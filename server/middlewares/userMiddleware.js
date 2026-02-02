@@ -3,18 +3,30 @@ import User from "../models/userModel.js";
 
 export const protect = async (req, res, next) => {
   let token;
+
+  // First, try to get token from cookies
   if (req.cookies && req.cookies.token) {
-    try {
-      token = req.cookies.token;
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      req.user = await User.findById(decoded.id).select("-password");
-      next();
-    } catch (error) {
-      return res.status(401).json({ message: "Not authorized, token failed" });
-    }
+    token = req.cookies.token;
+  }
+  // Fallback: Check Authorization header (for Safari and other browsers with strict cookie policies)
+  else if (req.headers.authorization && req.headers.authorization.startsWith("Bearer")) {
+    token = req.headers.authorization.split(" ")[1];
   }
 
-  if (!token) res.status(401).json({ message: "Not authorized, no token" });
+  if (!token) {
+    return res.status(401).json({ message: "Not authorized, no token" });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = await User.findById(decoded.id).select("-password");
+    if (!req.user) {
+      return res.status(401).json({ message: "Not authorized, user not found" });
+    }
+    return next();
+  } catch (error) {
+    return res.status(401).json({ message: "Not authorized, token failed" });
+  }
 };
 
 

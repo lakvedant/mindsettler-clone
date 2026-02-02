@@ -49,6 +49,7 @@ export const userSignup = async (req, res) => {
     res.cookie("token", token, cookieOptions).status(200).json({
       success: true,
       user: userResponse,
+      token, // Include token in response for Safari fallback
     });
   } catch (error) {
     console.log(error.message)
@@ -83,6 +84,7 @@ export const login = async (req, res) => {
     res.cookie("token", token, cookieOptions).status(200).json({
       success: true,
       user: userResponse,
+      token, // Include token in response for Safari fallback
     });
   } catch (error) {
     res.status(500).json({ message: error.message });

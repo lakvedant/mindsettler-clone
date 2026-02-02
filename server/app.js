@@ -22,10 +22,24 @@ import { globalLimiter } from './middlewares/rateLimiter.js';
 await connectDB();
 const app = express();
 app.set("trust proxy", 1); // Trust first proxy (needed for secure cookies behind proxies)
+
+// Cookie parser must be before session
+app.use(cookieParser());
+
 app.use(globalLimiter);
+
+// Middlewares - CORS must be early
+const isProduction = process.env.NODE_ENV === "production";
+app.use(cors({
+  origin: process.env.FRONTEND_URL,
+  credentials: true, // Crucial: Allows frontend to send session cookies
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+  exposedHeaders: ["set-cookie"],
+}));
+
 // --- SESSION CONFIGURATION (Must be before routes) ---
 // This enables req.session for your chatbot
-const isProduction = process.env.NODE_ENV === "production";
 app.use(session({
   secret: process.env.SESSION_SECRET || "mindsettler_secret_key", 
   resave: false,
@@ -42,16 +56,9 @@ app.use(session({
   }
 }));
 
-// Middlewares
-app.use(cors({
-  origin: process.env.FRONTEND_URL,
-  credentials: true // Crucial: Allows frontend to send session cookies
-}));
-
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(morgan("dev"));
-app.use(cookieParser());
 
 // Route Registrations
 app.use("/api/user", userRoute);
