@@ -1,7 +1,8 @@
-import { Helmet } from "react-helmet-async";
+import { useEffect } from "react";
 
 /**
  * SEO Component for dynamic page-level meta tags
+ * Uses native DOM manipulation instead of react-helmet-async
  * @param {Object} props
  * @param {string} props.title - Page title
  * @param {string} props.description - Page description
@@ -36,47 +37,78 @@ const SEO = ({
   // Canonical URL
   const canonicalUrl = canonical ? `${baseUrl}${canonical}` : baseUrl;
 
-  return (
-    <Helmet>
-      {/* Primary Meta Tags */}
-      <title>{fullTitle}</title>
-      <meta name="title" content={fullTitle} />
-      <meta name="description" content={description} />
-      <meta name="keywords" content={allKeywords} />
-      
-      {/* Robots */}
-      {noindex ? (
-        <meta name="robots" content="noindex, nofollow" />
-      ) : (
-        <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
-      )}
-      
-      {/* Canonical */}
-      <link rel="canonical" href={canonicalUrl} />
-      
-      {/* Open Graph / Facebook */}
-      <meta property="og:type" content={type} />
-      <meta property="og:url" content={canonicalUrl} />
-      <meta property="og:title" content={fullTitle} />
-      <meta property="og:description" content={description} />
-      <meta property="og:image" content={image} />
-      <meta property="og:site_name" content={siteName} />
-      
-      {/* Twitter */}
-      <meta name="twitter:card" content="summary_large_image" />
-      <meta name="twitter:url" content={canonicalUrl} />
-      <meta name="twitter:title" content={fullTitle} />
-      <meta name="twitter:description" content={description} />
-      <meta name="twitter:image" content={image} />
-      
-      {/* Additional Schema.org JSON-LD */}
-      {schema && (
-        <script type="application/ld+json">
-          {JSON.stringify(schema)}
-        </script>
-      )}
-    </Helmet>
-  );
+  useEffect(() => {
+    // Set document title
+    document.title = fullTitle;
+
+    // Helper function to set or create meta tag
+    const setMeta = (name, content, property = false) => {
+      const attr = property ? 'property' : 'name';
+      let meta = document.querySelector(`meta[${attr}="${name}"]`);
+      if (!meta) {
+        meta = document.createElement('meta');
+        meta.setAttribute(attr, name);
+        document.head.appendChild(meta);
+      }
+      meta.setAttribute('content', content);
+    };
+
+    // Primary Meta Tags
+    setMeta('title', fullTitle);
+    setMeta('description', description);
+    setMeta('keywords', allKeywords);
+    
+    // Robots
+    const robotsContent = noindex 
+      ? "noindex, nofollow" 
+      : "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1";
+    setMeta('robots', robotsContent);
+
+    // Canonical
+    let canonicalLink = document.querySelector('link[rel="canonical"]');
+    if (!canonicalLink) {
+      canonicalLink = document.createElement('link');
+      canonicalLink.setAttribute('rel', 'canonical');
+      document.head.appendChild(canonicalLink);
+    }
+    canonicalLink.setAttribute('href', canonicalUrl);
+
+    // Open Graph / Facebook
+    setMeta('og:type', type, true);
+    setMeta('og:url', canonicalUrl, true);
+    setMeta('og:title', fullTitle, true);
+    setMeta('og:description', description, true);
+    setMeta('og:image', image, true);
+    setMeta('og:site_name', siteName, true);
+
+    // Twitter
+    setMeta('twitter:card', 'summary_large_image');
+    setMeta('twitter:url', canonicalUrl);
+    setMeta('twitter:title', fullTitle);
+    setMeta('twitter:description', description);
+    setMeta('twitter:image', image);
+
+    // Schema.org JSON-LD
+    let schemaScript = document.querySelector('script[data-seo-schema]');
+    if (schema) {
+      if (!schemaScript) {
+        schemaScript = document.createElement('script');
+        schemaScript.setAttribute('type', 'application/ld+json');
+        schemaScript.setAttribute('data-seo-schema', 'true');
+        document.head.appendChild(schemaScript);
+      }
+      schemaScript.textContent = JSON.stringify(schema);
+    } else if (schemaScript) {
+      schemaScript.remove();
+    }
+
+    // Cleanup function
+    return () => {
+      // Reset to default title on unmount if needed
+    };
+  }, [fullTitle, description, allKeywords, canonicalUrl, image, type, schema, noindex, siteName]);
+
+  return null;
 };
 
 // Pre-configured SEO for common pages
