@@ -1276,7 +1276,7 @@ const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState("Profile");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
-  const { user, setUser } = useAuth();
+  const { user, setUser, loading: authLoading } = useAuth();
 
   const navItems = [
     { name: "Profile", icon: UserCircle },
@@ -1308,12 +1308,27 @@ const AdminDashboard = () => {
     };
   }, [isMobileMenuOpen]);
 
-  if (!user || user.role !== "admin") return <Navigate to="/auth" replace />;
-
   const handleLogout = useCallback(() => {
     setIsMobileMenuOpen(false);
     navigate("/logout");
   }, [navigate]);
+
+  // Show loading state while auth is being checked
+  if (authLoading) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-white">
+        <div className="flex flex-col items-center gap-4">
+          <div className="relative">
+            <div className="w-16 h-16 rounded-full border-4 border-slate-100"></div>
+            <div className="absolute top-0 left-0 w-16 h-16 rounded-full border-4 border-transparent border-t-[#3F2965] animate-spin"></div>
+          </div>
+          <p className="text-sm text-slate-400">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user || user.role !== "admin") return <Navigate to="/auth" replace />;
 
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden font-sans">

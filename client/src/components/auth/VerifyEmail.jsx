@@ -50,7 +50,6 @@ const VerifyEmail = ({ user, setUser }) => {
         setStatus("success");
         setMessage(response.data.message);
         
-        // Update user state if available
         if (setUser && response.data.user) {
           setUser(prev => ({ ...prev, isVerified: true }));
         }

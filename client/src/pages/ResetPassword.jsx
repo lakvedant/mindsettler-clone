@@ -1,4 +1,3 @@
-// pages/ResetPassword.jsx
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -19,7 +18,6 @@ import {
 import API from "../api/axios";
 import logo from "../assets/icons/MindsettlerLogo-removebg-preview.png";
 
-// Input Component
 const Input = ({ icon, label, rightIcon, error, ...props }) => (
   <motion.div
     initial={{ opacity: 0, x: -20 }}
@@ -132,7 +130,6 @@ const ResetPassword = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState([]);
 
-  // Verify token on mount
   useEffect(() => {
     if (!token) {
       setStatus(STATUS.INVALID);

@@ -1,35 +1,28 @@
 import User from "../models/userModel.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
-// Contact email imports
 import nodemailer from "nodemailer";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 
-// Helper function to create JWT
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRE,
   });
 };
 
-// @desc    Register user
-// @route   POST /api/auth/register
 export const userSignup = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    // 1. Check if user exists
     const userExists = await User.findOne({ email });
     if (userExists)
       return res.status(400).json({ message: "User already exists" });
 
-    // 2. Hash password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // 3. Create user
     const user = await User.create({
       name,
       email,
@@ -38,18 +31,18 @@ export const userSignup = async (req, res) => {
     const token = generateToken(user._id);
     const isProduction = process.env.NODE_ENV === "production";
     const cookieOptions = {
-      expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 day
-      httpOnly: true, // Prevents XSS attacks from reading the cookie
-      secure: isProduction, // Required for SameSite=None (Safari requires this)
-      sameSite: isProduction ? "none" : "lax", // Lowercase "none" for cross-site cookies
+      expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: isProduction ? "none" : "lax",
       path: "/",
     };
     const userResponse = user.toObject();
-    delete userResponse.password; // Remove password from response
+    delete userResponse.password;
     res.cookie("token", token, cookieOptions).status(200).json({
       success: true,
       user: userResponse,
-      token, // Include token in response for Safari fallback
+      token,
     });
   } catch (error) {
     console.log(error.message)
@@ -57,45 +50,39 @@ export const userSignup = async (req, res) => {
   }
 };
 
-// @desc    Login user
-// @route   POST /api/auth/login
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    // 1. Find user & include password (since we set select: false in schema)
     const user = await User.findOne({ email }).select("+password");
     if (!user) return res.status(401).json({ message: "Invalid credentials" });
 
-    // 2. Check password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch)
       return res.status(401).json({ message: "Invalid credentials" });
     const token = generateToken(user._id);
     const isProduction = process.env.NODE_ENV === "production";
     const cookieOptions = {
-      expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 day
-      httpOnly: true, // Prevents XSS attacks from reading the cookie
-      secure: isProduction, // Required for SameSite=None (Safari requires this)
-      sameSite: isProduction ? "none" : "lax", // Lowercase "none" for cross-site cookies
+      expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: isProduction ? "none" : "lax",
       path: "/",
     };
     const userResponse = user.toObject();
-    delete userResponse.password; // Remove password from response
+    delete userResponse.password;
     res.cookie("token", token, cookieOptions).status(200).json({
       success: true,
       user: userResponse,
-      token, // Include token in response for Safari fallback
+      token,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-// @desc    Get user profile
-// @route   GET /api/auth/profile
 export const getUserProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select("-password"); // exclude password
+    const user = await User.findById(req.user.id).select("-password");
     if (!user) return res.status(404).json({ message: "User not found" });
 
     res.status(200).json({
@@ -107,9 +94,6 @@ export const getUserProfile = async (req, res) => {
   }
 };
 
-// @desc    Get current logged in user (for frontend auth)
-// @route   GET /api/user/me
-// @access  Private
 export const getMe = async (req, res) => {
   try {
     const user = await User.findById(req.user._id).select("-password");
@@ -124,8 +108,8 @@ export const logout = async (req, res) => {
     const isProduction = process.env.NODE_ENV === "production";
     res.clearCookie("token", {
       httpOnly: true,
-      secure: isProduction, // Must match the cookie settings used when setting
-      sameSite: isProduction ? "none" : "lax", // Lowercase for Safari compatibility
+      secure: isProduction,
+      sameSite: isProduction ? "none" : "lax",
       path: "/",
     });
 
@@ -144,37 +128,32 @@ export const sendContactEmail = async (req, res) => {
   try {
     const { name, email, subject, message } = req.body;
 
-    // 1. Read the HTML template file
-    // Adjust the path below to point exactly to your template file
     const templatePath = path.join(__dirname, "../templates/contactEmail.html");
     let htmlContent = fs.readFileSync(templatePath, "utf-8");
 
-    // 2. Replace placeholders with actual data
     htmlContent = htmlContent
       .replace(/{{name}}/g, name)
       .replace(/{{email}}/g, email)
       .replace(/{{subject}}/g, subject || "General Inquiry")
       .replace(/{{message}}/g, message)
       .replace(/{{timestamp}}/g, new Date().toLocaleString());
-    // 3. Configure Transporter
+
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
         user: process.env.SENDER_EMAIL,
-        pass: process.env.SENDER_PASSWORD, // Use Gmail App Password
+        pass: process.env.SENDER_PASSWORD,
       },
     });
 
-    // 4. Define Mail Options
     const mailOptions = {
       from: `"MindSettler Contact" <${process.env.SENDER_EMAIL}>`,
       to: process.env.ADMIN_EMAIL,
-      replyTo: email, // Direct reply to user
+      replyTo: email,
       subject: `New Message: ${subject}`,
       html: htmlContent,
     };
 
-    // 5. Send Email
     await transporter.sendMail(mailOptions);
 
     res.status(200).json({
@@ -182,7 +161,7 @@ export const sendContactEmail = async (req, res) => {
       message: "Your message has been sent successfully.",
     });
   } catch (error) {
-    console.error("❌ Email Error:", error);
+    console.error("Email Error:", error);
     res
       .status(500)
       .json({ success: false, message: "Server Error: Could not send email." });
@@ -198,7 +177,7 @@ export const profileUpdate = async (req, res) => {
     const updatedUser = await User.findByIdAndUpdate(userId, updates, {
       new: true,
       runValidators: true,
-    }).select("-password"); // Exclude password from response
+    }).select("-password");
 
     res.status(200).json({
       success: true,
@@ -214,11 +193,9 @@ export const sendCorporateEmail = async (req, res) => {
   try {
     const { companyName, contactPerson, workEmail, subject, message } = req.body;
 
-    // 1. Read the HTML template file
     const templatePath = path.join(__dirname, "../templates/corporateEmail.html");
     let htmlContent = fs.readFileSync(templatePath, "utf-8");
 
-    // 2. Replace placeholders with actual data
     htmlContent = htmlContent
       .replace(/{{companyName}}/g, companyName)
       .replace(/{{contactPerson}}/g, contactPerson)
@@ -227,25 +204,22 @@ export const sendCorporateEmail = async (req, res) => {
       .replace(/{{message}}/g, message)
       .replace(/{{timestamp}}/g, new Date().toLocaleString());
 
-    // 3. Configure Transporter
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
         user: process.env.SENDER_EMAIL,
-        pass: process.env.SENDER_PASSWORD, // Use Gmail App Password
+        pass: process.env.SENDER_PASSWORD,
       },
     });
 
-    // 4. Define Mail Options
     const mailOptions = {
       from: `"MindSettler Corporate" <${process.env.SENDER_EMAIL}>`,
       to: process.env.ADMIN_EMAIL,
-      replyTo: workEmail, // Direct reply to user
+      replyTo: workEmail,
       subject: `New Corporate Message: ${subject || "Corporate Inquiry"}`,
       html: htmlContent,
     };
 
-    // 5. Send Email
     await transporter.sendMail(mailOptions);
 
     res.status(200).json({
@@ -253,7 +227,7 @@ export const sendCorporateEmail = async (req, res) => {
       message: "Your message has been sent successfully.",
     });
   } catch (error) {
-    console.error("❌ Email Error:", error);
+    console.error("Email Error:", error);
     res
       .status(500)
       .json({ success: false, message: "Server Error: Could not send email." });
@@ -261,7 +235,6 @@ export const sendCorporateEmail = async (req, res) => {
 };
 
 
-// Send Verification Link
 export const sendVerificationLink = async (req, res) => {
   try {
     const userId = req.user._id;
@@ -275,7 +248,6 @@ export const sendVerificationLink = async (req, res) => {
       return res.status(400).json({ message: "Email is already verified" });
     }
 
-    // Generate verification token
     const verificationToken = jwt.sign(
       { id: userId, purpose: "email_verification" },
       process.env.JWT_SECRET,
@@ -284,7 +256,6 @@ export const sendVerificationLink = async (req, res) => {
 
     const verificationLink = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
 
-    // Configure Transporter
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
@@ -293,7 +264,6 @@ export const sendVerificationLink = async (req, res) => {
       },
     });
 
-    // Define Mail Options
     const mailOptions = {
       from: `"MindSettler Support" <${process.env.SENDER_EMAIL}>`,
       to: user.email,
@@ -344,7 +314,6 @@ export const sendVerificationLink = async (req, res) => {
       `,
     };
 
-    // Send Email
     await transporter.sendMail(mailOptions);
 
     res.status(200).json({
@@ -352,7 +321,7 @@ export const sendVerificationLink = async (req, res) => {
       message: "Verification email has been sent. Please check your inbox.",
     });
   } catch (error) {
-    console.error("❌ Email Error:", error);
+    console.error("Email Error:", error);
     res.status(500).json({ 
       success: false, 
       message: "Server Error: Could not send email." 
@@ -360,7 +329,6 @@ export const sendVerificationLink = async (req, res) => {
   }
 };
 
-// Verify Email Token
 export const verifyEmailToken = async (req, res) => {
   try {
     const { token } = req.body;
@@ -372,7 +340,6 @@ export const verifyEmailToken = async (req, res) => {
       });
     }
 
-    // Verify the token
     let decoded;
     try {
       decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -393,7 +360,6 @@ export const verifyEmailToken = async (req, res) => {
       throw jwtError;
     }
 
-    // Check token purpose
     if (decoded.purpose !== "email_verification") {
       return res.status(400).json({ 
         success: false, 
@@ -401,7 +367,6 @@ export const verifyEmailToken = async (req, res) => {
       });
     }
 
-    // Find user
     const user = await User.findById(decoded.id);
 
     if (!user) {
@@ -411,7 +376,6 @@ export const verifyEmailToken = async (req, res) => {
       });
     }
 
-    // Check if already verified
     if (user.isVerified) {
       return res.status(200).json({ 
         success: true, 
@@ -420,7 +384,6 @@ export const verifyEmailToken = async (req, res) => {
       });
     }
 
-    // Update user as verified
     user.isVerified = true;
     await user.save();
 
@@ -436,7 +399,7 @@ export const verifyEmailToken = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("❌ Verification Error:", error);
+    console.error("Verification Error:", error);
     res.status(500).json({ 
       success: false, 
       message: "Server Error: Could not verify email." 

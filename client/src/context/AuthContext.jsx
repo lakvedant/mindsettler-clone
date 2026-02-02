@@ -11,9 +11,9 @@ export const AuthProvider = ({ children }) => {
     const checkUser = async () => {
       try {
         const res = await API.get('/user/me');
-        setUser(res.data.user); // Now you have the role!
+        setUser(res.data.user);
       } catch (err) {
-        console.error("Error fetching user data:", err); // Debugging line to check for errors
+        console.error(err);
       }
       setLoading(false);
     };
@@ -21,7 +21,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading, setUser }}>
+    <AuthContext.Provider value={{ user, loading, setLoading, setUser }}>
       {children}
     </AuthContext.Provider>
   );

@@ -9,12 +9,10 @@ const Navbar = () => {
   const { user } = useAuth();
   const location = useLocation();
 
-  // Close mobile menu on route change
   useEffect(() => {
     setIsMobileMenuOpen(false);
   }, [location.pathname]);
 
-  // Handle scroll
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 80);
@@ -23,7 +21,6 @@ const Navbar = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Prevent body scroll when mobile menu is open
   useEffect(() => {
     if (isMobileMenuOpen) {
       document.body.style.overflow = "hidden";
@@ -35,7 +32,6 @@ const Navbar = () => {
     };
   }, [isMobileMenuOpen]);
 
-  // Close menu on escape key
   useEffect(() => {
     const handleEscape = (e) => {
       if (e.key === "Escape") setIsMobileMenuOpen(false);

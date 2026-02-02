@@ -2,23 +2,15 @@ import { Availability } from '../models/adminModel.js';
 import Appointment from '../models/appointmentModel.js';
 import User from '../models/userModel.js';
 
-/**
- * @desc    Create/Update availability slots for a specific date
- * @route   POST /api/admin/availability
- * @access  Private/Admin
- */
-
 export const setAvailability = async (req, res) => {
     try {
         let { date, slots } = req.body;
         slots = Array.isArray(slots) ? slots : JSON.parse(slots);
-        // Format slots into the object structure required by the schema
         const formattedSlots = slots.map(time => ({
             time,
             isBooked: false
         }));
 
-        // Update existing date or create new one (upsert)
         const availability = await Availability.findOneAndUpdate(
             { date },
             { slots: formattedSlots, isActive: true },
@@ -31,11 +23,6 @@ export const setAvailability = async (req, res) => {
     }
 };
 
-/**
- * @desc    Get all appointments for Admin view
- * @route   GET /api/admin/appointments
- * @access  Private/Admin
- */
 export const getPendingAppointments = async (req, res) => {
     try {
         const appointments = await Appointment.find({ status:"confirmed" })
@@ -55,7 +42,6 @@ export const profileUpdate = async (req, res) => {
     const { name, phone, email, gender } = req.body;
     const updates = {name, phone, email, gender, profileIsComplete: true };
 
-    // check for email
     if (email) {
       const existingUser = await User.findOne({ email, _id: { $ne: userId } });
       if (existingUser) {
@@ -66,7 +52,7 @@ export const profileUpdate = async (req, res) => {
     const updatedUser = await User.findByIdAndUpdate(userId, updates, {
       new: true,
       runValidators: true,
-    }).select("-password"); // Exclude password from response
+    }).select("-password");
 
     res.status(200).json({
       success: true,

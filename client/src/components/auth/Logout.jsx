@@ -14,7 +14,6 @@ const Logout = () => {
       } catch (error) {
         console.error(error);
       } finally {
-        // Clear localStorage token (Safari fallback)
         localStorage.removeItem('token');
         setUser(null);
         navigate("/auth", { replace: true });

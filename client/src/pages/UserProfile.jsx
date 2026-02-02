@@ -1387,7 +1387,7 @@ const UserDashboard = () => {
   const [activeTab, setActiveTab] = useState("Profile");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
-  const { user, setUser } = useAuth();
+  const { user, setUser, loading: authLoading } = useAuth();
 
   const menuItems = [
     { name: "Profile", icon: User },
@@ -1417,15 +1417,21 @@ const UserDashboard = () => {
     };
   }, [isMobileMenuOpen]);
 
-  if (!user || user.role !== "user") return <Navigate to="/auth" />;
-
   const handleLogout = useCallback(() => {
     setIsMobileMenuOpen(false);
     navigate("/logout");
   }, [navigate]);
 
+  // Show loading state while auth is being checked
+  if (authLoading) {
+    return null; // IsLoginUser will show loading spinner
+  }
+
+  // Redirect non-users to auth page only after loading is complete
+  if (!user || user.role !== "user") return <Navigate to="/auth" />;
+
   return (
-    <IsLoginUser user={user}>
+    <IsLoginUser user={user} loading={authLoading}>
       <IsVerifiedUser user={user}>
       <div className="flex min-h-screen bg-gradient-to-br from-slate-50 via-white to-purple-50/30 font-sans relative">
         {/* Animated Background */}

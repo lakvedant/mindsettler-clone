@@ -1,5 +1,3 @@
-// components/ChatWidget/ChatWidget.jsx
-
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -30,7 +28,6 @@ import {
 import API from "../../api/axios.js";
 import botAvatar from "../../assets/icons/ChatBotmini-removebg-preview.png";
 
-// Generate unique chat ID
 const generateChatId = () => {
   const saved = sessionStorage.getItem("mindSettlerChatId");
   if (saved) return saved;
@@ -39,7 +36,6 @@ const generateChatId = () => {
   return newId;
 };
 
-// Time-based greeting
 const getTimeGreeting = () => {
   const hour = new Date().getHours();
   if (hour < 12) return { text: "Good morning", icon: Sun, emoji: "🌅" };
@@ -48,7 +44,6 @@ const getTimeGreeting = () => {
   return { text: "Good night", icon: Moon, emoji: "🌙" };
 };
 
-// Mood configuration
 const moodConfig = {
   happy: { icon: Smile, color: "text-green-500", bg: "bg-green-50", border: "border-green-200", label: "Happy" },
   sad: { icon: Frown, color: "text-blue-500", bg: "bg-blue-50", border: "border-blue-200", label: "Sad" },
@@ -59,7 +54,6 @@ const moodConfig = {
   calm: { icon: Coffee, color: "text-teal-500", bg: "bg-teal-50", border: "border-teal-200", label: "Calm" },
 };
 
-// Page navigation configuration
 const pageConfig = {
   "/": { name: "Home", icon: GripVertical, color: "from-slate-600 to-slate-800" },
   "/booking": { name: "Booking Session", icon: Calendar, color: "from-[#3F2965] to-[#DD1764]" },
@@ -70,7 +64,6 @@ const pageConfig = {
   "/logout": { name: "Logout", icon: ShieldCheck, color: "from-red-500 to-pink-500" },
 };
 
-// Default quick replies
 const defaultQuickReplies = [
   { text: "I'm feeling anxious", emoji: "😰" },
   { text: "I need to talk", emoji: "💭" },
@@ -78,11 +71,6 @@ const defaultQuickReplies = [
   { text: "I'm doing okay", emoji: "😊" },
 ];
 
-// ============================================
-// SUB-COMPONENTS
-// ============================================
-
-// Typing indicator
 const TypingIndicator = () => (
   <div className="flex justify-start animate-in fade-in slide-in-from-bottom-2 duration-300">
     <div className="flex items-end gap-2">
@@ -106,7 +94,6 @@ const TypingIndicator = () => (
   </div>
 );
 
-// Mood indicator badge
 const MoodBadge = ({ mood }) => {
   if (!mood || !moodConfig[mood]) return null;
   const { icon: Icon, color, bg, border, label } = moodConfig[mood];
@@ -119,7 +106,6 @@ const MoodBadge = ({ mood }) => {
   );
 };
 
-// Quick action buttons
 const QuickActions = ({ buttons, onSelect, isAnimated = true }) => {
   if (!buttons || buttons.length === 0) return null;
 
@@ -150,7 +136,6 @@ const QuickActions = ({ buttons, onSelect, isAnimated = true }) => {
   );
 };
 
-// Redirecting indicator component
 const RedirectingIndicator = ({ target }) => {
   const config = pageConfig[target] || { name: "page", icon: ExternalLink, color: "from-slate-600 to-slate-800" };
   const Icon = config.icon;
@@ -177,7 +162,6 @@ const RedirectingIndicator = ({ target }) => {
   );
 };
 
-// Message bubble
 const MessageBubble = ({ message, isUser, isLatest, isRedirecting, onQuickReply }) => {
   const [showReactions, setShowReactions] = useState(false);
 
@@ -270,9 +254,6 @@ const MessageBubble = ({ message, isUser, isLatest, isRedirecting, onQuickReply 
   );
 };
 
-// ============================================
-// DRAGGABLE HOOK
-// ============================================
 const useDraggable = (initialPosition = null) => {
   const [position, setPosition] = useState(() => {
     const saved = localStorage.getItem("chatWidgetPosition");
@@ -381,9 +362,6 @@ const useDraggable = (initialPosition = null) => {
   return { position, isDragging, hasMoved, buttonRef, handleMouseDown, handleTouchStart, resetPosition };
 };
 
-// ============================================
-// MAIN CHAT WIDGET
-// ============================================
 const ChatWidget = ({ user }) => {
   const navigate = useNavigate();
   const chatId = useRef(generateChatId()).current;
@@ -417,14 +395,12 @@ const ChatWidget = ({ user }) => {
 
   const { position, isDragging, hasMoved, buttonRef, handleMouseDown, handleTouchStart, resetPosition } = useDraggable();
 
-  // Auto-scroll
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
     }
   }, [history, loading, isRedirecting, isOpen]);
 
-  // Lock body scroll on mobile
   useEffect(() => {
     if (isOpen && window.innerWidth < 768) {
       document.body.style.overflow = "hidden";
@@ -434,25 +410,21 @@ const ChatWidget = ({ user }) => {
     return () => { document.body.style.overflow = "unset"; };
   }, [isOpen]);
 
-  // Focus input
   useEffect(() => {
     if (isOpen && inputRef.current) {
       setTimeout(() => inputRef.current?.focus(), 300);
     }
   }, [isOpen]);
 
-  // Hide notification
   useEffect(() => {
     const timer = setTimeout(() => setShowNotification(false), 8000);
     return () => clearTimeout(timer);
   }, []);
 
-  // Handle navigation with loading state
   const handleNavigate = useCallback((path) => {
     setIsRedirecting(true);
     setRedirectTarget(path);
     
-    // Navigate after showing the loading indicator
     setTimeout(() => {
       setIsOpen(false);
       setIsRedirecting(false);
@@ -461,26 +433,23 @@ const ChatWidget = ({ user }) => {
     }, 2500);
   }, [navigate]);
 
-  // Handle close
   const handleClose = useCallback(() => {
     setIsOpen(false);
     setIsRedirecting(false);
     setRedirectTarget(null);
   }, []);
 
-  // Handle quick reply
   const handleQuickReply = useCallback((text) => {
     if (!isRedirecting) {
       handleSend(text);
     }
   }, [isRedirecting]);
 
-  // Clear chat
   const handleClearChat = useCallback(async () => {
     try {
       await API.delete(`/chat/clear/${chatId}`);
     } catch (err) {
-      console.log("Clear chat error (non-critical):", err);
+      console.log("Clear chat error:", err);
     }
     
     setHistory([{
@@ -495,7 +464,6 @@ const ChatWidget = ({ user }) => {
     setRedirectTarget(null);
   }, [chatId, userName]);
 
-  // Send message
   const handleSend = async (text = message) => {
     if (!text.trim() || loading || isRedirecting) return;
 
@@ -515,7 +483,6 @@ const ChatWidget = ({ user }) => {
       const res = await API.post("/chat", { message: text.trim(), chatId, user });
       const { intent, reply, action, mood_detected } = res.data;
 
-      // Build bot message
       const botMessage = {
         role: "bot",
         content: reply,
@@ -525,7 +492,6 @@ const ChatWidget = ({ user }) => {
         intent: intent,
       };
 
-      // Add default quick replies if none provided and not navigating
       if (!action?.buttons && action?.type !== "navigate") {
         botMessage.action = {
           ...botMessage.action,
@@ -537,10 +503,8 @@ const ChatWidget = ({ user }) => {
 
       setHistory((prev) => [...prev, botMessage]);
 
-      // Update mood
       if (mood_detected) setCurrentMood(mood_detected);
 
-      // Handle navigation intents - auto navigate with loading indicator
       const navigationIntents = ["NAVIGATE_HOME", "BOOK_SESSION", "NAVIGATE_BOOKING", "NAVIGATE_RESOURCES", "NAVIGATE_CONTACT", "NAVIGATE_PROFILE", "NAVIGATE_CORPORATE", "NAVIGATE_LOGOUT"];
       
       if (navigationIntents.includes(intent) && action?.target) {
@@ -563,7 +527,6 @@ const ChatWidget = ({ user }) => {
     }
   };
 
-  // Button click handler
   const handleButtonClick = () => {
     if (!hasMoved) {
       setIsOpen(!isOpen);
@@ -571,7 +534,6 @@ const ChatWidget = ({ user }) => {
     }
   };
 
-  // Position styles
   const buttonPositionStyles = position
     ? { position: "fixed", left: `${position.x}px`, top: `${position.y}px`, right: "auto", bottom: "auto" }
     : { position: "fixed", left: "20px", bottom: "20px" };

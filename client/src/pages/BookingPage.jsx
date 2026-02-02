@@ -30,9 +30,6 @@ import { useAuth } from "../context/AuthContext";
 import { IsLoginUser, IsVerifiedUser, IsProfileCompleteUser } from "../components/auth/Verification";
 import { ScrollProgressBar } from "../components/common/ScrollProgressBar";
 
-// ==================== CUSTOM HOOKS ====================
-
-// Custom Hook for Mouse Position
 const useMousePosition = () => {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
@@ -47,25 +44,6 @@ const useMousePosition = () => {
   return mousePosition;
 };
 
-// Custom Hook for Intersection Observer
-const useOnScreen = (ref, threshold = 0.1) => {
-  const [isIntersecting, setIntersecting] = useState(false);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => setIntersecting(entry.isIntersecting),
-      { threshold }
-    );
-    if (ref.current) observer.observe(ref.current);
-    return () => observer.disconnect();
-  }, [ref, threshold]);
-
-  return isIntersecting;
-};
-
-// ==================== ANIMATION COMPONENTS ====================
-
-// Magnetic Button Component
 const MagneticButton = ({ children, className, onClick, disabled, type = "button", ...props }) => {
   const ref = useRef(null);
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -99,7 +77,6 @@ const MagneticButton = ({ children, className, onClick, disabled, type = "button
   );
 };
 
-// Text Reveal Animation Component
 const TextReveal = ({ children, delay = 0, className = "" }) => {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-50px" });
@@ -249,32 +226,6 @@ const FloatingShapes = () => {
             repeat: Infinity,
             ease: "easeInOut",
             delay: shape.delay,
-          }}
-        />
-      ))}
-
-      {/* Floating particles */}
-      {[...Array(20)].map((_, i) => (
-        <motion.div
-          key={`particle-${i}`}
-          className="absolute rounded-full"
-          style={{
-            width: 4 + Math.random() * 6,
-            height: 4 + Math.random() * 6,
-            left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 100}%`,
-            background: i % 2 === 0 ? "rgba(221,23,100,0.3)" : "rgba(63,41,101,0.3)",
-          }}
-          animate={{
-            y: [0, -40, 0],
-            x: [0, Math.random() * 20 - 10, 0],
-            opacity: [0.3, 0.6, 0.3],
-          }}
-          transition={{
-            duration: 4 + Math.random() * 3,
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: Math.random() * 2,
           }}
         />
       ))}
@@ -1329,7 +1280,7 @@ const SessionInfoCard = ({ icon: Icon, label, value }) => (
 
 // ==================== MAIN COMPONENT ====================
 const BookingPage = () => {
-const { user } = useAuth();
+const { user, loading: authLoading } = useAuth();
 const navigate = useNavigate();
 const scrollableRef = useRef(null);
 
@@ -1523,7 +1474,7 @@ const [pageLoaded, setPageLoaded] = useState(false);
   };
 
   return (
-    <IsLoginUser user={user}>
+    <IsLoginUser user={user} loading={authLoading}>
       <IsVerifiedUser user={user}>
         <IsProfileCompleteUser user={user}>
           <>

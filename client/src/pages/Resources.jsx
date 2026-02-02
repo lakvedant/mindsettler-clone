@@ -672,7 +672,7 @@ const ResourcesPage = () => {
   const [savedArticles, setSavedArticles] = useState([]);
   const [likedArticles, setLikedArticles] = useState([]);
   const [showScrollTop, setShowScrollTop] = useState(false);
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
 
   const { scrollYProgress } = useScroll({
     target: containerRef,
@@ -1118,7 +1118,7 @@ const ResourcesPage = () => {
   };
 
   return (
-    <IsLoginUser user={user}>
+    <IsLoginUser user={user} loading={authLoading}>
       <IsVerifiedUser user={user}>
         <IsProfileCompleteUser user={user}>
           <>

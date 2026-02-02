@@ -1,48 +1,62 @@
-// components/Guards/IsVerifiedUser.jsx
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router";
 import {
   X,
   Mail,
-  CheckCircle,
   RefreshCw,
   Loader2,
   Sparkles,
   AlertCircle,
-  Inbox,
-    Lock,
-    LogIn,
-    ArrowRight,
-    UserPlus,
-    UserCircle
+  Lock,
+  LogIn,
+  ArrowRight,
+  UserPlus,
+  UserCircle
 } from "lucide-react";
 import API from "../../api/axios";
 
-export const IsLoginUser = ({ user, children }) => {
+const AuthLoadingSpinner = () => (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-white">
+    <div className="flex flex-col items-center gap-4">
+      <div className="relative">
+        <div className="w-16 h-16 rounded-full border-4 border-slate-100"></div>
+        <div className="absolute top-0 left-0 w-16 h-16 rounded-full border-4 border-transparent border-t-[#3F2965] animate-spin"></div>
+      </div>
+      <div className="flex items-center gap-2">
+        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#3F2965] to-[#DD1764] flex items-center justify-center">
+          <Sparkles size={16} className="text-white" />
+        </div>
+        <span className="font-bold text-slate-600">MindSettler</span>
+      </div>
+      <p className="text-sm text-slate-400">Loading...</p>
+    </div>
+  </div>
+);
+
+export const IsLoginUser = ({ user, loading, children }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Handle navigation to login
   const handleGoToLogin = () => {
     navigate("/auth", { state: { from: location.pathname } });
   };
 
-  // Handle navigation to register
   const handleGoToRegister = () => {
     navigate("/auth", { state: { from: location.pathname } });
   };
 
-  // Handle go back
   const handleGoBack = () => {
     navigate(-1);
   };
 
-  // Handle go home
   const handleGoHome = () => {
     navigate("/");
   };
 
-  // If user is logged in, render children
+  if (loading) {
+    return <AuthLoadingSpinner />;
+  }
+
   if (user) {
     return <>{children}</>;
   }
@@ -138,7 +152,6 @@ export const IsVerifiedUser = ({ user, children }) => {
   const [verificationLoading, setVerificationLoading] = useState(false);
   const [verificationSent, setVerificationSent] = useState(false);
 
-  // Send verification email
   const handleSendVerification = async () => {
     setVerificationLoading(true);
     try {
@@ -151,7 +164,6 @@ export const IsVerifiedUser = ({ user, children }) => {
     }
   };
 
-  // Resend verification email
   const handleResendVerification = async () => {
     setVerificationSent(false);
     setVerificationLoading(true);
@@ -165,17 +177,14 @@ export const IsVerifiedUser = ({ user, children }) => {
     }
   };
 
-  // Handle go back
   const handleGoBack = () => {
     navigate(-1);
   };
 
-  // Handle go home
   const handleGoHome = () => {
     navigate("/");
   };
 
-  // If user is verified, render children
   if (user && user.isVerified) {
     return <>{children}</>;
   }
@@ -352,7 +361,6 @@ export const IsProfileCompleteUser = ({ user, children, requiredFields = ["name"
   const [showPopup] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
 
-  // Check which fields are missing
   const getMissingFields = () => {
     if (!user) return [];
     return requiredFields.filter((field) => {
@@ -361,7 +369,6 @@ export const IsProfileCompleteUser = ({ user, children, requiredFields = ["name"
     });
   };
 
-  // Format field name for display
   const formatFieldName = (field) => {
     const fieldNames = {
       name: "Full Name",
@@ -376,29 +383,23 @@ export const IsProfileCompleteUser = ({ user, children, requiredFields = ["name"
     return fieldNames[field] || field.charAt(0).toUpperCase() + field.slice(1);
   };
 
-  // Check user is admin or not
   useEffect(() => {
     if (user && user.role === "admin") {
       setIsAdmin(true);
     }
   }, [user]);
 
-  // Handle navigation to profile
   const handleGoToProfile = () => {
     navigate(isAdmin ? "/admin#profile" : "/profile#profile", { state: { from: location.pathname, edit: true } });
   };
-
-  // Handle go back
   const handleGoBack = () => {
     navigate(-1);
   };
 
-  // Handle go home
   const handleGoHome = () => {
     navigate("/");
   };
 
-  // If profile is complete, render children
   if (user && user.profileIsComplete) {
     return <>{children}</>;
   }

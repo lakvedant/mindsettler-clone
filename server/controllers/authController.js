@@ -3,7 +3,6 @@ import bcrypt from "bcryptjs";
 import nodemailer from "nodemailer";
 import User from "../models/userModel.js";
 
-// Forgot Password - Send Reset Link
 export const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
@@ -15,18 +14,15 @@ export const forgotPassword = async (req, res) => {
       });
     }
 
-    // Find user by email
     const user = await User.findOne({ email: email.toLowerCase() });
 
     if (!user) {
-      // Don't reveal if email exists or not for security
       return res.status(200).json({
         success: true,
         message: "If an account exists with this email, you will receive a password reset link.",
       });
     }
 
-    // Generate reset token
     const resetToken = jwt.sign(
       { id: user._id, purpose: "password_reset" },
       process.env.JWT_SECRET,
@@ -35,7 +31,6 @@ export const forgotPassword = async (req, res) => {
 
     const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
 
-    // Configure Transporter
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
@@ -44,7 +39,6 @@ export const forgotPassword = async (req, res) => {
       },
     });
 
-    // Email Template
     const mailOptions = {
       from: `"MindSettler Support" <${process.env.SENDER_EMAIL}>`,
       to: user.email,
@@ -100,7 +94,6 @@ export const forgotPassword = async (req, res) => {
       `,
     };
 
-    // Send Email
     await transporter.sendMail(mailOptions);
 
     res.status(200).json({
@@ -109,7 +102,7 @@ export const forgotPassword = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("❌ Forgot Password Error:", error);
+    console.error("Forgot Password Error:", error);
     res.status(500).json({
       success: false,
       message: "Failed to process request. Please try again later.",
@@ -117,12 +110,10 @@ export const forgotPassword = async (req, res) => {
   }
 };
 
-// Reset Password - Verify Token & Update Password
 export const resetPassword = async (req, res) => {
   try {
     const { token, password, confirmPassword } = req.body;
 
-    // Validate inputs
     if (!token) {
       return res.status(400).json({
         success: false,
@@ -151,7 +142,6 @@ export const resetPassword = async (req, res) => {
       });
     }
 
-    // Verify token
     let decoded;
     try {
       decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -172,7 +162,6 @@ export const resetPassword = async (req, res) => {
       throw jwtError;
     }
 
-    // Check token purpose
     if (decoded.purpose !== "password_reset") {
       return res.status(400).json({
         success: false,
@@ -180,7 +169,6 @@ export const resetPassword = async (req, res) => {
       });
     }
 
-    // Find user
     const user = await User.findById(decoded.id);
 
     if (!user) {
@@ -190,11 +178,9 @@ export const resetPassword = async (req, res) => {
       });
     }
 
-    // Hash new password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Update password
     user.password = hashedPassword;
     await user.save();
 
@@ -281,7 +267,6 @@ export const verifyResetToken = async (req, res) => {
       });
     }
 
-    // Verify token
     let decoded;
     try {
       decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -301,7 +286,6 @@ export const verifyResetToken = async (req, res) => {
       });
     }
 
-    // Check token purpose
     if (decoded.purpose !== "password_reset") {
       return res.status(400).json({
         success: false,
@@ -310,7 +294,6 @@ export const verifyResetToken = async (req, res) => {
       });
     }
 
-    // Check if user exists
     const user = await User.findById(decoded.id).select("email name");
 
     if (!user) {
@@ -329,7 +312,7 @@ export const verifyResetToken = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("❌ Verify Token Error:", error);
+    console.error("Verify Token Error:", error);
     res.status(500).json({
       success: false,
       valid: false,
