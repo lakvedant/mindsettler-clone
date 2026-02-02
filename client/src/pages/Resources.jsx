@@ -1137,7 +1137,6 @@ const ResourcesPage = () => {
                 {/* Animated Background */}
                 <motion.div
                   className="absolute inset-0 z-0"
-                  style={{ y: backgroundY }}
                 >
                   <div
                     className="absolute inset-0"

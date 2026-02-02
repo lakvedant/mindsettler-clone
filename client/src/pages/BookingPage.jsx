@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { motion, AnimatePresence, useMotionValue, useSpring, useTransform, useInView } from "framer-motion";
+import { motion, AnimatePresence, useMotionValue, useTransform, useInView } from "framer-motion";
 import {
   Calendar as CalendarIcon,
   Clock,
@@ -116,50 +116,6 @@ const TextReveal = ({ children, delay = 0, className = "" }) => {
   );
 };
 
-// Staggered Text Animation
-const StaggerText = ({ text, className, delay = 0 }) => {
-  const words = text.split(" ");
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true });
-  
-  const container = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.05, delayChildren: delay },
-    },
-  };
-
-  const child = {
-    hidden: { opacity: 0, y: 20, rotateX: 90 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      rotateX: 0,
-      transition: {
-        type: "spring",
-        damping: 12,
-        stiffness: 100,
-      },
-    },
-  };
-
-  return (
-    <motion.div
-      ref={ref}
-      className={className}
-      variants={container}
-      initial="hidden"
-      animate={isInView ? "visible" : "hidden"}
-    >
-      {words.map((word, index) => (
-        <motion.span key={index} variants={child} className="inline-block mr-2">
-          {word}
-        </motion.span>
-      ))}
-    </motion.div>
-  );
-};
 
 // Glowing Card with Mouse Track
 const GlowingCard = ({ children, className, color = "purple", isMobile = false }) => {
@@ -219,8 +175,7 @@ const GlowingCard = ({ children, className, color = "purple", isMobile = false }
 
 // Enhanced Floating Shapes with Parallax - Hidden on mobile
 const FloatingShapes = ({ isMobile = false }) => {
-  const mousePosition = useMousePosition();
-  
+
   const shapes = useMemo(() => [
     { size: 300, x: "5%", y: "10%", color: "purple", delay: 0 },
     { size: 400, x: "80%", y: "5%", color: "pink", delay: 0.5 },
