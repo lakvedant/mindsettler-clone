@@ -20,13 +20,15 @@ import logo from "../assets/icons/MindsettlerLogo-removebg-preview.png";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import Login_img from "../assets/images/Login_img-removebg-preview.png";
+import useIsMobile from "../hooks/useIsMobile";
+import { AuthenticationSEO } from "../components/common/SEO";
 
 // Feature badges component
-const FeatureBadge = ({ icon: Icon, text, delay }) => (
+const FeatureBadge = ({ icon: Icon, text, delay, isMobile = false }) => (
   <motion.div
-    initial={{ opacity: 0, y: 20 }}
+    initial={isMobile ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
-    transition={{ delay, duration: 0.5 }}
+    transition={isMobile ? {} : { delay, duration: 0.5 }}
     className="flex items-center gap-2 px-3 py-1.5 bg-white/80 backdrop-blur-sm rounded-full shadow-sm border border-white/50"
   >
     <Icon size={14} className="text-[#DD1764]" />
@@ -96,26 +98,19 @@ const IllustrationSection = ({ illustrationSrc }) => (
   </div>
 );
 
-// Mobile Illustration
+// Mobile Illustration - No animations on mobile
 const MobileIllustration = ({ illustrationSrc }) => (
-  <motion.div
-    initial={{ opacity: 0, scale: 0.9 }}
-    animate={{ opacity: 1, scale: 1 }}
-    transition={{ duration: 0.6 }}
-    className="lg:hidden relative w-full flex justify-center items-end py-6"
-  >
+  <div className="lg:hidden relative w-full flex justify-center items-end py-6">
     {/* Arch background */}
     <div className="absolute bottom-0 w-40 h-52 sm:w-48 sm:h-60 bg-gradient-to-t from-[#F8D7DA] via-[#FADBD8] to-transparent rounded-t-full" />
 
     {/* Character */}
-    <motion.img
+    <img
       src={illustrationSrc}
       alt="Illustration"
       className="relative z-10 w-36 sm:w-44 h-auto object-contain drop-shadow-xl"
-      animate={{ y: [0, -5, 0] }}
-      transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
     />
-  </motion.div>
+  </div>
 );
 
 // Enhanced Input Component
@@ -340,6 +335,8 @@ const AuthPage = () => {
   }
 
   return (
+    <>
+    <AuthenticationSEO />
     <div className="relative min-h-screen w-full flex bg-gradient-to-br from-[#f8f4fc] via-white to-[#fdf2f5] overflow-hidden">
       {/* Mobile background decorations */}
       <div className="lg:hidden absolute inset-0 pointer-events-none">
@@ -644,6 +641,7 @@ const AuthPage = () => {
         </motion.div>
       </AnimatePresence>
     </div>
+    </>
   );
 };
 

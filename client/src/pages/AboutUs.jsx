@@ -14,6 +14,7 @@ import introVideo from "../assets/video/IMG_2808.MOV";
 import { Link } from "react-router";
 import { ScrollProgressBar } from "../components/common/ScrollProgressBar";
 import useIsMobile from "../hooks/useIsMobile";
+import { AboutSEO } from "../components/common/SEO";
 
 // Custom Hook for Mouse Position
 const useMousePosition = () => {
@@ -257,11 +258,13 @@ const AboutUsPage = () => {
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ["start start", "end end"],
+    layoutEffect: false,
   });
 
   const { scrollYProgress: heroScrollProgress } = useScroll({
     target: heroRef,
     offset: ["start start", "end start"],
+    layoutEffect: false,
   });
 
   const backgroundY = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
@@ -482,6 +485,7 @@ const AboutUsPage = () => {
 
   return (
     <>
+      <AboutSEO />
       <ScrollProgressBar />
       <Navbar />
       

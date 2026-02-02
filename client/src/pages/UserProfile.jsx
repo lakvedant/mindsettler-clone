@@ -37,6 +37,7 @@ import {
 import Logo from "../assets/icons/MindsettlerLogo-removebg-preview.png";
 import API from "../api/axios";
 import { useAuth } from "../context/AuthContext";
+import { ProfileSEO } from "../components/common/SEO";
 import { IsLoginUser, IsVerifiedUser } from "../components/auth/Verification";
 
 // --- ANIMATED BACKGROUND COMPONENT ---
@@ -1433,6 +1434,7 @@ const UserDashboard = () => {
   return (
     <IsLoginUser user={user} loading={authLoading}>
       <IsVerifiedUser user={user}>
+      <ProfileSEO />
       <div className="flex min-h-screen bg-gradient-to-br from-slate-50 via-white to-purple-50/30 font-sans relative">
         {/* Animated Background */}
         <AnimatedBackground />

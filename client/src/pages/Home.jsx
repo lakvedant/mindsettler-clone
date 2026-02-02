@@ -5,12 +5,14 @@ import FAQ from "../components/common/FAQ.jsx";
 import Footer from "../components/common/Footer.jsx";
 import MindSettlerSection from "../components/common/MindSettlerSection.jsx";
 import StatsSection from "../components/common/StatsSection.jsx";
+import { HomeSEO } from "../components/common/SEO.jsx";
 
 
 
 function Home() {
   return (
     <>
+    <HomeSEO />
     <Navbar />
     <div className="min-h-screen bg-slate-50 font-sans antialiased">
       <HeroSection />

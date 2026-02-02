@@ -7,6 +7,8 @@ import {
   AnimatePresence,
 } from "framer-motion";
 import { Link } from "react-router";
+import useIsMobile from "../hooks/useIsMobile";
+import { NotFoundSEO } from "../components/common/SEO";
 
 // Custom Hook for Mouse Position
 const useMousePosition = () => {
@@ -24,11 +26,12 @@ const useMousePosition = () => {
 };
 
 // Magnetic Button Component
-const MagneticButton = ({ children, className, onClick }) => {
+const MagneticButton = ({ children, className, onClick, isMobile = false }) => {
   const ref = useRef(null);
   const [position, setPosition] = useState({ x: 0, y: 0 });
 
   const handleMouse = (e) => {
+    if (isMobile) return;
     const { clientX, clientY } = e;
     const { height, width, left, top } = ref.current.getBoundingClientRect();
     const middleX = clientX - (left + width / 2);
@@ -37,6 +40,15 @@ const MagneticButton = ({ children, className, onClick }) => {
   };
 
   const reset = () => setPosition({ x: 0, y: 0 });
+
+  // On mobile, render simple button
+  if (isMobile) {
+    return (
+      <button ref={ref} onClick={onClick} className={className}>
+        {children}
+      </button>
+    );
+  }
 
   return (
     <motion.button
@@ -53,8 +65,11 @@ const MagneticButton = ({ children, className, onClick }) => {
   );
 };
 
-// Floating Particle Component
-const FloatingParticle = ({ delay, duration, size, initialX, initialY }) => {
+// Floating Particle Component - Hidden on mobile
+const FloatingParticle = ({ delay, duration, size, initialX, initialY, isMobile = false }) => {
+  // Don't render on mobile
+  if (isMobile) return null;
+  
   return (
     <motion.div
       className="absolute rounded-full"
@@ -362,6 +377,7 @@ const PageNotFound = () => {
 
   return (
     <>
+      <NotFoundSEO />
       <div className="min-h-screen relative overflow-hidden">
         {/* Animated Background */}
         <div

@@ -28,9 +28,11 @@ import {
 } from "lucide-react";
 import Navbar from "../components/common/Navbar";
 import Footer from "../components/common/Footer";
+import { ContactSEO } from "../components/common/SEO";
 import API from "../api/axios";
 import FAQSection from "../components/common/FAQ";
 import { ScrollProgressBar } from "../components/common/ScrollProgressBar";
+import useIsMobile from "../hooks/useIsMobile";
 
 // ============== CUSTOM HOOKS ==============
 
@@ -58,12 +60,13 @@ const MagneticButton = ({
   onClick,
   disabled,
   type = "button",
+  isMobile = false,
 }) => {
   const ref = useRef(null);
   const [position, setPosition] = useState({ x: 0, y: 0 });
 
   const handleMouse = (e) => {
-    if (disabled) return;
+    if (disabled || isMobile) return;
     const { clientX, clientY } = e;
     const { height, width, left, top } = ref.current.getBoundingClientRect();
     const middleX = clientX - (left + width / 2);
@@ -72,6 +75,21 @@ const MagneticButton = ({
   };
 
   const reset = () => setPosition({ x: 0, y: 0 });
+
+  // On mobile, render simple button
+  if (isMobile) {
+    return (
+      <button
+        ref={ref}
+        type={type}
+        onClick={onClick}
+        disabled={disabled}
+        className={className}
+      >
+        {children}
+      </button>
+    );
+  }
 
   return (
     <motion.button
@@ -189,21 +207,31 @@ const StaggerText = ({ text, className, delay = 0 }) => {
 };
 
 // Glowing Card with Mouse Track
-const GlowingCard = ({ children, className, color = "purple" }) => {
+const GlowingCard = ({ children, className, color = "purple", isMobile = false }) => {
   const ref = useRef(null);
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
 
   const handleMouseMove = useCallback(
     (e) => {
+      if (isMobile) return;
       const rect = ref.current?.getBoundingClientRect();
       if (rect) {
         mouseX.set(e.clientX - rect.left);
         mouseY.set(e.clientY - rect.top);
       }
     },
-    [mouseX, mouseY]
+    [mouseX, mouseY, isMobile]
   );
+
+  // On mobile, render simple div
+  if (isMobile) {
+    return (
+      <div ref={ref} className={`relative ${className}`}>
+        {children}
+      </div>
+    );
+  }
 
   return (
     <motion.div
@@ -230,8 +258,11 @@ const GlowingCard = ({ children, className, color = "purple" }) => {
   );
 };
 
-// Enhanced Bubble Animation Background Component
-const BubbleBackground = () => {
+// Enhanced Bubble Animation Background Component - Conditionally rendered
+const BubbleBackground = ({ isMobile = false }) => {
+  // Don't render on mobile for performance
+  if (isMobile) return null;
+
   const bubbles = [
     { size: 280, x: "5%", y: "8%", opacity: 0.15, color: "purple", delay: 0 },
     { size: 320, x: "75%", y: "5%", opacity: 0.12, color: "pink", delay: 0.5 },
@@ -1048,6 +1079,7 @@ const ContactPage = () => {
 
   return (
     <>
+      <ContactSEO />
       <ScrollProgressBar />
       <Navbar />
 

@@ -35,9 +35,12 @@ import Navbar from "../components/common/Navbar";
 import Footer from "../components/common/Footer.jsx";
 import API from "../api/axios";
 import { ScrollProgressBar } from "../components/common/ScrollProgressBar.jsx";
+import useIsMobile from "../hooks/useIsMobile";
+import { CorporateSEO } from "../components/common/SEO";
 
 const CorporateServices = () => {
   const containerRef = useRef(null);
+  const isMobile = useIsMobile();
   const [formData, setFormData] = useState({
     companyName: "",
     contactPerson: "",
@@ -52,6 +55,7 @@ const CorporateServices = () => {
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ["start start", "end end"],
+    layoutEffect: false,
   });
 
   const backgroundY = useTransform(scrollYProgress, [0, 1], ["0%", "20%"]);
@@ -262,6 +266,7 @@ const CorporateServices = () => {
 
   return (
     <>
+      <CorporateSEO />
       <ScrollProgressBar />
       <Navbar />
       <div ref={containerRef} className="min-h-screen overflow-hidden">

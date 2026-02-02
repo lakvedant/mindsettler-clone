@@ -544,34 +544,39 @@ const AppointmentsView = () => {
         </div>
       )}
 
-      {/* Desktop Table View */}
-      <div className="hidden lg:block bg-white rounded-2xl sm:rounded-3xl border shadow-sm overflow-hidden animate-in fade-in duration-500">
-        <table className="w-full text-left">
-          <thead className="bg-slate-50 border-b">
-            <tr>
-              <th className="p-4 lg:p-5 text-[10px] sm:text-xs font-black text-slate-500 uppercase">
-                #
-              </th>
-              <th className="p-4 lg:p-5 text-[10px] sm:text-xs font-black text-slate-500 uppercase">
-                Client Details
-              </th>
-              <th className="p-4 lg:p-5 text-[10px] sm:text-xs font-black text-slate-500 uppercase text-center">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {appointments.length === 0 ? (
-              <tr>
-                <td
-                  colSpan="3"
-                  className="p-10 text-center text-slate-400 font-medium uppercase text-xs tracking-widest"
-                >
-                  No pending appointments found.
-                </td>
-              </tr>
-            ) : (
-              appointments.map((app, idx) => (
+      {/* Empty State - Show when no appointments */}
+      {appointments.length === 0 ? (
+        <div className="bg-white rounded-2xl sm:rounded-3xl border shadow-sm p-8 sm:p-12 lg:p-16 text-center animate-in fade-in duration-500">
+          <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 sm:mb-6 rounded-full bg-linear-to-tr from-purple-50 to-pink-50 flex items-center justify-center">
+            <CalendarCheck className="w-8 h-8 sm:w-10 sm:h-10 text-[#3F2965]/40" />
+          </div>
+          <h3 className="text-lg sm:text-xl font-black text-[#3F2965] mb-2">
+            No Pending Appointments
+          </h3>
+          <p className="text-slate-400 text-xs sm:text-sm font-medium max-w-sm mx-auto">
+            You're all caught up! There are no appointments waiting for your review at the moment.
+          </p>
+        </div>
+      ) : (
+        <>
+          {/* Desktop Table View */}
+          <div className="hidden lg:block bg-white rounded-2xl sm:rounded-3xl border shadow-sm overflow-hidden animate-in fade-in duration-500">
+            <table className="w-full text-left">
+              <thead className="bg-slate-50 border-b">
+                <tr>
+                  <th className="p-4 lg:p-5 text-[10px] sm:text-xs font-black text-slate-500 uppercase">
+                    #
+                  </th>
+                  <th className="p-4 lg:p-5 text-[10px] sm:text-xs font-black text-slate-500 uppercase">
+                    Client Details
+                  </th>
+                  <th className="p-4 lg:p-5 text-[10px] sm:text-xs font-black text-slate-500 uppercase text-center">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {appointments.map((app, idx) => (
                 <tr
                   key={app._id}
                   className="border-b last:border-0 hover:bg-slate-50/50 transition-colors"
@@ -632,15 +637,14 @@ const AppointmentsView = () => {
                     </div>
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+              ))}
+            </tbody>
+          </table>
+        </div>
 
-      {/* Mobile View */}
-      <div className="lg:hidden space-y-3">
-        {appointments.map((app) => (
+        {/* Mobile View */}
+        <div className="lg:hidden space-y-3">
+          {appointments.map((app) => (
           <div
             key={app._id}
             className="bg-white rounded-2xl border shadow-sm p-4 space-y-3"
@@ -682,7 +686,9 @@ const AppointmentsView = () => {
             </div>
           </div>
         ))}
-      </div>
+        </div>
+      </>
+      )}
 
       {/* Appointment Details Modal */}
       {selectedApp && (

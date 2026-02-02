@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Minus, Search } from 'lucide-react';
 import FAQ_img from '../../assets/images/FAQ_img-removebg-preview.png'
+import useIsMobile from '../../hooks/useIsMobile';
 const faqData = [
   {
     id: 1,
@@ -27,6 +28,7 @@ const faqData = [
 
 const FAQSection = () => {
   const [activeId, setActiveId] = useState(1);
+  const isMobile = useIsMobile();
 
   return (
     <div className="bg-[#FDFCF9] flex items-center justify-center p-6 md:p-12 font-sans overflow-hidden">
@@ -34,9 +36,9 @@ const FAQSection = () => {
         
         {/* Left Side: Content & Search */}
         <motion.div 
-          initial={{ opacity: 0, x: -30 }}
+          initial={isMobile ? { opacity: 1, x: 0 } : { opacity: 0, x: -30 }}
           whileInView={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.6 }}
+          transition={isMobile ? {} : { duration: 0.6 }}
           className="z-10"
         >
           <header className="mb-10">
@@ -89,17 +91,19 @@ const FAQSection = () => {
 
         {/* Right Side: Your Image (735x490) */}
         <motion.div 
-          initial={{ opacity: 0, x: 50 }}
+          initial={isMobile ? { opacity: 1, x: 0 } : { opacity: 0, x: 50 }}
           whileInView={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.8 }}
+          transition={isMobile ? {} : { duration: 0.8 }}
           className="relative flex justify-center items-center"
         >
-          {/* Decorative Animated Circles to match your style */}
-          <motion.div 
-            animate={{ scale: [1, 1.1, 1], rotate: 360 }}
-            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-            className="absolute -z-10 w-[110%] h-[110%] border border-[#3F2965]/5 rounded-full"
-          />
+          {/* Decorative Animated Circles - Hidden on mobile */}
+          {!isMobile && (
+            <motion.div 
+              animate={{ scale: [1, 1.1, 1], rotate: 360 }}
+              transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+              className="absolute -z-10 w-[110%] h-[110%] border border-[#3F2965]/5 rounded-full"
+            />
+          )}
 
           {/* <div className="relative z-10 shadow-2xl rounded-2xl overflow-hidden border-8 border-white"> */}
             <img 
@@ -107,21 +111,25 @@ const FAQSection = () => {
               alt="MindSettler FAQ Illustration"
               width={735}
               height={490}
-              className="w-full h-auto object-cover transition-transform duration-700 hover:scale-105"
+              className={`w-full h-auto object-cover ${isMobile ? '' : 'transition-transform duration-700 hover:scale-105'}`}
             />
           {/* </div> */}
 
-          {/* Abstract floating elements */}
-          <motion.div 
-            animate={{ y: [0, -20, 0] }}
-            transition={{ repeat: Infinity, duration: 4 }}
-            className="absolute -bottom-12 -left-12 w-48 h-48 bg-[#F5F2ED] rounded-full filter blur-3xl opacity-80"
-          />
-          <motion.div 
-            animate={{ y: [0, 20, 0] }}
-            transition={{ repeat: Infinity, duration: 6 }}
-            className="absolute -top-12 -right-12 w-40 h-40 bg-[#Dd1764]/10 rounded-full filter blur-3xl opacity-50"
-          />
+          {/* Abstract floating elements - Hidden on mobile */}
+          {!isMobile && (
+            <>
+              <motion.div 
+                animate={{ y: [0, -20, 0] }}
+                transition={{ repeat: Infinity, duration: 4 }}
+                className="absolute -bottom-12 -left-12 w-48 h-48 bg-[#F5F2ED] rounded-full filter blur-3xl opacity-80"
+              />
+              <motion.div 
+                animate={{ y: [0, 20, 0] }}
+                transition={{ repeat: Infinity, duration: 6 }}
+                className="absolute -top-12 -right-12 w-40 h-40 bg-[#Dd1764]/10 rounded-full filter blur-3xl opacity-50"
+              />
+            </>
+          )}
         </motion.div>
       </div>
     </div>

@@ -185,7 +185,12 @@ export const IsVerifiedUser = ({ user, children }) => {
     navigate("/");
   };
 
-  if (user && user.isVerified) {
+  // If no user, let IsLoginUser handle it - just render children
+  if (!user) {
+    return <>{children}</>;
+  }
+
+  if (user.isVerified) {
     return <>{children}</>;
   }
 
@@ -400,7 +405,12 @@ export const IsProfileCompleteUser = ({ user, children, requiredFields = ["name"
     navigate("/");
   };
 
-  if (user && user.profileIsComplete) {
+  // If no user, let IsLoginUser handle it - just render children
+  if (!user) {
+    return <>{children}</>;
+  }
+
+  if (user.profileIsComplete) {
     return <>{children}</>;
   }
 

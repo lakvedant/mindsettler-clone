@@ -1,14 +1,17 @@
 import { useRef, useState } from "react";
 import { motion, useScroll, useSpring, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
+import useIsMobile from "../../hooks/useIsMobile";
 
 const JourneySection = () => {
   const containerRef = useRef(null);
   const [openBook, setOpenBook] = useState(null);
+  const isMobile = useIsMobile();
 
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ["start end", "end end"],
+    layoutEffect: false,
   });
 
   // Slow and smooth animation
@@ -124,12 +127,20 @@ const JourneySection = () => {
   const BookCard = ({ step, index }) => {
     const isOpen = openBook === index;
 
+    // Handle card interaction - toggle on mobile, hover on desktop
+    const handleClick = () => {
+      if (isMobile) {
+        setOpenBook(isOpen ? null : index);
+      }
+    };
+
     return (
       <div
         className="relative w-72 h-80 cursor-pointer"
         style={{ perspective: "1500px" }}
-        onMouseEnter={() => setOpenBook(index)}
-        onMouseLeave={() => setOpenBook(null)}
+        onClick={handleClick}
+        onMouseEnter={() => !isMobile && setOpenBook(index)}
+        onMouseLeave={() => !isMobile && setOpenBook(null)}
       >
         {/* Book Shadow */}
         <motion.div
@@ -251,7 +262,6 @@ const JourneySection = () => {
               animate={{ opacity: [0.5, 1, 0.5] }}
               transition={{ duration: 2, repeat: Infinity }}
             >
-              <span>Hover to explore</span>
               <motion.span
                 animate={{ x: [0, 3, 0] }}
                 transition={{ duration: 1, repeat: Infinity }}
@@ -308,68 +318,70 @@ const JourneySection = () => {
       }}
     >
       {/* ==================== BUBBLE ANIMATION BACKGROUND ==================== */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {bubbles.map((bubble, index) => (
-          <motion.div
-            key={index}
-            className="absolute rounded-full"
-            style={{
-              width: bubble.size,
-              height: bubble.size,
-              left: bubble.x,
-              top: bubble.y,
-              background: bubble.color === "purple" 
-                ? `radial-gradient(circle at 30% 30%, rgba(139, 92, 246, ${bubble.opacity + 0.05}), rgba(63, 41, 101, ${bubble.opacity}))`
-                : `radial-gradient(circle at 30% 30%, rgba(251, 207, 232, ${bubble.opacity + 0.1}), rgba(221, 23, 100, ${bubble.opacity}))`,
-              filter: "blur(1px)",
-            }}
-            initial={{ 
-              scale: 0.8, 
-              opacity: 0 
-            }}
-            animate={{ 
-              scale: [0.95, 1.05, 0.95],
-              opacity: [bubble.opacity * 0.8, bubble.opacity, bubble.opacity * 0.8],
-              x: [0, 10, -10, 0],
-              y: [0, -15, 5, 0],
-            }}
-            transition={{
-              duration: 8 + index * 0.5,
-              repeat: Infinity,
-              ease: "easeInOut",
-              delay: bubble.delay,
-            }}
-          />
-        ))}
-        
-        {/* Extra floating small bubbles for depth */}
-        {[...Array(15)].map((_, i) => (
-          <motion.div
-            key={`small-${i}`}
-            className="absolute rounded-full"
-            style={{
-              width: 40 + Math.random() * 60,
-              height: 40 + Math.random() * 60,
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              background: i % 2 === 0 
-                ? `radial-gradient(circle at 30% 30%, rgba(167, 139, 250, 0.15), rgba(139, 92, 246, 0.08))`
-                : `radial-gradient(circle at 30% 30%, rgba(251, 207, 232, 0.18), rgba(244, 114, 182, 0.1))`,
-            }}
-            animate={{
-              scale: [1, 1.2, 1],
-              opacity: [0.1, 0.2, 0.1],
-              y: [0, -20, 0],
-            }}
-            transition={{
-              duration: 6 + Math.random() * 4,
-              repeat: Infinity,
-              ease: "easeInOut",
-              delay: Math.random() * 3,
-            }}
-          />
-        ))}
-      </div>
+      {!isMobile && (
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {bubbles.map((bubble, index) => (
+            <motion.div
+              key={index}
+              className="absolute rounded-full"
+              style={{
+                width: bubble.size,
+                height: bubble.size,
+                left: bubble.x,
+                top: bubble.y,
+                background: bubble.color === "purple" 
+                  ? `radial-gradient(circle at 30% 30%, rgba(139, 92, 246, ${bubble.opacity + 0.05}), rgba(63, 41, 101, ${bubble.opacity}))`
+                  : `radial-gradient(circle at 30% 30%, rgba(251, 207, 232, ${bubble.opacity + 0.1}), rgba(221, 23, 100, ${bubble.opacity}))`,
+                filter: "blur(1px)",
+              }}
+              initial={{ 
+                scale: 0.8, 
+                opacity: 0 
+              }}
+              animate={{ 
+                scale: [0.95, 1.05, 0.95],
+                opacity: [bubble.opacity * 0.8, bubble.opacity, bubble.opacity * 0.8],
+                x: [0, 10, -10, 0],
+                y: [0, -15, 5, 0],
+              }}
+              transition={{
+                duration: 8 + index * 0.5,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: bubble.delay,
+              }}
+            />
+          ))}
+          
+          {/* Extra floating small bubbles for depth */}
+          {[...Array(15)].map((_, i) => (
+            <motion.div
+              key={`small-${i}`}
+              className="absolute rounded-full"
+              style={{
+                width: 40 + Math.random() * 60,
+                height: 40 + Math.random() * 60,
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                background: i % 2 === 0 
+                  ? `radial-gradient(circle at 30% 30%, rgba(167, 139, 250, 0.15), rgba(139, 92, 246, 0.08))`
+                  : `radial-gradient(circle at 30% 30%, rgba(251, 207, 232, 0.18), rgba(244, 114, 182, 0.1))`,
+              }}
+              animate={{
+                scale: [1, 1.2, 1],
+                opacity: [0.1, 0.2, 0.1],
+                y: [0, -20, 0],
+              }}
+              transition={{
+                duration: 6 + Math.random() * 4,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: Math.random() * 3,
+              }}
+            />
+          ))}
+        </div>
+      )}
       {/* ==================== END BUBBLE ANIMATION BACKGROUND ==================== */}
 
       {/* Soft gradient overlay for smoother look */}
@@ -413,9 +425,9 @@ const JourneySection = () => {
         {/* Section Header */}
         <div className="text-center mb-32 relative z-10">
           <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
+            initial={isMobile ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.8 }}
             whileInView={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6 }}
+            transition={isMobile ? {} : { duration: 0.6 }}
             className="inline-block mb-6"
           >
             <span className="px-6 py-2 rounded-full bg-white/60 backdrop-blur-sm border border-[#3F2965]/20 text-[#Dd1764] font-bold tracking-[0.3em] uppercase text-sm shadow-lg">
@@ -424,39 +436,41 @@ const JourneySection = () => {
           </motion.div>
 
           <motion.h2
-            initial={{ opacity: 0, y: 30 }}
+            initial={isMobile ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
+            transition={isMobile ? {} : { duration: 0.8, delay: 0.2 }}
             className="text-5xl md:text-7xl font-serif font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#3F2965] via-[#7c3aed] to-[#Dd1764] mt-4"
           >
             Your Mental Wellness Journey
           </motion.h2>
 
           <motion.p
-            initial={{ opacity: 0 }}
+            initial={isMobile ? { opacity: 1 } : { opacity: 0 }}
             whileInView={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
+            transition={isMobile ? {} : { delay: 0.4 }}
             className="text-[#3F2965]/60 text-xl mt-6 max-w-2xl mx-auto font-medium"
           >
-            Hover over each milestone to open the book of knowledge
+            {isMobile ? "Tap each milestone to open the book of knowledge" : "Hover over each milestone to open the book of knowledge"}
           </motion.p>
 
-          {/* Animated Dots */}
-          <motion.div
-            className="flex justify-center gap-2 mt-8"
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            transition={{ delay: 0.6 }}
-          >
-            {[0, 1, 2].map((i) => (
-              <motion.div
-                key={i}
-                className="w-2 h-2 rounded-full bg-gradient-to-r from-[#3F2965] to-[#Dd1764]"
-                animate={{ scale: [1, 1.5, 1] }}
-                transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.2 }}
-              />
-            ))}
-          </motion.div>
+          {/* Animated Dots - Hidden on mobile */}
+          {!isMobile && (
+            <motion.div
+              className="flex justify-center gap-2 mt-8"
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              transition={{ delay: 0.6 }}
+            >
+              {[0, 1, 2].map((i) => (
+                <motion.div
+                  key={i}
+                  className="w-2 h-2 rounded-full bg-gradient-to-r from-[#3F2965] to-[#Dd1764]"
+                  animate={{ scale: [1, 1.5, 1] }}
+                  transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.2 }}
+                />
+              ))}
+            </motion.div>
+          )}
         </div>
 
         {/* SVG River Path */}
@@ -528,10 +542,10 @@ const JourneySection = () => {
           {milestones.map((step, index) => (
             <motion.div
               key={index}
-              initial={{ opacity: 0, y: 80 }}
+              initial={isMobile ? { opacity: 1, y: 0 } : { opacity: 0, y: 80 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-50px" }}
-              transition={{ duration: 0.8, type: "spring" }}
+              transition={isMobile ? {} : { duration: 0.8, type: "spring" }}
               className={`flex w-full mb-40 ${
                 step.side === "left"
                   ? "justify-start pl-12"
@@ -545,34 +559,47 @@ const JourneySection = () => {
 
         {/* Bottom CTA */}
         <motion.div
-          initial={{ opacity: 0, y: 40 }}
+          initial={isMobile ? { opacity: 1, y: 0 } : { opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
           className="text-center pb-20 pt-8 relative z-10"
         >
-          <motion.div
-            className="relative inline-block"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            {/* Button Glow */}
-            <motion.div
-              className="absolute inset-0 rounded-full bg-gradient-to-r from-[#3F2965] to-[#Dd1764] blur-xl opacity-40"
-              animate={{ scale: [1, 1.1, 1] }}
-              transition={{ duration: 2, repeat: Infinity }}
-            />
-            <Link to="/booking">
-              <button className="relative px-12 py-5 rounded-full bg-gradient-to-r from-[#3F2965] via-[#5a3d7a] to-[#Dd1764] text-white font-bold text-lg shadow-2xl hover:shadow-[#Dd1764]/30 transition-shadow duration-300">
-                <span className="flex items-center gap-3">
-                  <motion.span
-                    animate={{ x: [0, 5, 0] }}
-                    transition={{ duration: 1, repeat: Infinity }}
-                  >
+          {isMobile ? (
+            <div className="relative inline-block">
+              <div className="absolute inset-0 rounded-full bg-gradient-to-r from-[#3F2965] to-[#Dd1764] blur-xl opacity-40" />
+              <Link to="/booking">
+                <button className="relative px-12 py-5 rounded-full bg-gradient-to-r from-[#3F2965] via-[#5a3d7a] to-[#Dd1764] text-white font-bold text-lg shadow-2xl">
+                  <span className="flex items-center gap-3">
                     Start Your Journey📖
-                  </motion.span>
-                </span>
-              </button>
-            </Link>
-          </motion.div>
+                  </span>
+                </button>
+              </Link>
+            </div>
+          ) : (
+            <motion.div
+              className="relative inline-block"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              {/* Button Glow */}
+              <motion.div
+                className="absolute inset-0 rounded-full bg-gradient-to-r from-[#3F2965] to-[#Dd1764] blur-xl opacity-40"
+                animate={{ scale: [1, 1.1, 1] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              />
+              <Link to="/booking">
+                <button className="relative px-12 py-5 rounded-full bg-gradient-to-r from-[#3F2965] via-[#5a3d7a] to-[#Dd1764] text-white font-bold text-lg shadow-2xl hover:shadow-[#Dd1764]/30 transition-shadow duration-300">
+                  <span className="flex items-center gap-3">
+                    <motion.span
+                      animate={{ x: [0, 5, 0] }}
+                      transition={{ duration: 1, repeat: Infinity }}
+                    >
+                      Start Your Journey📖
+                    </motion.span>
+                  </span>
+                </button>
+              </Link>
+            </motion.div>
+          )}
         </motion.div>
       </div>
     </section>

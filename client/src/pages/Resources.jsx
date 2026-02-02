@@ -33,6 +33,7 @@ import {
 } from "lucide-react";
 import Navbar from "../components/common/Navbar";
 import Footer from "../components/common/Footer";
+import { ResourcesSEO } from "../components/common/SEO";
 import { useAuth } from "../context/AuthContext";
 import {
   IsLoginUser,
@@ -40,6 +41,7 @@ import {
   IsProfileCompleteUser,
 } from "../components/auth/Verification";
 import { ScrollProgressBar } from "../components/common/ScrollProgressBar";
+import useIsMobile from "../hooks/useIsMobile";
 
 // ============== CUSTOM HOOKS ==============
 
@@ -61,11 +63,12 @@ const useMousePosition = () => {
 // ============== ANIMATION COMPONENTS ==============
 
 // Magnetic Button Component
-const MagneticButton = ({ children, className, onClick, href, target }) => {
+const MagneticButton = ({ children, className, onClick, href, target, isMobile = false }) => {
   const ref = useRef(null);
   const [position, setPosition] = useState({ x: 0, y: 0 });
 
   const handleMouse = (e) => {
+    if (isMobile) return;
     const { clientX, clientY } = e;
     const { height, width, left, top } = ref.current.getBoundingClientRect();
     const middleX = clientX - (left + width / 2);
@@ -74,6 +77,22 @@ const MagneticButton = ({ children, className, onClick, href, target }) => {
   };
 
   const reset = () => setPosition({ x: 0, y: 0 });
+
+  // On mobile, render simple button/link
+  if (isMobile) {
+    const Component = href ? 'a' : 'button';
+    return (
+      <Component
+        ref={ref}
+        href={href}
+        target={target}
+        onClick={onClick}
+        className={className}
+      >
+        {children}
+      </Component>
+    );
+  }
 
   const Component = href ? motion.a : motion.button;
 
@@ -671,29 +690,15 @@ const ResourcesPage = () => {
   const [activeCategory, setActiveCategory] = useState("all");
   const [savedArticles, setSavedArticles] = useState([]);
   const [likedArticles, setLikedArticles] = useState([]);
-  const [showScrollTop, setShowScrollTop] = useState(false);
   const { user, loading: authLoading } = useAuth();
 
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ["start start", "end end"],
+    layoutEffect: false, // Prevents the hydration error
   });
 
   const backgroundY = useTransform(scrollYProgress, [0, 1], ["0%", "20%"]);
-
-  // Show/hide scroll to top button
-  useEffect(() => {
-    const handleScroll = () => {
-      setShowScrollTop(window.scrollY > 500);
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  // Scroll to top function
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
 
   // Categories
   const categories = [
@@ -1122,6 +1127,7 @@ const ResourcesPage = () => {
       <IsVerifiedUser user={user}>
         <IsProfileCompleteUser user={user}>
           <>
+            <ResourcesSEO />
             <ScrollProgressBar />
             <Navbar />
 
@@ -1996,51 +2002,6 @@ const ResourcesPage = () => {
                       </span>
                     </motion.div>
                   </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* Scroll to Top Button */}
-              <AnimatePresence>
-                {showScrollTop && (
-                  <motion.button
-                    initial={{ opacity: 0, scale: 0.8, y: 20 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.8, y: 20 }}
-                    onClick={scrollToTop}
-                    className="fixed bottom-6 right-6 z-50 w-12 h-12 bg-gradient-to-br from-[#3F2965] to-[#Dd1764] text-white rounded-full shadow-xl flex items-center justify-center overflow-hidden group"
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.95 }}
-                    data-hover
-                  >
-                    {/* Ripple effect */}
-                    <motion.div
-                      className="absolute inset-0 rounded-full"
-                      animate={{
-                        boxShadow: [
-                          "0 0 0 0 rgba(221,23,100,0.4)",
-                          "0 0 0 15px rgba(221,23,100,0)",
-                        ],
-                      }}
-                      transition={{ duration: 1.5, repeat: Infinity }}
-                    />
-                    {/* Shine effect */}
-                    <motion.div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
-                    <motion.svg
-                      className="w-5 h-5 relative z-10"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      animate={{ y: [0, -3, 0] }}
-                      transition={{ duration: 1.5, repeat: Infinity }}
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M5 10l7-7m0 0l7 7m-7-7v18"
-                      />
-                    </motion.svg>
-                  </motion.button>
                 )}
               </AnimatePresence>
             </div>

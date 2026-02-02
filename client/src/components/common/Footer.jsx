@@ -9,10 +9,12 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import useIsMobile from "../../hooks/useIsMobile";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
   const [scrollRequired, setScrollRequired] = useState(false);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -60,25 +62,30 @@ export default function Footer() {
     },
   ];
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.2,
-      },
-    },
-  };
+  // Animation variants - disabled on mobile
+  const containerVariants = isMobile
+    ? { hidden: { opacity: 1 }, visible: { opacity: 1 } }
+    : {
+        hidden: { opacity: 0 },
+        visible: {
+          opacity: 1,
+          transition: {
+            staggerChildren: 0.1,
+            delayChildren: 0.2,
+          },
+        },
+      };
 
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.5 },
-    },
-  };
+  const itemVariants = isMobile
+    ? { hidden: { opacity: 1, y: 0 }, visible: { opacity: 1, y: 0 } }
+    : {
+        hidden: { opacity: 0, y: 20 },
+        visible: {
+          opacity: 1,
+          y: 0,
+          transition: { duration: 0.5 },
+        },
+      };
 
   return (
     <footer className="relative overflow-hidden">
@@ -135,7 +142,7 @@ export default function Footer() {
             <div className="mb-6">
               <motion.h2
                 className="text-3xl font-bold text-white mb-1"
-                whileHover={{ scale: 1.02 }}
+                whileHover={isMobile ? {} : { scale: 1.02 }}
               >
                 <span className="bg-gradient-to-r from-white via-[#Dd1764] to-white bg-clip-text text-transparent">
                   MINDSETTLER
@@ -161,7 +168,7 @@ export default function Footer() {
               <motion.a
                 href="+91 9974631313"
                 className="flex items-center gap-3 text-gray-300/80 hover:text-white transition-colors group"
-                whileHover={{ x: 5 }}
+                whileHover={isMobile ? {} : { x: 5 }}
               >
                 <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-[#Dd1764]/30 transition-colors">
                   <Phone className="w-4 h-4 text-[#Dd1764]" />
@@ -172,7 +179,7 @@ export default function Footer() {
               <motion.a
                 href="mailto:contact@mindsettler.com"
                 className="flex items-center gap-3 text-gray-300/80 hover:text-white transition-colors group"
-                whileHover={{ x: 5 }}
+                whileHover={isMobile ? {} : { x: 5 }}
               >
                 <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-[#Dd1764]/30 transition-colors">
                   <Mail className="w-4 h-4 text-[#Dd1764]" />
@@ -182,7 +189,7 @@ export default function Footer() {
 
               <motion.div
                 className="flex items-center gap-3 text-gray-300/80 group"
-                whileHover={{ x: 5 }}
+                whileHover={isMobile ? {} : { x: 5 }}
               >
                 <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-[#Dd1764]/30 transition-colors">
                   <MapPin className="w-4 h-4 text-[#Dd1764]" />
@@ -202,8 +209,8 @@ export default function Footer() {
               {footerLinks.services.map((link, index) => (
                 <motion.li
                   key={index}
-                  whileHover={{ x: 5 }}
-                  transition={{ type: "spring", stiffness: 300 }}
+                  whileHover={isMobile ? {} : { x: 5 }}
+                  transition={isMobile ? {} : { type: "spring", stiffness: 300 }}
                 >
                   <a
                     href={link.href}
@@ -227,8 +234,8 @@ export default function Footer() {
               {footerLinks.company.map((link, index) => (
                 <motion.li
                   key={index}
-                  whileHover={{ x: 5 }}
-                  transition={{ type: "spring", stiffness: 300 }}
+                  whileHover={isMobile ? {} : { x: 5 }}
+                  transition={isMobile ? {} : { type: "spring", stiffness: 300 }}
                 >
                   <a
                     href={link.href}
@@ -252,8 +259,8 @@ export default function Footer() {
               {footerLinks.resources.map((link, index) => (
                 <motion.li
                   key={index}
-                  whileHover={{ x: 5 }}
-                  transition={{ type: "spring", stiffness: 300 }}
+                  whileHover={isMobile ? {} : { x: 5 }}
+                  transition={isMobile ? {} : { type: "spring", stiffness: 300 }}
                 >
                   <a
                     href={link.href}
@@ -288,11 +295,11 @@ export default function Footer() {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="group relative w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center overflow-hidden border border-white/10 hover:border-[#Dd1764]/50 transition-colors"
-                  whileHover={{ scale: 1.1, y: -3 }}
-                  whileTap={{ scale: 0.95 }}
-                  initial={{ opacity: 0, y: 20 }}
+                  whileHover={isMobile ? {} : { scale: 1.1, y: -3 }}
+                  whileTap={isMobile ? {} : { scale: 0.95 }}
+                  initial={isMobile ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
+                  transition={isMobile ? {} : { delay: index * 0.1 }}
                 >
                   {/* Hover Background */}
                   <motion.div
@@ -309,7 +316,7 @@ export default function Footer() {
             {/* Additional CTA */}
             <motion.div
               className="mt-8 p-4 rounded-xl bg-gradient-to-r from-[#Dd1764]/20 to-[#7c3aed]/20 border border-white/10"
-              whileHover={{ scale: 1.02, borderColor: "rgba(221,23,100,0.3)" }}
+              whileHover={isMobile ? {} : { scale: 1.02, borderColor: "rgba(221,23,100,0.3)" }}
             >
               <p className="text-white font-medium text-sm mb-2">
                 Need Support?
@@ -320,7 +327,7 @@ export default function Footer() {
               <motion.a
                 href="/contact"
                 className="inline-flex items-center gap-2 text-[#Dd1764] text-sm font-medium hover:text-white transition-colors"
-                whileHover={{ x: 3 }}
+                whileHover={isMobile ? {} : { x: 3 }}
               >
                 Get in Touch
                 <ArrowRight className="w-4 h-4" />
@@ -342,24 +349,28 @@ export default function Footer() {
             {/* Copyright */}
             <motion.p
               className="text-gray-400 text-sm flex items-center gap-2"
-              initial={{ opacity: 0 }}
+              initial={isMobile ? { opacity: 1 } : { opacity: 0 }}
               whileInView={{ opacity: 1 }}
               viewport={{ once: true }}
             >
               © {currentYear} MindSettler. Made with
-              <motion.span
-                animate={{ scale: [1, 1.2, 1] }}
-                transition={{ duration: 1, repeat: Infinity }}
-              >
+              {isMobile ? (
                 <Heart className="w-4 h-4 text-[#Dd1764] fill-[#Dd1764]" />
-              </motion.span>
+              ) : (
+                <motion.span
+                  animate={{ scale: [1, 1.2, 1] }}
+                  transition={{ duration: 1, repeat: Infinity }}
+                >
+                  <Heart className="w-4 h-4 text-[#Dd1764] fill-[#Dd1764]" />
+                </motion.span>
+              )}
               for mental wellness.
             </motion.p>
 
             {/* Legal Links */}
             <motion.div
               className="flex flex-wrap items-center gap-4 text-sm"
-              initial={{ opacity: 0 }}
+              initial={isMobile ? { opacity: 1 } : { opacity: 0 }}
               whileInView={{ opacity: 1 }}
               viewport={{ once: true }}
             >
@@ -385,30 +396,52 @@ export default function Footer() {
 
       {/* Scroll to Top Button */}
       {scrollRequired && (
-      <motion.button
-        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-        className="fixed bottom-7 right-5 w-12 h-12 rounded-full bg-linear-to-r from-[#3F2965] to-[#Dd1764] text-white shadow-lg shadow-[#Dd1764]/30 flex items-center justify-center z-30"
-        initial={{ opacity: 0, scale: 0 }}
-        animate={{ opacity: 1, scale: 1 }}
-        whileHover={{ scale: 1.1, y: -3 }}
-        whileTap={{ scale: 0.9 }}
-      >
-        <motion.svg
-          className="w-5 h-5"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          animate={{ y: [0, -3, 0] }}
-          transition={{ duration: 1.5, repeat: Infinity }}
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M5 10l7-7m0 0l7 7m-7-7v18"
-          />
-        </motion.svg>
-      </motion.button>)}
+        isMobile ? (
+          <button
+            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+            className="fixed bottom-7 right-5 w-12 h-12 rounded-full bg-linear-to-r from-[#3F2965] to-[#Dd1764] text-white shadow-lg shadow-[#Dd1764]/30 flex items-center justify-center z-30"
+          >
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M5 10l7-7m0 0l7 7m-7-7v18"
+              />
+            </svg>
+          </button>
+        ) : (
+          <motion.button
+            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+            className="fixed bottom-7 right-5 w-12 h-12 rounded-full bg-linear-to-r from-[#3F2965] to-[#Dd1764] text-white shadow-lg shadow-[#Dd1764]/30 flex items-center justify-center z-30"
+            initial={{ opacity: 0, scale: 0 }}
+            animate={{ opacity: 1, scale: 1 }}
+            whileHover={{ scale: 1.1, y: -3 }}
+            whileTap={{ scale: 0.9 }}
+          >
+            <motion.svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              animate={{ y: [0, -3, 0] }}
+              transition={{ duration: 1.5, repeat: Infinity }}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M5 10l7-7m0 0l7 7m-7-7v18"
+              />
+            </motion.svg>
+          </motion.button>
+        )
+      )}
     </footer>
   );
 }

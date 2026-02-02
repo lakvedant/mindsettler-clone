@@ -201,6 +201,51 @@ body:has(.fixed.inset-0.z-50) {
   }
 }
 
+/* ========== DISABLE ANIMATIONS & HOVER ON MOBILE ========== */
+@media screen and (max-width: 768px) {
+  /* Disable all CSS animations on mobile */
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+  }
+
+  /* Disable hover effects on mobile */
+  *:hover {
+    transform: none !important;
+  }
+
+  /* Disable specific animation classes */
+  .animate-in,
+  .animate-pulse-soft,
+  .animate-spin,
+  .page-transition {
+    animation: none !important;
+  }
+
+  /* Disable transform-based hover effects */
+  button:hover,
+  a:hover,
+  [role="button"]:hover {
+    transform: none !important;
+    box-shadow: inherit !important;
+  }
+
+  /* Disable floating/parallax effects */
+  .transform-gpu {
+    transform: none !important;
+  }
+
+  /* Keep essential visibility transitions for UX */
+  .transition-opacity {
+    transition-duration: 0.15s !important;
+  }
+}
+
 /* Improve touch scrolling on iOS */
 .touch-scroll {
   -webkit-overflow-scrolling: touch;

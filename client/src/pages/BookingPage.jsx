@@ -29,6 +29,8 @@ import API from "../api/axios";
 import { useAuth } from "../context/AuthContext";
 import { IsLoginUser, IsVerifiedUser, IsProfileCompleteUser } from "../components/auth/Verification";
 import { ScrollProgressBar } from "../components/common/ScrollProgressBar";
+import useIsMobile from "../hooks/useIsMobile";
+import { BookingSEO } from "../components/common/SEO";
 
 const useMousePosition = () => {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
@@ -44,12 +46,12 @@ const useMousePosition = () => {
   return mousePosition;
 };
 
-const MagneticButton = ({ children, className, onClick, disabled, type = "button", ...props }) => {
+const MagneticButton = ({ children, className, onClick, disabled, type = "button", isMobile = false, ...props }) => {
   const ref = useRef(null);
   const [position, setPosition] = useState({ x: 0, y: 0 });
 
   const handleMouse = (e) => {
-    if (disabled) return;
+    if (disabled || isMobile) return;
     const { clientX, clientY } = e;
     const { height, width, left, top } = ref.current.getBoundingClientRect();
     const middleX = clientX - (left + width / 2);
@@ -58,6 +60,22 @@ const MagneticButton = ({ children, className, onClick, disabled, type = "button
   };
 
   const reset = () => setPosition({ x: 0, y: 0 });
+
+  // On mobile, render simple button
+  if (isMobile) {
+    return (
+      <button
+        ref={ref}
+        type={type}
+        onClick={onClick}
+        disabled={disabled}
+        className={className}
+        {...props}
+      >
+        {children}
+      </button>
+    );
+  }
 
   return (
     <motion.button
@@ -144,26 +162,36 @@ const StaggerText = ({ text, className, delay = 0 }) => {
 };
 
 // Glowing Card with Mouse Track
-const GlowingCard = ({ children, className, color = "purple" }) => {
+const GlowingCard = ({ children, className, color = "purple", isMobile = false }) => {
   const ref = useRef(null);
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
 
   const handleMouseMove = useCallback(
     (e) => {
+      if (isMobile) return;
       const rect = ref.current?.getBoundingClientRect();
       if (rect) {
         mouseX.set(e.clientX - rect.left);
         mouseY.set(e.clientY - rect.top);
       }
     },
-    [mouseX, mouseY]
+    [mouseX, mouseY, isMobile]
   );
 
   const handleMouseLeave = () => {
     mouseX.set(0);
     mouseY.set(0);
   };
+
+  // On mobile, render simple div
+  if (isMobile) {
+    return (
+      <div ref={ref} className={`relative ${className}`}>
+        {children}
+      </div>
+    );
+  }
 
   return (
     <motion.div
@@ -189,8 +217,8 @@ const GlowingCard = ({ children, className, color = "purple" }) => {
   );
 };
 
-// Enhanced Floating Shapes with Parallax
-const FloatingShapes = () => {
+// Enhanced Floating Shapes with Parallax - Hidden on mobile
+const FloatingShapes = ({ isMobile = false }) => {
   const mousePosition = useMousePosition();
   
   const shapes = useMemo(() => [
@@ -200,6 +228,9 @@ const FloatingShapes = () => {
     { size: 350, x: "10%", y: "70%", color: "pink", delay: 1.5 },
     { size: 200, x: "40%", y: "30%", color: "purple", delay: 0.3 },
   ], []);
+
+  // Don't render on mobile for performance
+  if (isMobile) return null;
 
   return (
     <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
@@ -1283,6 +1314,7 @@ const BookingPage = () => {
 const { user, loading: authLoading } = useAuth();
 const navigate = useNavigate();
 const scrollableRef = useRef(null);
+const isMobile = useIsMobile();
 
 // --- States ---
 const [selectedSlot, setSelectedSlot] = useState("");
@@ -1506,6 +1538,9 @@ const [pageLoaded, setPageLoaded] = useState(false);
               }
             `}</style>
 
+            {/* SEO */}
+            <BookingSEO />
+
             {/* Scroll Progress Bar */}
             <ScrollProgressBar />
 
@@ -1514,7 +1549,7 @@ const [pageLoaded, setPageLoaded] = useState(false);
 
             <div className="min-h-screen pt-24 bg-gradient-to-br from-[#FDFCFD] via-white to-purple-50/30 font-sans flex flex-col relative overflow-hidden">
               {/* Floating Background Shapes */}
-              <FloatingShapes />
+              <FloatingShapes isMobile={isMobile} />
 
               {/* Modals */}
               <ConfirmationModal
