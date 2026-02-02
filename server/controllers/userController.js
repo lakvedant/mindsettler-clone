@@ -50,6 +50,7 @@ export const userSignup = async (req, res) => {
       user: userResponse,
     });
   } catch (error) {
+    console.log(error.message)
     res.status(500).json({ message: error.message });
   }
 };
