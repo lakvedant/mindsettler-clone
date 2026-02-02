@@ -1565,28 +1565,7 @@ const ResourcesPage = () => {
                   </AnimatePresence>
 
                   {/* Load More Button (Optional) */}
-                  {filteredArticles.length > 0 &&
-                    filteredArticles.length >= 6 && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 30 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        className="mt-16 text-center"
-                      >
-                        <MagneticButton className="group relative px-8 py-4 bg-white border-2 border-[#3F2965]/20 text-[#3F2965] font-bold rounded-full overflow-hidden hover:border-[#Dd1764]/50 transition-colors">
-                          <motion.span className="absolute inset-0 bg-gradient-to-r from-[#3F2965]/5 to-[#Dd1764]/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                          <span className="relative flex items-center gap-2">
-                            Explore More Articles
-                            <motion.span
-                              animate={{ y: [0, 3, 0] }}
-                              transition={{ duration: 1.5, repeat: Infinity }}
-                            >
-                              <ChevronDown className="w-5 h-5" />
-                            </motion.span>
-                          </span>
-                        </MagneticButton>
-                      </motion.div>
-                    )}
+
                 </div>
 
                 {/* Background decoration */}
