@@ -37,10 +37,10 @@ export const userSignup = async (req, res) => {
     });
     const token = generateToken(user._id);
     const cookieOptions = {
+      expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 day
       httpOnly: true, // Prevents XSS attacks from reading the cookie
       secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
       path: "/",
     };
     const userResponse = user.toObject();
@@ -50,7 +50,7 @@ export const userSignup = async (req, res) => {
       user: userResponse,
     });
   } catch (error) {
-    console.log(error.message);
+    console.log(error.message)
     res.status(500).json({ message: error.message });
   }
 };
@@ -70,10 +70,10 @@ export const login = async (req, res) => {
       return res.status(401).json({ message: "Invalid credentials" });
     const token = generateToken(user._id);
     const cookieOptions = {
+      expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 day
       httpOnly: true, // Prevents XSS attacks from reading the cookie
       secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
       path: "/",
     };
     const userResponse = user.toObject();
@@ -120,8 +120,7 @@ export const logout = async (req, res) => {
     res.clearCookie("token", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 0,
+      sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
       path: "/",
     });
 
@@ -205,16 +204,13 @@ export const profileUpdate = async (req, res) => {
   }
 };
 
+
 export const sendCorporateEmail = async (req, res) => {
   try {
-    const { companyName, contactPerson, workEmail, subject, message } =
-      req.body;
+    const { companyName, contactPerson, workEmail, subject, message } = req.body;
 
     // 1. Read the HTML template file
-    const templatePath = path.join(
-      __dirname,
-      "../templates/corporateEmail.html",
-    );
+    const templatePath = path.join(__dirname, "../templates/corporateEmail.html");
     let htmlContent = fs.readFileSync(templatePath, "utf-8");
 
     // 2. Replace placeholders with actual data
@@ -259,12 +255,13 @@ export const sendCorporateEmail = async (req, res) => {
   }
 };
 
+
 // Send Verification Link
 export const sendVerificationLink = async (req, res) => {
   try {
     const userId = req.user._id;
     const user = await User.findById(userId);
-
+    
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -277,7 +274,7 @@ export const sendVerificationLink = async (req, res) => {
     const verificationToken = jwt.sign(
       { id: userId, purpose: "email_verification" },
       process.env.JWT_SECRET,
-      { expiresIn: "1h" },
+      { expiresIn: "1h" }
     );
 
     const verificationLink = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
@@ -351,9 +348,9 @@ export const sendVerificationLink = async (req, res) => {
     });
   } catch (error) {
     console.error("❌ Email Error:", error);
-    res.status(500).json({
-      success: false,
-      message: "Server Error: Could not send email.",
+    res.status(500).json({ 
+      success: false, 
+      message: "Server Error: Could not send email." 
     });
   }
 };
@@ -364,9 +361,9 @@ export const verifyEmailToken = async (req, res) => {
     const { token } = req.body;
 
     if (!token) {
-      return res.status(400).json({
-        success: false,
-        message: "Verification token is required",
+      return res.status(400).json({ 
+        success: false, 
+        message: "Verification token is required" 
       });
     }
 
@@ -376,16 +373,16 @@ export const verifyEmailToken = async (req, res) => {
       decoded = jwt.verify(token, process.env.JWT_SECRET);
     } catch (jwtError) {
       if (jwtError.name === "TokenExpiredError") {
-        return res.status(400).json({
-          success: false,
+        return res.status(400).json({ 
+          success: false, 
           message: "Verification link has expired. Please request a new one.",
-          expired: true,
+          expired: true
         });
       }
       if (jwtError.name === "JsonWebTokenError") {
-        return res.status(400).json({
-          success: false,
-          message: "Invalid verification link.",
+        return res.status(400).json({ 
+          success: false, 
+          message: "Invalid verification link." 
         });
       }
       throw jwtError;
@@ -393,9 +390,9 @@ export const verifyEmailToken = async (req, res) => {
 
     // Check token purpose
     if (decoded.purpose !== "email_verification") {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid token purpose",
+      return res.status(400).json({ 
+        success: false, 
+        message: "Invalid token purpose" 
       });
     }
 
@@ -403,18 +400,18 @@ export const verifyEmailToken = async (req, res) => {
     const user = await User.findById(decoded.id);
 
     if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
+      return res.status(404).json({ 
+        success: false, 
+        message: "User not found" 
       });
     }
 
     // Check if already verified
     if (user.isVerified) {
-      return res.status(200).json({
-        success: true,
+      return res.status(200).json({ 
+        success: true, 
         message: "Email is already verified",
-        alreadyVerified: true,
+        alreadyVerified: true
       });
     }
 
@@ -429,14 +426,15 @@ export const verifyEmailToken = async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
-        isVerified: user.isVerified,
-      },
+        isVerified: user.isVerified
+      }
     });
+
   } catch (error) {
     console.error("❌ Verification Error:", error);
-    res.status(500).json({
-      success: false,
-      message: "Server Error: Could not verify email.",
+    res.status(500).json({ 
+      success: false, 
+      message: "Server Error: Could not verify email." 
     });
   }
 };
