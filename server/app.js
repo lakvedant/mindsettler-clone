@@ -25,6 +25,7 @@ app.set("trust proxy", 1); // Trust first proxy (needed for secure cookies behin
 app.use(globalLimiter);
 // --- SESSION CONFIGURATION (Must be before routes) ---
 // This enables req.session for your chatbot
+const isProduction = process.env.NODE_ENV === "production";
 app.use(session({
   secret: process.env.SESSION_SECRET || "mindsettler_secret_key", 
   resave: false,
@@ -34,9 +35,9 @@ app.use(session({
     collectionName: "sessions",
   }),
   cookie: {
-    secure: false, // Set to true if using HTTPS
+    secure: isProduction, // Must be true in production for Safari (requires HTTPS)
     httpOnly: true,
-    sameSite: "lax", // Helps with CORS session sharing
+    sameSite: isProduction ? "none" : "lax", // "none" required for cross-site cookies in Safari
     maxAge: 24 * 60 * 60 * 1000, // Session expires in 24 hours
   }
 }));

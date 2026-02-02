@@ -36,11 +36,12 @@ export const userSignup = async (req, res) => {
       password: hashedPassword,
     });
     const token = generateToken(user._id);
+    const isProduction = process.env.NODE_ENV === "production";
     const cookieOptions = {
       expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 day
       httpOnly: true, // Prevents XSS attacks from reading the cookie
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+      secure: isProduction, // Required for SameSite=None (Safari requires this)
+      sameSite: isProduction ? "none" : "lax", // Lowercase "none" for cross-site cookies
       path: "/",
     };
     const userResponse = user.toObject();
@@ -69,11 +70,12 @@ export const login = async (req, res) => {
     if (!isMatch)
       return res.status(401).json({ message: "Invalid credentials" });
     const token = generateToken(user._id);
+    const isProduction = process.env.NODE_ENV === "production";
     const cookieOptions = {
       expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 day
       httpOnly: true, // Prevents XSS attacks from reading the cookie
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+      secure: isProduction, // Required for SameSite=None (Safari requires this)
+      sameSite: isProduction ? "none" : "lax", // Lowercase "none" for cross-site cookies
       path: "/",
     };
     const userResponse = user.toObject();
@@ -117,10 +119,11 @@ export const getMe = async (req, res) => {
 
 export const logout = async (req, res) => {
   try {
+    const isProduction = process.env.NODE_ENV === "production";
     res.clearCookie("token", {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+      secure: isProduction, // Must match the cookie settings used when setting
+      sameSite: isProduction ? "none" : "lax", // Lowercase for Safari compatibility
       path: "/",
     });
 
