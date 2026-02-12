@@ -88,10 +88,11 @@ const Navbar = () => {
           {/* Desktop Navigation */}
           <ul className="hidden lg:flex justify-end items-center space-x-6 xl:space-x-8">
             {navLinks.map((link) => (
-              <li key={link.name} className="relative group py-1">
+              <li key={link.name} className="group">
                 <NavLink
                   to={link.href}
                   className={({ isActive }) => `
+                    relative inline-block pb-1 cursor-pointer
                     text-sm xl:text-[15px] font-bold tracking-wide transition-all duration-300 whitespace-nowrap
                     ${isScrolled ? "text-[#583f7a]" : "text-[#e04073]"}
                     ${isActive ? "opacity-100" : "opacity-80 hover:opacity-100"}
