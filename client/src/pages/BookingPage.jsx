@@ -20,7 +20,7 @@ import {
   ChevronRight,
   Shield,
   Banknote,
-  Heart,
+  Heart
 } from "lucide-react";
 import { useNavigate } from "react-router";
 import Navbar from "../components/common/Navbar";

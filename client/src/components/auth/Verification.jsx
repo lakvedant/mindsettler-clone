@@ -11,7 +11,9 @@ import {
   LogIn,
   ArrowRight,
   UserPlus,
-  UserCircle
+  UserCircle,
+  CheckCircle,
+  Inbox,
 } from "lucide-react";
 import API from "../../api/axios";
 
@@ -168,9 +170,10 @@ export const IsVerifiedUser = ({ user, children }) => {
     setVerificationSent(false);
     setVerificationLoading(true);
     try {
-      await API.post("/auth/send-verification-email");
+      await API.post("/user/auth/send-verification-email");
       setVerificationSent(true);
     } catch (err) {
+      console.log(err);
       alert(err.response?.data?.message || "Failed to resend verification email.");
     } finally {
       setVerificationLoading(false);

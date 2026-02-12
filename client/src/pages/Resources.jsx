@@ -1282,7 +1282,7 @@ const ResourcesPage = () => {
               </section>
 
               {/* Categories Section - Sticky */}
-              <section className="py-6 bg-white/80 backdrop-blur-md sticky top-0 z-30 border-b border-[#3F2965]/10 shadow-sm">
+              <section className="py-6 bg-white/80 backdrop-blur-md sticky top-0 z-10 border-b border-[#3F2965]/10 shadow-sm">
                 <div className="max-w-7xl mx-auto px-6">
                   <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-hide">
                     {categories.map((category, index) => (
