@@ -3,6 +3,9 @@
 [![Vercel Deployment](https://img.shields.io/badge/Vercel-Deployed-black?style=for-the-badge&logo=vercel)](https://mindsettler-taupe.vercel.app)
 [![MERN Stack](https://img.shields.io/badge/Stack-MERN-blue?style=for-the-badge)](https://mongodb.com)
 [![SVNIT Surat](https://img.shields.io/badge/Institute-SVNIT%20Surat-orange?style=for-the-badge)](https://www.svnit.ac.in)
+[![GWOC 2026](https://img.shields.io/badge/GWOC%202026-Winner%20🏆-gold?style=for-the-badge)](https://github.com)
+
+> **🏆 Winner — Google Winter of Code (GWOC) 2026**
 
 **MindSettler** is a professional-grade mental health platform built to democratize access to specialized therapy. Designed by an AI student at **NIT Surat**, this project addresses the logistical friction in mental healthcare through an automated booking engine, a secure internal economy (Wallet), and smart-activation digital session rooms.
 
