@@ -55,7 +55,14 @@ const userSchema = new mongoose.Schema({
     isVerified: { 
         type: Boolean, 
         default: false 
+    },
+    verificationExpires: {
+        type: Date,
+        default: null
     }
 }, { timestamps: true });
+
+// TTL index: auto-delete documents when verificationExpires passes
+userSchema.index({ verificationExpires: 1 }, { expireAfterSeconds: 0 });
 
 export default mongoose.model('User', userSchema);

@@ -269,6 +269,7 @@ const AuthPage = () => {
   const [errors, setErrors] = useState([]);
   const [showPassword, setShowPassword] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
+  const [signupEmail, setSignupEmail] = useState("");
   const navigate = useNavigate();
   const { user, setUser } = useAuth();
 
@@ -304,6 +305,10 @@ const AuthPage = () => {
         if (view === "forgot") {
           setForgotEmail(formData.email);
           setView("forgot-success");
+        } else if (view === "signup" && resData.requiresVerification) {
+          // Signup succeeded — show "check your email" screen
+          setSignupEmail(formData.email);
+          setView("signup-verify");
         } else {
           setView("success");
           setTimeout(() => {
@@ -323,7 +328,7 @@ const AuthPage = () => {
     }
   };
 
-  // Success/Forgot Success screens
+  // Success/Forgot Success/Signup Verify screens
   if (view === "forgot-success" || view === "success") {
     return (
       <SuccessScreen
@@ -331,6 +336,90 @@ const AuthPage = () => {
         onBack={() => setView("login")}
         email={forgotEmail}
       />
+    );
+  }
+
+  if (view === "signup-verify") {
+    return (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.9 }}
+        className="w-full min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-[#f8f4fc] via-white to-[#fdf2f5]"
+      >
+        <div className="w-full max-w-sm sm:max-w-md bg-white/80 backdrop-blur-xl p-6 sm:p-10 rounded-3xl shadow-2xl border border-white/50 text-center relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-[#3F2965]/5 to-[#DD1764]/5 pointer-events-none" />
+
+          <motion.div
+            initial={{ scale: 0, rotate: -180 }}
+            animate={{ scale: 1, rotate: 0 }}
+            transition={{ type: "spring", duration: 0.8, delay: 0.2 }}
+            className="relative w-20 h-20 sm:w-24 sm:h-24 mx-auto mb-6"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-[#3F2965] to-[#DD1764] rounded-full opacity-20 animate-ping" />
+            <div className="relative w-full h-full bg-gradient-to-br from-[#3F2965] to-[#DD1764] rounded-full flex items-center justify-center shadow-xl shadow-[#3F2965]/30">
+              <Mail size={32} className="text-white sm:w-10 sm:h-10" />
+            </div>
+          </motion.div>
+
+          <motion.h2
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="text-2xl sm:text-3xl font-bold text-[#3F2965] mb-3"
+          >
+            Verify Your Email
+          </motion.h2>
+
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="text-[#6B4D8A]/70 mb-2 text-sm sm:text-base leading-relaxed"
+          >
+            We've sent a verification link to your email address.
+          </motion.p>
+
+          {signupEmail && (
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.55 }}
+              className="text-[#3F2965] font-medium text-sm mb-4"
+            >
+              📧 {signupEmail}
+            </motion.p>
+          )}
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+            className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 text-left"
+          >
+            <p className="text-xs text-amber-800 font-medium">
+              💡 <strong>Important:</strong>
+            </p>
+            <ul className="text-xs text-amber-700 mt-2 space-y-1 list-disc list-inside">
+              <li>Check your spam/junk folder</li>
+              <li>The link expires in <strong>10 minutes</strong></li>
+              <li>If the link expires, you'll need to sign up again</li>
+              <li>You must verify before you can log in</li>
+            </ul>
+          </motion.div>
+
+          <motion.button
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.7 }}
+            onClick={() => setView("login")}
+            className="inline-flex items-center gap-2 text-sm font-bold text-[#DD1764] hover:text-[#3F2965] transition-colors"
+          >
+            <ChevronLeft size={16} />
+            Go to Login
+          </motion.button>
+        </div>
+      </motion.div>
     );
   }
 

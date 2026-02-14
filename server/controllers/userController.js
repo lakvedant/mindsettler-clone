@@ -16,36 +16,109 @@ export const userSignup = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    const userExists = await User.findOne({ email });
-    if (userExists)
-      return res.status(400).json({ message: "User already exists" });
+    // Check if a verified user already exists with this email
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      if (existingUser.isVerified) {
+        return res.status(400).json({ message: "User already exists" });
+      }
+      // Remove previous unverified entry so user can re-register
+      await User.deleteOne({ _id: existingUser._id });
+    }
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
+
+    // Set verification expiry to 10 minutes from now
+    const verificationExpires = new Date(Date.now() + 10 * 60 * 1000);
 
     const user = await User.create({
       name,
       email,
       password: hashedPassword,
+      isVerified: false,
+      verificationExpires,
     });
-    const token = generateToken(user._id);
-    const isProduction = process.env.NODE_ENV === "production";
-    const cookieOptions = {
-      expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-      httpOnly: true,
-      secure: isProduction,
-      sameSite: isProduction ? "none" : "lax",
-      path: "/",
+
+    // Generate a verification token valid for 10 minutes
+    const verificationToken = jwt.sign(
+      { id: user._id, purpose: "email_verification" },
+      process.env.JWT_SECRET,
+      { expiresIn: "10m" }
+    );
+
+    const verificationLink = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
+
+    // Send verification email
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.SENDER_EMAIL,
+        pass: process.env.SENDER_PASSWORD,
+      },
+    });
+
+    const mailOptions = {
+      from: `"MindSettler Support" <${process.env.SENDER_EMAIL}>`,
+      to: user.email,
+      subject: "Verify Your Email - MindSettler",
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: linear-gradient(135deg, #3F2965, #DD1764); padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+            .header h1 { color: white; margin: 0; }
+            .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+            .button { display: inline-block; background: linear-gradient(135deg, #3F2965, #DD1764); color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; margin: 20px 0; }
+            .footer { text-align: center; margin-top: 20px; color: #666; font-size: 12px; }
+            .warning { background: #fff3cd; padding: 10px; border-radius: 5px; margin-top: 20px; font-size: 12px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>\uD83E\uDDE0 MindSettler</h1>
+            </div>
+            <div class="content">
+              <h2>Hello ${user.name}! \uD83D\uDC4B</h2>
+              <p>Thank you for signing up for MindSettler. Please verify your email address to complete your registration.</p>
+              
+              <div style="text-align: center;">
+                <a href="${verificationLink}" class="button">\u2705 Verify My Email</a>
+              </div>
+              
+              <p>Or copy and paste this link in your browser:</p>
+              <p style="word-break: break-all; background: #eee; padding: 10px; border-radius: 5px; font-size: 12px;">${verificationLink}</p>
+              
+              <div class="warning">
+                \u23F0 <strong>This link will expire in 10 minutes.</strong><br>
+                If the link expires, you will need to sign up again.<br>
+                If you didn't create an account with MindSettler, please ignore this email.
+              </div>
+            </div>
+            <div class="footer">
+              <p>\u00A9 ${new Date().getFullYear()} MindSettler. All rights reserved.</p>
+              <p>This is an automated message, please do not reply.</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `,
     };
-    const userResponse = user.toObject();
-    delete userResponse.password;
-    res.cookie("token", token, cookieOptions).status(200).json({
+
+    await transporter.sendMail(mailOptions);
+
+    // Do NOT log the user in — they must verify first
+    res.status(200).json({
       success: true,
-      user: userResponse,
-      token,
+      requiresVerification: true,
+      message: "Registration successful! A verification link has been sent to your email. Please verify within 10 minutes.",
     });
   } catch (error) {
-    console.log(error.message)
+    console.log(error.message);
     res.status(500).json({ message: error.message });
   }
 };
@@ -55,6 +128,14 @@ export const login = async (req, res) => {
     const { email, password } = req.body;
     const user = await User.findOne({ email }).select("+password");
     if (!user) return res.status(401).json({ message: "Invalid credentials" });
+
+    // Block login if email is not verified
+    if (!user.isVerified) {
+      return res.status(403).json({
+        message: "Your email is not verified. Please sign up again to receive a new verification link.",
+        notVerified: true,
+      });
+    }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch)
@@ -347,7 +428,7 @@ export const verifyEmailToken = async (req, res) => {
       if (jwtError.name === "TokenExpiredError") {
         return res.status(400).json({ 
           success: false, 
-          message: "Verification link has expired. Please request a new one.",
+          message: "Verification link has expired. Please sign up again to get a new link.",
           expired: true
         });
       }
@@ -372,7 +453,7 @@ export const verifyEmailToken = async (req, res) => {
     if (!user) {
       return res.status(404).json({ 
         success: false, 
-        message: "User not found" 
+        message: "User not found. The verification link may have expired. Please sign up again." 
       });
     }
 
@@ -384,18 +465,30 @@ export const verifyEmailToken = async (req, res) => {
       });
     }
 
+    // Mark as verified and remove TTL expiry so user is persisted
     user.isVerified = true;
+    user.verificationExpires = undefined;
     await user.save();
 
-    res.status(200).json({
+    // Auto-authenticate: generate token and set cookie
+    const authToken = generateToken(user._id);
+    const isProduction = process.env.NODE_ENV === "production";
+    const cookieOptions = {
+      expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: isProduction ? "none" : "lax",
+      path: "/",
+    };
+
+    const userResponse = user.toObject();
+    delete userResponse.password;
+
+    res.cookie("token", authToken, cookieOptions).status(200).json({
       success: true,
-      message: "Email verified successfully! You can now access all features.",
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        isVerified: user.isVerified
-      }
+      message: "Email verified successfully! Logging you in...",
+      token: authToken,
+      user: userResponse,
     });
 
   } catch (error) {

@@ -1,27 +1,22 @@
-import { useState, useEffect, use } from "react";
+import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import { 
   CheckCircle, 
-  XCircle, 
-  Loader2, 
-  Mail, 
+  XCircle,
+  Loader2,
   AlertCircle,
   Home,
-  RefreshCw,
   ArrowRight
 } from "lucide-react";
 import API from "../../api/axios";
 
-const VerifyEmail = ({ user, setUser }) => {
+const VerifyEmail = ({ setUser }) => {
   const [searchParams] = useSearchParams();
-  const [isAdmin, setIsAdmin] = useState(false);
   const navigate = useNavigate();
   const token = searchParams.get("token");
 
   const [status, setStatus] = useState("loading"); // loading, success, error, expired, already_verified
   const [message, setMessage] = useState("");
-  const [resendLoading, setResendLoading] = useState(false);
-  const [resendSuccess, setResendSuccess] = useState(false);
 
   useEffect(() => {
     if (token) {
@@ -31,12 +26,6 @@ const VerifyEmail = ({ user, setUser }) => {
       setMessage("No verification token provided.");
     }
   }, [token]);
-
-  useEffect(() => {
-    if (user && user.role === "admin") {
-      setIsAdmin(true);
-    }
-  }, [user]);
 
   const verifyToken = async () => {
     try {
@@ -49,10 +38,19 @@ const VerifyEmail = ({ user, setUser }) => {
       } else {
         setStatus("success");
         setMessage(response.data.message);
-        
-        if (setUser && response.data.user) {
-          setUser(prev => ({ ...prev, isVerified: true }));
+
+        // Auto-authenticate: store token and set user in context
+        if (response.data.token) {
+          localStorage.setItem("token", response.data.token);
         }
+        if (setUser && response.data.user) {
+          setUser(response.data.user);
+        }
+
+        // Redirect to home after a short delay
+        setTimeout(() => {
+          navigate("/");
+        }, 2500);
       }
     } catch (error) {
       console.error("Verification error:", error);
@@ -64,19 +62,6 @@ const VerifyEmail = ({ user, setUser }) => {
         setStatus("error");
         setMessage(error.response?.data?.message || "Verification failed. Please try again.");
       }
-    }
-  };
-
-  const handleResendVerification = async () => {
-    setResendLoading(true);
-    setResendSuccess(false);
-    try {
-      await API.post("/auth/send-verification-email");
-      setResendSuccess(true);
-    } catch (error) {
-      alert(error.response?.data?.message || "Failed to resend verification email.");
-    } finally {
-      setResendLoading(false);
     }
   };
 
@@ -99,7 +84,6 @@ const VerifyEmail = ({ user, setUser }) => {
         );
 
       case "success":
-        user.isVerified = true; // Ensure user state is updated
         return (
           <div className="text-center">
             <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center shadow-lg shadow-green-500/30 animate-in zoom-in duration-500">
@@ -108,24 +92,12 @@ const VerifyEmail = ({ user, setUser }) => {
             <h1 className="text-2xl font-bold text-slate-800 mb-2">
               Email Verified! 🎉
             </h1>
-            <p className="text-slate-500 mb-6">
+            <p className="text-slate-500 mb-2">
               {message}
             </p>
-            <div className="space-y-3">
-              <button
-                onClick={() => navigate(isAdmin ? "/admin#profile" : "/profile#profile")}
-                className="w-full py-3 bg-gradient-to-r from-[#3F2965] to-[#DD1764] text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg hover:shadow-xl hover:opacity-90 transition-all"
-              >
-                Go to Profile
-                <ArrowRight size={18} />
-              </button>
-              <button
-                onClick={() => navigate("/")}
-                className="w-full py-3 border border-slate-200 text-slate-600 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-slate-50 transition-all"
-              >
-                <Home size={18} />
-                Back to Home
-              </button>
+            <p className="text-sm text-[#3F2965]/60 mb-6">Redirecting you to the homepage...</p>
+            <div className="w-full h-1.5 bg-gradient-to-r from-[#3F2965] via-[#DD1764] to-[#3F2965] rounded-full overflow-hidden">
+              <div className="h-full bg-white/30 animate-pulse" />
             </div>
           </div>
         );
@@ -144,10 +116,10 @@ const VerifyEmail = ({ user, setUser }) => {
             </p>
             <div className="space-y-3">
               <button
-                onClick={() => navigate(isAdmin ? "/admin#profile" : "/profile#profile")}
+                onClick={() => navigate("/auth")}
                 className="w-full py-3 bg-gradient-to-r from-[#3F2965] to-[#DD1764] text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg hover:shadow-xl hover:opacity-90 transition-all"
               >
-                Go to Profile
+                Go to Login
                 <ArrowRight size={18} />
               </button>
             </div>
@@ -167,30 +139,13 @@ const VerifyEmail = ({ user, setUser }) => {
               {message}
             </p>
             
-            {resendSuccess ? (
-              <div className="p-4 bg-green-50 border border-green-200 rounded-xl mb-4">
-                <div className="flex items-center justify-center gap-2 text-green-600">
-                  <CheckCircle size={18} />
-                  <span className="font-medium">New verification email sent!</span>
-                </div>
-                <p className="text-sm text-green-600 mt-1">
-                  Please check your inbox.
-                </p>
-              </div>
-            ) : (
-              <button
-                onClick={handleResendVerification}
-                disabled={resendLoading}
-                className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg hover:shadow-xl hover:opacity-90 transition-all disabled:opacity-50"
-              >
-                {resendLoading ? (
-                  <Loader2 className="animate-spin" size={18} />
-                ) : (
-                  <RefreshCw size={18} />
-                )}
-                {resendLoading ? "Sending..." : "Resend Verification Email"}
-              </button>
-            )}
+            <button
+              onClick={() => navigate("/auth")}
+              className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg hover:shadow-xl hover:opacity-90 transition-all"
+            >
+              Sign Up Again
+              <ArrowRight size={18} />
+            </button>
             
             <button
               onClick={() => navigate("/")}
@@ -217,31 +172,13 @@ const VerifyEmail = ({ user, setUser }) => {
             </p>
             
             <div className="space-y-3">
-              {user && !user.isVerified && (
-                <>
-                  {resendSuccess ? (
-                    <div className="p-4 bg-green-50 border border-green-200 rounded-xl">
-                      <div className="flex items-center justify-center gap-2 text-green-600">
-                        <CheckCircle size={18} />
-                        <span className="font-medium">New verification email sent!</span>
-                      </div>
-                    </div>
-                  ) : (
-                    <button
-                      onClick={handleResendVerification}
-                      disabled={resendLoading}
-                      className="w-full py-3 bg-gradient-to-r from-[#3F2965] to-[#DD1764] text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg hover:shadow-xl hover:opacity-90 transition-all disabled:opacity-50"
-                    >
-                      {resendLoading ? (
-                        <Loader2 className="animate-spin" size={18} />
-                      ) : (
-                        <Mail size={18} />
-                      )}
-                      {resendLoading ? "Sending..." : "Request New Verification"}
-                    </button>
-                  )}
-                </>
-              )}
+              <button
+                onClick={() => navigate("/auth")}
+                className="w-full py-3 bg-gradient-to-r from-[#3F2965] to-[#DD1764] text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg hover:shadow-xl hover:opacity-90 transition-all"
+              >
+                Go to Sign Up
+                <ArrowRight size={18} />
+              </button>
               
               <button
                 onClick={() => navigate("/")}

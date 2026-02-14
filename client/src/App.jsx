@@ -35,7 +35,7 @@ function App() {
         <Route path="/logout" element={<Logout />} />
         <Route path="/aboutus" element={<AboutUsPage />} />
         <Route path="/resources" element={<ResourcesPage />} />
-        <Route path="/verify-email" element={<VerifyEmail user={user} setUser={setUser} />}/>
+        <Route path="/verify-email" element={<VerifyEmail setUser={setUser} />}/>
         <Route path="/reset-password" element={<ResetPassword />} />
         {/* GROUP 2: Admin Pages (No Public Navbar) */}
         {/* Your AdminDashboard has its own Sidebar, so it doesn't need a wrapper */}

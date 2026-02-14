@@ -82,7 +82,7 @@ router.post(
   sendVerificationLink
 );
 
-router.post("/auth/verify-email", authLimiter, protect, verifyEmailToken);
+router.post("/auth/verify-email", authLimiter, verifyEmailToken);
 
 // Reset Password Link and Update Password routes can be added here
 router.post(
