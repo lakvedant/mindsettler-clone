@@ -295,7 +295,7 @@ const WalletView = ({ user }) => {
 
   // Your UPI Details - Update these with actual values
   const upiDetails = {
-    upiId: "mindsettler@paytm", // Replace with your actual UPI ID
+    upiId: import.meta.env.VITE_UPI_ID,
     name: "MindSettler Wellness",
     merchantCode: "MINDSETTLER",
   };
