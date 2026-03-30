@@ -1,5 +1,5 @@
 import express from 'express';
-import { bookSession, updateStatus, getMyAppointments, getAvailability, deleteAvailability, flushAvailability, updateMeetLink } from '../controllers/appointmentController.js';
+import { bookSession, updateStatus, getMyAppointments, getAvailability, deleteAvailability, flushAvailability, updateMeetLink, rescheduleSession } from '../controllers/appointmentController.js';
 import { isProfileComplete, protect } from '../middlewares/userMiddleware.js';
 import { admin } from '../middlewares/adminMiddleware.js';
 import { body, validationResult } from 'express-validator';
@@ -35,6 +35,7 @@ router.post(
 
 // Admin only route
 router.patch('/status/:id', admin, updateStatus);
+router.patch('/reschedule/:id', isProfileComplete, rescheduleSession);
 router.delete('/delete-availability/:id', admin, deleteAvailability);
 router.get('/my-sessions', isProfileComplete, getMyAppointments);
 router.get('/get-availability', getAvailability);

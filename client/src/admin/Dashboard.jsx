@@ -4,7 +4,6 @@ import { useNavigate, Link, Navigate } from "react-router-dom";
 import {
   CalendarCheck,
   Clock,
-  Wallet,
   LogOut,
   X,
   Check,
@@ -31,7 +30,8 @@ import {
   Link2,
   ExternalLink,
   Users,
-  ChevronDown
+  ChevronDown,
+  CreditCard
 } from "lucide-react";
 import API from "../api/axios";
 import { useAuth } from "../context/AuthContext";
@@ -238,28 +238,34 @@ const AdminProfileView = ({ user, setUser }) => {
   );
 };
 
-// --- 2. WALLET REQUESTS VIEW ---
-const WalletRequestsView = () => {
-  const [requests, setRequests] = useState([]);
+// --- 2. SESSION PAYMENTS VIEW ---
+const SessionPaymentsView = () => {
+  const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [procId, setProcId] = useState(null);
 
   useEffect(() => {
-    API.get("/transactions/")
+    API.get("/session-payments/pending")
       .then((res) => {
-        setRequests(res.data.data || []);
+        setPayments(res.data.data || []);
         setLoading(false);
       })
       .catch(() => setLoading(false));
   }, []);
 
-  const handleAction = async (id, status) => {
+  const handleAction = async (id, status, reason = "") => {
     setProcId(id);
     try {
-      await API.patch(`/transactions/${status}-topup/${id}`);
-      setRequests((prev) => prev.filter((r) => r._id !== id));
+      if (status === "reject") {
+        await API.patch(`/session-payments/reject/${id}`, {
+          rejectionReason: reason || "Payment verification failed",
+        });
+      } else {
+        await API.patch(`/session-payments/approve/${id}`);
+      }
+      setPayments((prev) => prev.filter((p) => p._id !== id));
     } catch (e) {
-      alert("Error processing request");
+      alert("Error processing payment");
     } finally {
       setProcId(null);
     }
@@ -268,171 +274,96 @@ const WalletRequestsView = () => {
   if (loading)
     return (
       <div className="flex justify-center p-12 sm:p-20">
-        <Loader2 className="animate-spin text-[#3F2965]" size={36} />
+        <Loader2 className="animate-spin text-[#3F2965]" size={40} />
       </div>
     );
 
   return (
-    <div className="animate-in fade-in duration-500">
-      {/* Desktop Table View */}
-      <div className="hidden md:block bg-white rounded-2xl sm:rounded-3xl border shadow-sm overflow-hidden">
-        <table className="w-full text-left">
-          <thead className="bg-slate-50 border-b">
-            <tr>
-              <th className="p-4 lg:p-5 text-[10px] sm:text-xs font-black text-slate-500 uppercase">
-                #
-              </th>
-              <th className="p-4 lg:p-5 text-[10px] sm:text-xs font-black text-slate-500 uppercase">
-                User
-              </th>
-              <th className="p-4 lg:p-5 text-[10px] sm:text-xs font-black text-slate-500 uppercase">
-                Transaction ID
-              </th>
-              <th className="p-4 lg:p-5 text-[10px] sm:text-xs font-black text-slate-500 uppercase">
-                Amount
-              </th>
-              <th className="p-4 lg:p-5 text-[10px] sm:text-xs font-black text-slate-500 uppercase text-center">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {requests.map((req, idx) => (
-              <tr
-                key={req._id}
-                className="border-b last:border-0 hover:bg-slate-50/50 transition-all"
-              >
-                <td className="p-4 lg:p-5 text-sm font-bold text-slate-400">
-                  {idx + 1}
-                </td>
-                <td className="p-4 lg:p-5 font-bold text-slate-800">
-                  <div className="flex flex-col">
-                    <span className="text-sm">{req.user?.name}</span>
-                    <span className="text-[10px] text-slate-400 font-medium truncate max-w-37.5">
-                      {req.user?.email}
-                    </span>
-                  </div>
-                </td>
-                <td className="p-4 lg:p-5">
-                  <span className="px-2 sm:px-3 py-1 bg-slate-100 text-[#3F2965] rounded-lg font-mono text-[10px] sm:text-xs font-bold border border-slate-200">
-                    {req.transactionId?.toUpperCase() || "N/A"}
-                  </span>
-                </td>
-                <td className="p-4 lg:p-5 font-black text-[#Dd1764] text-sm">
-                  ₹{req.amount}
-                </td>
-                <td className="p-4 lg:p-5 flex justify-center gap-2">
-                  <button
-                    disabled={procId === req._id}
-                    onClick={() => handleAction(req._id, "reject")}
-                    className="p-2 text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors disabled:opacity-50"
-                    title="Reject"
-                  >
-                    {procId === req._id ? (
-                      <Loader2 size={16} className="animate-spin" />
-                    ) : (
-                      <X size={16} />
-                    )}
-                  </button>
-                  <button
-                    disabled={procId === req._id}
-                    onClick={() => handleAction(req._id, "approve")}
-                    className="p-2 text-white bg-[#3F2965] rounded-lg hover:opacity-90 transition-opacity shadow-md disabled:opacity-50"
-                    title="Approve"
-                  >
-                    {procId === req._id ? (
-                      <Loader2 size={16} className="animate-spin" />
-                    ) : (
-                      <Check size={16} />
-                    )}
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        {requests.length === 0 && (
-          <div className="p-12 sm:p-20 text-center text-slate-400 font-bold uppercase text-[10px] sm:text-xs tracking-widest">
-            No pending wallet requests
-          </div>
-        )}
-      </div>
-
-      {/* Mobile Card View */}
-      <div className="md:hidden space-y-3">
-        {requests.length === 0 ? (
-          <div className="bg-white rounded-2xl border p-8 text-center">
-            <Wallet className="mx-auto text-slate-200 mb-3" size={40} />
-            <p className="text-slate-400 font-bold text-sm">
-              No pending requests
-            </p>
-          </div>
-        ) : (
-          requests.map((req, idx) => (
-            <div
-              key={req._id}
-              className="bg-white rounded-2xl border shadow-sm p-4 space-y-3"
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-linear-to-tr from-[#3F2965] to-[#Dd1764] flex items-center justify-center text-white font-bold text-sm">
-                    {req.user?.name?.charAt(0)}
-                  </div>
-                  <div>
-                    <p className="font-bold text-slate-800 text-sm">
-                      {req.user?.name}
-                    </p>
-                    <p className="text-[10px] text-slate-400 truncate max-w-37.5">
-                      {req.user?.email}
-                    </p>
-                  </div>
-                </div>
-                <span className="text-lg font-black text-[#Dd1764]">
-                  ₹{req.amount}
-                </span>
+    <div className="space-y-4">
+      {payments.length === 0 ? (
+        <div className="text-center py-12 bg-slate-50 rounded-2xl">
+          <CreditCard size={48} className="mx-auto text-slate-200 mb-3" />
+          <p className="text-slate-500 font-bold">No pending payments</p>
+          <p className="text-sm text-slate-400">All payments have been verified</p>
+        </div>
+      ) : (
+        payments.map((payment) => (
+          <div
+            key={payment._id}
+            className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow"
+          >
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+              <div>
+                <p className="text-xs text-slate-400 uppercase font-bold">User</p>
+                <p className="font-bold text-slate-700">{payment.user?.name}</p>
+                <p className="text-xs text-slate-500">{payment.user?.email}</p>
               </div>
 
-              <div className="bg-slate-50 rounded-xl p-3">
-                <p className="text-[9px] font-black text-slate-400 uppercase mb-1">
-                  Transaction ID
-                </p>
-                <p className="font-mono text-xs font-bold text-[#3F2965] break-all">
-                  {req.transactionId?.toUpperCase() || "N/A"}
-                </p>
+              <div>
+                <p className="text-xs text-slate-400 uppercase font-bold">Amount</p>
+                <p className="font-black text-2xl text-[#3F2965]">₹{payment.amount}</p>
               </div>
 
-              <div className="flex gap-2">
-                <button
-                  disabled={procId === req._id}
-                  onClick={() => handleAction(req._id, "reject")}
-                  className="flex-1 py-2.5 text-xs font-black uppercase text-red-600 bg-red-50 rounded-xl hover:bg-red-100 transition-colors disabled:opacity-50 flex items-center justify-center gap-1"
-                >
-                  {procId === req._id ? (
-                    <Loader2 size={14} className="animate-spin" />
-                  ) : (
-                    <>
-                      <X size={14} /> Reject
-                    </>
-                  )}
-                </button>
-                <button
-                  disabled={procId === req._id}
-                  onClick={() => handleAction(req._id, "approve")}
-                  className="flex-1 py-2.5 text-xs font-black uppercase text-white bg-[#3F2965] rounded-xl shadow-md hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-1"
-                >
-                  {procId === req._id ? (
-                    <Loader2 size={14} className="animate-spin" />
-                  ) : (
-                    <>
-                      <Check size={14} /> Approve
-                    </>
-                  )}
-                </button>
+              <div>
+                <p className="text-xs text-slate-400 uppercase font-bold">UTR Number</p>
+                <p className="font-mono font-bold text-slate-700">{payment.utrNumber}</p>
               </div>
             </div>
-          ))
-        )}
-      </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4 p-3 rounded-xl bg-slate-50 border border-slate-100">
+              <div>
+                <p className="text-[10px] text-slate-400 uppercase font-bold">Therapy</p>
+                <p className="text-sm font-bold text-slate-700">{payment.appointment?.therapyType || "N/A"}</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-slate-400 uppercase font-bold">Session Type</p>
+                <p className="text-sm font-bold text-slate-700 capitalize">{payment.appointment?.sessionType || "N/A"}</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-slate-400 uppercase font-bold">Date</p>
+                <p className="text-sm font-bold text-slate-700">
+                  {payment.appointment?.availabilityRef?.date
+                    ? new Date(payment.appointment.availabilityRef.date).toLocaleDateString()
+                    : "N/A"}
+                </p>
+              </div>
+              <div>
+                <p className="text-[10px] text-slate-400 uppercase font-bold">Time</p>
+                <p className="text-sm font-bold text-slate-700">{payment.appointment?.timeSlot || "N/A"}</p>
+              </div>
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                disabled={procId !== null}
+                onClick={() => handleAction(payment._id, "reject")}
+                className="flex-1 py-2.5 text-xs font-black uppercase text-red-600 bg-red-50 rounded-xl hover:bg-red-100 transition-colors disabled:opacity-50 flex items-center justify-center gap-1"
+              >
+                {procId === payment._id ? (
+                  <Loader2 size={14} className="animate-spin" />
+                ) : (
+                  <>
+                    <X size={14} /> Reject
+                  </>
+                )}
+              </button>
+              <button
+                disabled={procId !== null}
+                onClick={() => handleAction(payment._id, "approve")}
+                className="flex-1 py-2.5 text-xs font-black uppercase text-white bg-[#3F2965] rounded-xl shadow-md hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-1"
+              >
+                {procId === payment._id ? (
+                  <Loader2 size={14} className="animate-spin" />
+                ) : (
+                  <>
+                    <Check size={14} /> Approve
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        ))
+      )}
     </div>
   );
 };
@@ -719,6 +650,26 @@ const AppointmentsView = () => {
                   <AlertCircle size={14} /> {modalError}
                 </div>
               )}
+
+              {/* Client Contact Info */}
+              <div className="bg-blue-50/50 p-4 rounded-2xl border border-blue-100">
+                <p className="text-[9px] font-black text-slate-300 uppercase tracking-tighter mb-3">
+                  Client Contact
+                </p>
+                <div className="space-y-2">
+                  <p className="text-sm font-bold text-slate-700">
+                    {selectedApp.user?.name}
+                  </p>
+                  <div className="flex items-center gap-2 text-[11px]">
+                    <Mail size={12} className="text-slate-400" />
+                    <p className="text-slate-600">{selectedApp.user?.email}</p>
+                  </div>
+                  <div className="flex items-center gap-2 text-[11px]">
+                    <Phone size={12} className="text-slate-400" />
+                    <p className="text-slate-600">{selectedApp.user?.phone || "N/A"}</p>
+                  </div>
+                </div>
+              </div>
 
               {/* Therapy & Date Info */}
               <div className="grid grid-cols-1 gap-4">
@@ -1253,7 +1204,7 @@ const BottomNavigation = ({ navItems, activeTab, setActiveTab }) => {
           const isActive = activeTab === item.name;
           // Shorten names for mobile
           const shortName = item.name
-            .replace("Wallet Requests", "Wallet")
+            .replace("Session Payments", "Payments")
             .replace("Appointments", "Appts")
             .replace("Time Slots", "Slots");
           return (
@@ -1286,7 +1237,7 @@ const AdminDashboard = () => {
 
   const navItems = [
     { name: "Profile", icon: UserCircle },
-    { name: "Wallet Requests", icon: Wallet },
+    { name: "Session Payments", icon: CreditCard },
     { name: "Appointments", icon: CalendarCheck },
     { name: "Time Slots", icon: Clock },
   ];
@@ -1427,7 +1378,7 @@ const AdminDashboard = () => {
             {activeTab === "Profile" && (
               <AdminProfileView user={user} setUser={setUser} />
             )}
-            {activeTab === "Wallet Requests" && <WalletRequestsView />}
+            {activeTab === "Session Payments" && <SessionPaymentsView />}
             {activeTab === "Appointments" && <AppointmentsView />}
             {activeTab === "Time Slots" && <TimeSlotsView />}
           </div>

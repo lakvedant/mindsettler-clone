@@ -43,11 +43,6 @@ const userSchema = new mongoose.Schema({
         enum: ['Discovery', 'Awareness', 'Healing', 'Growth'],
         default: 'Discovery'
     },
-    walletBalance: {
-        type: Number,
-        default: 0,
-        min: 0
-    },
     profileIsComplete: { 
         type: Boolean, 
         default: false 

@@ -1,10 +1,9 @@
 import Appointment from "../models/appointmentModel.js";
 import { Availability } from "../models/adminModel.js";
-import { WalletTransaction } from "../models/transactionModel.js";
 import User from "../models/userModel.js";
 import { sendBookingConfirmationEmail, sendSessionRejectedEmail } from "../utils/emailService.js";
 
-// @desc    Book a new session using Wallet Balance
+// @desc    Book a new session
 // @route   POST /api/appointments/book
 // @access  Private
 export const bookSession = async (req, res) => {
@@ -15,29 +14,12 @@ export const bookSession = async (req, res) => {
       timeSlot,
       availabilityRef,
       notes,
-      isPaidViaWallet,
     } = req.body;
-
-    const sessionPrice = Number(process.env.SESSION_PRICE);
 
     // 1. Get User
     const user = await User.findById(req.user._id);
 
-    // 2. Check Wallet Balance (only if paying via wallet)
-    const shouldPayViaWallet = isPaidViaWallet || sessionType === "online";
-
-    if (shouldPayViaWallet) {
-      if (!user || user.walletBalance < sessionPrice) {
-        return res.status(400).json({
-          success: false,
-          message: `Insufficient wallet balance. Current: ₹${
-            user?.walletBalance || 0
-          }. Required: ₹${sessionPrice}`,
-        });
-      }
-    }
-
-    // 3. Atomically find availability and mark slot as booked
+    // 2. Atomically find availability and mark slot as booked
     const availability = await Availability.findOneAndUpdate(
       {
         _id: availabilityRef,
@@ -73,7 +55,7 @@ export const bookSession = async (req, res) => {
       });
     }
 
-    // 4. Create the Appointment
+    // 3. Create the Appointment
     const appointment = await Appointment.create({
       user: req.user._id,
       availabilityRef,
@@ -81,46 +63,31 @@ export const bookSession = async (req, res) => {
       sessionType,
       timeSlot,
       notes,
-      isPaid: shouldPayViaWallet,
-      status: "confirmed",
+      isPaid: false, // Payment will be handled separately via UTR
+      status: sessionType === "online" ? "pending" : "confirmed",
     });
 
-    // 5. Handle Payment (if paying via wallet)
-    if (shouldPayViaWallet) {
-      user.walletBalance -= sessionPrice;
-      await user.save();
-
-      await WalletTransaction.create({
-        user: req.user._id,
-        amount: sessionPrice,
-        type: "debit",
-        purpose: "booking",
-        status: "completed",
-        referenceId: appointment._id,
-        balanceAfter: user.walletBalance,
-      });
-    }
-
-    // 6. Send Confirmation Email
-    try {
-      await sendBookingConfirmationEmail(user.email, {
-        userName: user.name,
-        therapyType,
-        sessionType,
-        date: availability.date,
-        timeSlot,
-        isPaidViaWallet: shouldPayViaWallet,
-        sessionPrice,
-        bookingId: appointment._id.toString(),
-      });
-    } catch (emailError) {
-      // Log error but don't fail the booking
-      console.error("Failed to send booking confirmation email:", emailError);
+    // 4. Send immediate confirmation only for offline sessions.
+    // Online sessions are confirmed after admin approves submitted UTR payment.
+    if (sessionType === "offline") {
+      try {
+        await sendBookingConfirmationEmail(user.email, {
+          userName: user.name,
+          therapyType,
+          sessionType,
+          date: availability.date,
+          timeSlot,
+          bookingId: appointment._id.toString(),
+        });
+      } catch (emailError) {
+        // Log error but don't fail the booking
+        console.error("Failed to send booking confirmation email:", emailError);
+      }
     }
 
     res.status(201).json({
       success: true,
-      message: "Session booked successfully! Confirmation email sent.",
+      message: "Session booked successfully! Please submit payment via UTR.",
       data: appointment,
     });
   } catch (error) {
@@ -133,7 +100,6 @@ export const bookSession = async (req, res) => {
 };
 
 // @desc    Update appointment status (Admin Only)
-// controllers/appointmentController.js
 export const updateStatus = async (req, res) => {
   try {
     const { status } = req.body;
@@ -168,30 +134,8 @@ export const updateStatus = async (req, res) => {
       });
     }
 
-    let refundAmount = 0;
-
     // Handle rejection
     if (status === "rejected") {
-      // Process refund if payment was made via wallet
-      if (appointment.isPaid) {
-        refundAmount = Number(process.env.SESSION_PRICE);
-
-        // Refund to wallet
-        user.walletBalance += refundAmount;
-        await user.save();
-
-        // Create refund transaction record
-        await WalletTransaction.create({
-          user: user._id,
-          amount: refundAmount,
-          type: "credit",
-          purpose: "refund",
-          status: "completed",
-          referenceId: appointment._id,
-          balanceAfter: user.walletBalance,
-        });
-      }
-
       // Free up the booked slot
       await Availability.updateOne(
         {
@@ -222,8 +166,6 @@ export const updateStatus = async (req, res) => {
           date: appointmentDate,
           timeSlot: appointment.timeSlot,
           bookingId: appointment._id.toString(),
-          isPaid: appointment.isPaid,
-          refundAmount: refundAmount,
         });
       } catch (emailError) {
         console.error("Failed to send rejection email:", emailError);
@@ -237,11 +179,7 @@ export const updateStatus = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: `Appointment ${status} successfully${
-        status === "rejected" && appointment.isPaid
-          ? `. ₹${refundAmount} refunded to user's wallet.`
-          : ""
-      }`,
+      message: `Appointment ${status} successfully`,
       data: appointment,
     });
   } catch (error) {
@@ -266,6 +204,87 @@ export const getMyAppointments = async (req, res) => {
       .json({ success: true, count: appointments.length, data: appointments });
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Reschedule an existing session (User)
+// @route   PATCH /api/appointment/reschedule/:id
+// @access  Private
+export const rescheduleSession = async (req, res) => {
+  try {
+    const { availabilityRef, timeSlot, notes } = req.body;
+
+    if (!availabilityRef || !timeSlot) {
+      return res.status(400).json({
+        success: false,
+        message: "Availability and time slot are required.",
+      });
+    }
+
+    const appointment = await Appointment.findById(req.params.id);
+
+    if (!appointment) {
+      return res.status(404).json({ success: false, message: "Appointment not found" });
+    }
+
+    if (appointment.user.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ success: false, message: "Unauthorized" });
+    }
+
+    if (!["pending", "confirmed"].includes(appointment.status)) {
+      return res.status(400).json({
+        success: false,
+        message: `Cannot reschedule a ${appointment.status} session.`,
+      });
+    }
+
+    // Book the new slot atomically.
+    const newAvailability = await Availability.findOneAndUpdate(
+      {
+        _id: availabilityRef,
+        slots: {
+          $elemMatch: {
+            time: timeSlot,
+            isBooked: false,
+          },
+        },
+      },
+      { $set: { "slots.$.isBooked": true } },
+      { new: true }
+    );
+
+    if (!newAvailability) {
+      return res.status(400).json({
+        success: false,
+        message: "Selected slot is no longer available.",
+      });
+    }
+
+    // Release previous slot.
+    await Availability.updateOne(
+      {
+        _id: appointment.availabilityRef,
+        "slots.time": appointment.timeSlot,
+      },
+      { $set: { "slots.$.isBooked": false } }
+    );
+
+    appointment.availabilityRef = availabilityRef;
+    appointment.timeSlot = timeSlot;
+    if (typeof notes === "string") {
+      appointment.notes = notes;
+    }
+    await appointment.save();
+
+    const updated = await Appointment.findById(appointment._id).populate("availabilityRef");
+
+    return res.status(200).json({
+      success: true,
+      message: "Session rescheduled successfully.",
+      data: updated,
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
   }
 };
 

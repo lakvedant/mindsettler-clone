@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 /**
- * Tracks specific booking details. Payment info is linked via WalletTransaction.
+ * Tracks booking details. Payment is handled via SessionPayment model.
  */
 const appointmentSchema = new mongoose.Schema(
   {
@@ -30,11 +30,11 @@ const appointmentSchema = new mongoose.Schema(
     },
     isPaid: {
       type: Boolean,
-      default: false, // Will be set to true immediately if paid via Wallet
+      default: false, // Will be set to true once admin approves the UTR payment
     },
-    walletTransactionRef: {
+    sessionPaymentRef: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "WalletTransaction"
+      ref: "SessionPayment"
     },
     meetLink: { type: String }, // Google Meet link for online sessions
   },

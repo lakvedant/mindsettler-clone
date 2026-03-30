@@ -20,7 +20,10 @@ import {
   ChevronRight,
   Shield,
   Banknote,
-  Heart
+  Heart,
+  CreditCard,
+  Copy,
+  CheckCircle2
 } from "lucide-react";
 import { useNavigate } from "react-router";
 import Navbar from "../components/common/Navbar";
@@ -684,8 +687,8 @@ const SessionTypeToggle = ({ sessionType, setSessionType }) => {
   );
 };
 
-// Enhanced Payment Method Selector
-const PaymentMethodSelector = ({ paymentMethod, setPaymentMethod, walletBalance }) => {
+// Offline in-person payment notice
+const OfflinePaymentNotice = () => {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -694,115 +697,334 @@ const PaymentMethodSelector = ({ paymentMethod, setPaymentMethod, walletBalance 
       className="mb-6 md:mb-10"
     >
       <SectionTitle
-        icon={<Wallet size={16} className="md:w-4 md:h-4" />}
+        icon={<Banknote size={16} className="md:w-4 md:h-4" />}
         title="Payment Method"
-        subtitle="Choose how you'd like to pay"
+        subtitle="In-person session payment"
       />
-      <div className="flex gap-2 md:gap-4 mt-3">
-        {[
-          {
-            type: "wallet",
-            icon: Wallet,
-            label: "Pay via Wallet",
-            subtitle: `Balance: ₹${walletBalance || 0}`,
-            disabled: (walletBalance || 0) < 500,
-            color: "green",
-          },
-          {
-            type: "cash",
-            icon: Banknote,
-            label: "Pay Cash",
-            subtitle: "Pay at clinic",
-            disabled: false,
-            color: "amber",
-          },
-        ].map(({ type, icon: Icon, label, subtitle, disabled, color }, index) => (
-          <motion.button
-            key={type}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 + index * 0.1 }}
-            whileHover={{ scale: disabled ? 1 : 1.02, y: disabled ? 0 : -2 }}
-            whileTap={{ scale: disabled ? 1 : 0.98 }}
-            onClick={() => !disabled && setPaymentMethod(type)}
-            disabled={disabled}
-            className={`
-              relative flex-1 p-3 md:p-5 rounded-xl md:rounded-2xl border-2 flex flex-col items-center justify-center gap-2 md:gap-3 
-              font-black text-xs md:text-sm transition-all duration-300 overflow-hidden
-              ${disabled ? "opacity-50 cursor-not-allowed" : ""}
-              ${
-                paymentMethod === type && !disabled
-                  ? "border-[#DD1764] bg-gradient-to-br from-pink-50 to-purple-50 text-[#3F2965] shadow-lg shadow-pink-200/50"
-                  : "bg-white border-slate-100 text-slate-400 hover:border-slate-200"
-              }
-            `}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.35 }}
+        className="mt-3 p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-2"
+      >
+        <AlertCircle size={16} className="text-amber-600 shrink-0 mt-0.5" />
+        <p className="text-xs text-amber-700 font-medium">
+          In-person sessions are cash only. Please pay ₹500 at the clinic before your session begins.
+        </p>
+      </motion.div>
+    </motion.div>
+  );
+};
+
+// Online Session Payment Modal - UPI QR + UTR Input
+const PaymentModal = ({ 
+  isOpen, 
+  onClose, 
+  onSuccess, 
+  selectedDate, 
+  selectedSlot, 
+  selectedTherapy,
+  appointmentId,
+  user,
+  formatTo12Hr
+}) => {
+  const [utrNumber, setUtrNumber] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+  const [paymentSubmitted, setPaymentSubmitted] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const upiId = "mindsettler@upi"; // Replace with actual UPI ID
+
+  const handleCopyUPI = () => {
+    navigator.clipboard.writeText(upiId);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const validateUTR = (utr) => {
+    // UTR should be 12-20 alphanumeric characters
+    return /^[A-Z0-9]{12,20}$/.test(utr.toUpperCase());
+  };
+
+  const handleSubmitPayment = async () => {
+    setError("");
+    
+    if (!utrNumber.trim()) {
+      setError("Please enter your UTR number");
+      return;
+    }
+
+    if (!validateUTR(utrNumber)) {
+      setError("UTR must be 12-20 alphanumeric characters");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const response = await API.post("/session-payments/submit", {
+        appointmentId: appointmentId,
+        utrNumber: utrNumber.toUpperCase(),
+        amount: 500,
+        notes: `Payment for ${selectedTherapy} on ${formatTo12Hr(selectedSlot)}`
+      });
+
+      if (response.status === 200 || response.status === 201) {
+        setPaymentSubmitted(true);
+        // Call onSuccess callback after 2 seconds
+        setTimeout(() => {
+          onSuccess();
+        }, 2000);
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to submit payment. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+        >
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+            onClick={onClose}
+          />
+          
+          {/* Modal */}
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0, y: 50 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.8, opacity: 0, y: 50 }}
+            transition={{ type: "spring", stiffness: 300, damping: 25 }}
+            className="relative bg-white rounded-3xl md:rounded-[2.5rem] p-5 md:p-8 max-w-md w-full shadow-2xl overflow-hidden"
           >
+            {/* Decorative Elements */}
             <motion.div
-              animate={{
-                scale: paymentMethod === type && !disabled ? [1, 1.1, 1] : 1,
-                rotate: paymentMethod === type && !disabled ? [0, -10, 10, 0] : 0,
-              }}
-              transition={{ duration: 0.5 }}
-              className={`
-                p-1.5 md:p-2 rounded-lg md:rounded-xl transition-all duration-300
-                ${paymentMethod === type && !disabled ? "bg-[#DD1764]/10" : "bg-slate-50"}
-              `}
-            >
-              <Icon
-                size={16}
-                className={`md:w-5 md:h-5 ${paymentMethod === type && !disabled ? "text-[#DD1764]" : ""}`}
-              />
-            </motion.div>
-            <div className="text-center">
-              <span className="block text-[10px] sm:text-xs md:text-sm">{label}</span>
-              <span
-                className={`block text-[8px] sm:text-[10px] mt-1 ${
-                  paymentMethod === type && !disabled ? "text-[#DD1764]" : "text-slate-300"
-                }`}
+              className="absolute -top-10 -right-10 w-32 h-32 bg-gradient-to-br from-[#DD1764] to-[#3F2965] rounded-full opacity-10 blur-2xl"
+              animate={{ scale: [1, 1.2, 1], rotate: [0, 180, 360] }}
+              transition={{ duration: 10, repeat: Infinity }}
+            />
+
+            {/* Close button */}
+            {!paymentSubmitted && (
+              <motion.button
+                whileHover={{ scale: 1.1, rotate: 90 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={onClose}
+                className="absolute top-4 right-4 p-2 hover:bg-slate-100 rounded-full transition-colors"
               >
-                {subtitle}
-              </span>
-            </div>
-            
-            <AnimatePresence>
-              {paymentMethod === type && !disabled && (
+                <X size={18} className="text-slate-400" />
+              </motion.button>
+            )}
+
+            {/* Success State */}
+            <AnimatePresence mode="wait">
+              {paymentSubmitted ? (
                 <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  exit={{ scale: 0 }}
-                  transition={{ type: "spring", stiffness: 300 }}
-                  className="absolute top-2 right-2"
+                  key="success"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  className="flex flex-col items-center justify-center py-8"
                 >
-                  <Check size={14} className="text-[#DD1764]" />
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: "spring", stiffness: 300 }}
+                    className="w-16 h-16 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center mb-4"
+                  >
+                    <CheckCircle2 size={32} className="text-white" strokeWidth={2} />
+                  </motion.div>
+                  <TextReveal>
+                    <h3 className="text-xl font-black text-[#3F2965] text-center mb-2">
+                      Payment Submitted!
+                    </h3>
+                  </TextReveal>
+                  <motion.p
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.2 }}
+                    className="text-sm text-slate-500 text-center"
+                  >
+                    Your UTR has been submitted. Admin will verify shortly.
+                  </motion.p>
+                </motion.div>
+              ) : (
+                <motion.div key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                  {/* Header */}
+                  <div className="flex items-center gap-3 mb-6">
+                    <motion.div
+                      animate={{ y: [0, -5, 0] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                      className="p-2 md:p-3 bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl md:rounded-2xl"
+                    >
+                      <CreditCard size={24} className="text-[#DD1764]" />
+                    </motion.div>
+                    <div>
+                      <h3 className="font-black text-lg md:text-xl text-[#3F2965]">Pay via UPI</h3>
+                      <p className="text-[10px] md:text-xs text-slate-400 font-medium">
+                        Submit your UTR number
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Session Info */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
+                    className="p-3 bg-slate-50 rounded-xl mb-6 space-y-1.5"
+                  >
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="text-slate-400 font-bold">Therapy</span>
+                      <span className="text-[#3F2965] font-black">{selectedTherapy}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="text-slate-400 font-bold">Date & Time</span>
+                      <span className="text-[#3F2965] font-black">{selectedDate} {formatTo12Hr(selectedSlot)}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="text-slate-400 font-bold">Amount</span>
+                      <span className="text-[#3F2965] font-black">₹500</span>
+                    </div>
+                  </motion.div>
+
+                  {/* QR Code Section */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                    className="p-4 bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl mb-6 flex flex-col items-center"
+                  >
+                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-wider mb-3">Scan & Pay</p>
+                    <div className="bg-white p-3 rounded-xl border-2 border-white shadow-md">
+                      <img
+                        src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=${upiId}&pn=Mindsettler&am=500&tr=${Date.now()}`}
+                        alt="UPI QR Code"
+                        className="w-40 h-40"
+                      />
+                    </div>
+                    
+                    {/* UPI ID Copy Button */}
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={handleCopyUPI}
+                      className="mt-4 text-center w-full"
+                    >
+                      <div className="p-2 bg-white border border-slate-200 rounded-lg flex items-center justify-center gap-2">
+                        <span className="text-xs font-bold text-slate-600">{upiId}</span>
+                        <motion.div
+                          initial={{ scale: 1 }}
+                          animate={{ scale: copied ? 1.2 : 1 }}
+                        >
+                          {copied ? (
+                            <Check size={14} className="text-green-500" />
+                          ) : (
+                            <Copy size={14} className="text-slate-400" />
+                          )}
+                        </motion.div>
+                      </div>
+                    </motion.button>
+                  </motion.div>
+
+                  {/* UTR Input Section */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                    className="mb-4"
+                  >
+                    <label className="block text-xs font-black text-[#3F2965] uppercase tracking-wider mb-2">
+                      Enter UTR Number
+                    </label>
+                    <input
+                      type="text"
+                      value={utrNumber}
+                      onChange={(e) => {
+                        setUtrNumber(e.target.value.toUpperCase());
+                        setError("");
+                      }}
+                      placeholder="e.g., ABC123XYZ456"
+                      maxLength="20"
+                      className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 bg-white focus:border-[#DD1764] focus:outline-none font-bold text-[#3F2965] placeholder-slate-300 transition-colors"
+                    />
+                    <p className="text-[9px] text-slate-400 mt-1 font-medium">
+                      UTR is a 12-20 character code provided after payment
+                    </p>
+                  </motion.div>
+
+                  {/* Error Message */}
+                  <AnimatePresence>
+                    {error && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0, y: -10 }}
+                        animate={{ opacity: 1, height: "auto", y: 0 }}
+                        exit={{ opacity: 0, height: 0, y: -10 }}
+                        transition={{ duration: 0.3 }}
+                        className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2"
+                      >
+                        <AlertCircle size={16} className="text-red-600 shrink-0 mt-0.5" />
+                        <p className="text-xs text-red-600 font-medium">{error}</p>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  {/* Submit Button */}
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={handleSubmitPayment}
+                    disabled={submitting || !utrNumber.trim()}
+                    className="w-full py-4 bg-gradient-to-r from-[#DD1764] to-[#e91e7e] text-white font-black rounded-xl shadow-lg shadow-pink-200 hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+                  >
+                    {submitting ? (
+                      <>
+                        <motion.div
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                        >
+                          <Loader2 size={18} />
+                        </motion.div>
+                        <span>Processing...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Check size={18} />
+                        <span>Confirm Payment</span>
+                      </>
+                    )}
+                  </motion.button>
+
+                  {/* Info Box */}
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.4 }}
+                    className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-start gap-2"
+                  >
+                    <Info size={14} className="text-blue-600 shrink-0 mt-0.5" />
+                    <p className="text-[9px] text-blue-700 font-medium">
+                      Admin will verify your payment within 5-10 minutes. Session will be confirmed once approved.
+                    </p>
+                  </motion.div>
                 </motion.div>
               )}
             </AnimatePresence>
-          </motion.button>
-        ))}
-      </div>
-      
-      <AnimatePresence>
-        {paymentMethod === "cash" && (
-          <motion.div
-            initial={{ opacity: 0, height: 0, y: -10 }}
-            animate={{ opacity: 1, height: "auto", y: 0 }}
-            exit={{ opacity: 0, height: 0, y: -10 }}
-            transition={{ duration: 0.3 }}
-            className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-2"
-          >
-            <motion.div
-              animate={{ rotate: [0, -10, 10, 0] }}
-              transition={{ duration: 0.5 }}
-            >
-              <AlertCircle size={16} className="text-amber-600 shrink-0 mt-0.5" />
-            </motion.div>
-            <p className="text-xs text-amber-700 font-medium">
-              Please pay ₹500 in cash at the clinic before your session begins.
-            </p>
           </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 };
 
@@ -993,7 +1215,7 @@ const ConfirmationModal = ({
 };
 
 // Enhanced Success Overlay with Confetti
-const SuccessOverlay = ({ isOpen, onNavigate, isPaidViaWallet }) => {
+const SuccessOverlay = ({ isOpen, onNavigate, isPaidViaWallet, sessionType }) => {
   const [showConfetti, setShowConfetti] = useState(false);
 
   useEffect(() => {
@@ -1137,12 +1359,30 @@ const SuccessOverlay = ({ isOpen, onNavigate, isPaidViaWallet }) => {
               transition={{ delay: 0.5 }}
               className="text-slate-500 mb-8 font-medium"
             >
-              Your session has been scheduled successfully. We've sent a confirmation to your email.
+              {sessionType === "online"
+                ? "Your payment has been submitted. Admin will verify it within 5-10 minutes. Session confirmation email will be sent once approved."
+                : "Your session has been scheduled successfully. We've sent a confirmation to your email."}
             </motion.p>
+
+            {/* Payment status reminders */}
+            <AnimatePresence>
+              {sessionType === "online" && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.6 }}
+                  className="bg-blue-50 border border-blue-200 rounded-2xl p-4 mb-4"
+                >
+                  <p className="text-xs font-bold text-blue-700">
+                    🔄 Your UTR payment is pending admin verification. You'll receive a confirmation email once approved.
+                  </p>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* Cash payment reminder */}
             <AnimatePresence>
-              {!isPaidViaWallet && (
+              {!isPaidViaWallet && sessionType !== "online" && (
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -1282,10 +1522,15 @@ const [availabilityId, setAvailabilityId] = useState("");
 const [loadingSlots, setLoadingSlots] = useState(false);
 const [submitting, setSubmitting] = useState(false);
 const [errorMsg, setErrorMsg] = useState("");
-const [paymentMethod, setPaymentMethod] = useState("wallet");
 const [showConfirmModal, setShowConfirmModal] = useState(false);
+const [showPaymentModal, setShowPaymentModal] = useState(false);
+const [appointmentIdForPayment, setAppointmentIdForPayment] = useState("");
 const [showSuccess, setShowSuccess] = useState(false);
 const [pageLoaded, setPageLoaded] = useState(false);
+const rescheduleAppointmentId = useMemo(
+  () => new URLSearchParams(window.location.search).get("reschedule"),
+  []
+);
 
     const therapies = [
     "Cognitive Behavioural Therapy (CBT)",
@@ -1304,12 +1549,34 @@ const [pageLoaded, setPageLoaded] = useState(false);
     return () => clearTimeout(timer);
   }, []);
 
-  // Reset payment method to wallet when switching to online
   useEffect(() => {
-    if (sessionType === "online") {
-      setPaymentMethod("wallet");
-    }
-  }, [sessionType]);
+    const prefillRescheduleData = async () => {
+      if (!rescheduleAppointmentId) return;
+
+      try {
+        const res = await API.get("/appointment/my-sessions");
+        const session = (res.data.data || []).find((s) => s._id === rescheduleAppointmentId);
+
+        if (!session) {
+          setErrorMsg("Session not found for reschedule.");
+          return;
+        }
+
+        if (!["pending", "confirmed"].includes((session.status || "").toLowerCase())) {
+          setErrorMsg("Only pending or confirmed sessions can be rescheduled.");
+          return;
+        }
+
+        setSelectedTherapy(session.therapyType || "Cognitive Behavioural Therapy (CBT)");
+        setSessionType(session.sessionType || "online");
+        setNote(session.notes || "");
+      } catch (err) {
+        setErrorMsg("Unable to load session for reschedule.");
+      }
+    };
+
+    prefillRescheduleData();
+  }, [rescheduleAppointmentId]);
 
   // Calculate progress step
   const currentStep = selectedSlot ? 2 : selectedTherapy ? 1 : 0;
@@ -1376,28 +1643,63 @@ const [pageLoaded, setPageLoaded] = useState(false);
     (slot) => parseInt(slot.split(":")[0]) >= 12
   );
 
-  const getIsPaidViaWallet = () => {
-    if (sessionType === "online") {
-      return true;
-    }
-    return paymentMethod === "wallet";
-  };
+  const getIsPaidViaWallet = () => sessionType === "online";
 
-  const initiateBooking = () => {
+  const initiateBooking = async () => {
+        // Reschedule existing appointment from profile page.
+        if (rescheduleAppointmentId) {
+          setSubmitting(true);
+          try {
+            await API.patch(`/appointment/reschedule/${rescheduleAppointmentId}`, {
+              availabilityRef: availabilityId,
+              timeSlot: selectedSlot,
+              notes: note,
+            });
+            setShowSuccess(true);
+          } catch (err) {
+            setErrorMsg(err.response?.data?.message || "Failed to reschedule. Please try again.");
+          } finally {
+            setSubmitting(false);
+          }
+          return;
+        }
+
     setErrorMsg("");
     if (!selectedSlot) {
       setErrorMsg("Please select a time slot first.");
       return;
     }
 
-    const isPaidViaWallet = getIsPaidViaWallet();
-    if (isPaidViaWallet && (user?.walletBalance || 0) < 500) {
-      setErrorMsg(
-        "Insufficient wallet balance. Please add funds or select cash payment for in-person sessions."
-      );
+    // For online sessions, create appointment first then show payment modal
+    if (sessionType === "online") {
+      setSubmitting(true);
+      try {
+        const response = await API.post("/appointment/book", {
+          therapyType: selectedTherapy,
+          date: selectedDate,
+          timeSlot: selectedSlot,
+          sessionType: sessionType,
+          notes: note,
+          availabilityRef: availabilityId,
+          isPaidViaWallet: false, // Online sessions don't use wallet directly
+        });
+
+        const appointmentId = response.data.data?._id || response.data.data?.appointmentId;
+        if (appointmentId) {
+          setAppointmentIdForPayment(appointmentId);
+          setShowPaymentModal(true);
+        } else {
+          setErrorMsg("Failed to create appointment. Please try again.");
+        }
+      } catch (err) {
+        setErrorMsg(err.response?.data?.message || "Failed to create appointment. Please try again.");
+      } finally {
+        setSubmitting(false);
+      }
       return;
     }
 
+    // For offline sessions, show confirmation modal.
     setShowConfirmModal(true);
   };
 
@@ -1406,7 +1708,7 @@ const [pageLoaded, setPageLoaded] = useState(false);
     setSubmitting(true);
     setErrorMsg("");
 
-    const isPaidViaWallet = getIsPaidViaWallet();
+    const isPaidViaWallet = false;
 
     try {
       await API.post("/appointment/book", {
@@ -1419,10 +1721,6 @@ const [pageLoaded, setPageLoaded] = useState(false);
         isPaidViaWallet: isPaidViaWallet,
       });
 
-      if (isPaidViaWallet) {
-        user.walletBalance -= 500;
-      }
-
       setShowSuccess(true);
     } catch (err) {
       setErrorMsg(
@@ -1433,7 +1731,18 @@ const [pageLoaded, setPageLoaded] = useState(false);
     }
   };
 
+  const handlePaymentSuccess = () => {
+    setShowPaymentModal(false);
+    setAppointmentIdForPayment("");
+    setShowSuccess(true);
+  };
+
   const isPaidViaWallet = getIsPaidViaWallet();
+  const ctaText = rescheduleAppointmentId
+    ? "Confirm Reschedule"
+    : sessionType === "online"
+    ? "Proceed to Payment"
+    : "Confirm Booking";
 
   // Animation variants
   const containerVariants = {
@@ -1508,7 +1817,7 @@ const [pageLoaded, setPageLoaded] = useState(false);
 
               {/* Modals */}
               <ConfirmationModal
-                isOpen={showConfirmModal}
+                isOpen={showConfirmModal && sessionType === "offline"}
                 onClose={() => setShowConfirmModal(false)}
                 onConfirm={handleFinalPayment}
                 selectedTherapy={selectedTherapy}
@@ -1516,7 +1825,19 @@ const [pageLoaded, setPageLoaded] = useState(false);
                 selectedSlot={selectedSlot}
                 formatTo12Hr={formatTo12Hr}
                 sessionType={sessionType}
-                paymentMethod={paymentMethod}
+                paymentMethod="cash"
+              />
+
+              <PaymentModal
+                isOpen={showPaymentModal}
+                onClose={() => setShowPaymentModal(false)}
+                onSuccess={handlePaymentSuccess}
+                selectedDate={selectedDate}
+                selectedSlot={selectedSlot}
+                selectedTherapy={selectedTherapy}
+                appointmentId={appointmentIdForPayment}
+                user={user}
+                formatTo12Hr={formatTo12Hr}
               />
 
               <SuccessOverlay
@@ -1525,6 +1846,7 @@ const [pageLoaded, setPageLoaded] = useState(false);
                   navigate(`/profile#${encodeURIComponent("My Bookings")}`)
                 }
                 isPaidViaWallet={isPaidViaWallet}
+                sessionType={sessionType}
               />
 
               {/* Main Content */}
@@ -1714,7 +2036,7 @@ const [pageLoaded, setPageLoaded] = useState(false);
                         setSessionType={setSessionType}
                       />
 
-                      {/* Payment Method Selector - Only for offline */}
+                      {/* Offline in-person payment info */}
                       <AnimatePresence>
                         {sessionType === "offline" && (
                           <motion.div
@@ -1723,11 +2045,7 @@ const [pageLoaded, setPageLoaded] = useState(false);
                             exit={{ opacity: 0, height: 0 }}
                             transition={{ duration: 0.3 }}
                           >
-                            <PaymentMethodSelector
-                              paymentMethod={paymentMethod}
-                              setPaymentMethod={setPaymentMethod}
-                              walletBalance={user?.walletBalance}
-                            />
+                            <OfflinePaymentNotice />
                           </motion.div>
                         )}
                       </AnimatePresence>
@@ -1839,13 +2157,13 @@ const [pageLoaded, setPageLoaded] = useState(false);
                             }}
                             transition={{ duration: 2, repeat: Infinity }}
                             className={`p-2 md:p-3 rounded-xl md:rounded-2xl ${
-                              isPaidViaWallet
-                                ? "bg-gradient-to-br from-green-50 to-emerald-50 text-green-600"
+                              sessionType === "online"
+                                ? "bg-gradient-to-br from-blue-50 to-cyan-50 text-blue-600"
                                 : "bg-gradient-to-br from-amber-50 to-orange-50 text-amber-600"
                             }`}
                           >
-                            {isPaidViaWallet ? (
-                              <Wallet size={20} className="md:w-6 md:h-6" />
+                            {sessionType === "online" ? (
+                              <CreditCard size={20} className="md:w-6 md:h-6" />
                             ) : (
                               <Banknote size={20} className="md:w-6 md:h-6" />
                             )}
@@ -1855,8 +2173,8 @@ const [pageLoaded, setPageLoaded] = useState(false);
                               Payment Method
                             </p>
                             <p className="text-xs md:text-sm font-bold text-[#3F2965]">
-                              {isPaidViaWallet
-                                ? `Wallet Balance: ₹${user?.walletBalance || 0}`
+                              {sessionType === "online"
+                                ? "UPI Payment - UTR Required"
                                 : "Cash Payment at Clinic"}
                             </p>
                           </div>
@@ -1879,7 +2197,7 @@ const [pageLoaded, setPageLoaded] = useState(false);
                             ${selectedSlot && !submitting ? "animate-glow" : ""}
                           `}
                         >
-                          {submitting ? (
+                        {submitting ? (
                             <>
                               <motion.div
                                 animate={{ rotate: 360 }}
@@ -1898,7 +2216,7 @@ const [pageLoaded, setPageLoaded] = useState(false);
                                 <Check size={18} />
                               </motion.div>
                               <span>
-                                {isPaidViaWallet ? "Confirm & Pay ₹500" : "Confirm Booking"}
+                                {ctaText}
                               </span>
                               <motion.div
                                 animate={{ x: [0, 5, 0] }}
@@ -1920,7 +2238,7 @@ const [pageLoaded, setPageLoaded] = useState(false);
                       >
                         {[
                           { icon: Shield, text: "Secure Payment" },
-                          { icon: Clock, text: "Instant Confirmation" },
+                          { icon: Clock, text: sessionType === "online" ? "Admin Verification" : "Instant Confirmation" },
                           { icon: Heart, text: "24/7 Support" },
                         ].map((item, index) => (
                           <motion.div

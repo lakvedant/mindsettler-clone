@@ -18,7 +18,7 @@ import MongoStore from "connect-mongo";
 import userRoute from "./routes/userRoute.js";
 import appointnentRoute from "./routes/appointmentRoute.js";
 import adminRoute from "./routes/adminRoute.js";
-import walletTransactionsRoute from './routes/walletRoute.js'
+import sessionPaymentRoute from './routes/sessionPaymentRoute.js'
 import chatRoutes from "./routes/chat.routes.js";
 import { protect } from "./middlewares/userMiddleware.js";
 import connectDB from "./config/db.js";
@@ -63,7 +63,7 @@ app.use(morgan("dev"));
 app.use("/api/user", userRoute);
 app.use("/api/appointment", appointnentRoute);
 app.use("/api/admin", adminRoute);
-app.use('/api/transactions', protect, walletTransactionsRoute);
+app.use('/api/session-payments', protect, sessionPaymentRoute);
 app.use("/api/chat", chatRoutes);
 
 export default app;
