@@ -366,10 +366,6 @@ const MyBookingsView = () => {
     ? sessions 
     : sessions.filter(s => s.status?.toLowerCase() === activeFilter);
 
-  const handleReschedule = (sessionId) => {
-    navigate(`/booking?reschedule=${sessionId}`);
-  };
-
   if (loading) {
     return (
       <div className="py-20 flex flex-col items-center justify-center">
@@ -592,15 +588,6 @@ const MyBookingsView = () => {
                       {session.status === "completed" ? "Session completed" : "Your journey continues"}
                     </span>
                   </div>
-                  
-                  {["pending", "confirmed"].includes((session.status || "").toLowerCase()) && (
-                    <button
-                      onClick={() => handleReschedule(session._id)}
-                      className="flex items-center gap-1 text-[9px] sm:text-[10px] font-black uppercase text-[#Dd1764] hover:gap-2 transition-all shrink-0"
-                    >
-                      Reschedule <ChevronRight size={10} className="sm:w-3 sm:h-3" />
-                    </button>
-                  )}
                   
                   {session.status === "completed" && (
                     <div className="flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 bg-green-50 rounded-full shrink-0">
