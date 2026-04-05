@@ -1300,7 +1300,7 @@ const isMobile = useIsMobile();
 // --- States ---
 const [selectedSlot, setSelectedSlot] = useState("");
 const [sessionType, setSessionType] = useState("online");
-const [selectedTherapy, setSelectedTherapy] = useState("Cognitive Behavioural Therapy (CBT)");
+const [selectedTherapy, setSelectedTherapy] = useState("Couples");
 const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0]);
 const [note, setNote] = useState("");
 const [availableSlots, setAvailableSlots] = useState([]);
@@ -1319,14 +1319,10 @@ const rescheduleAppointmentId = useMemo(
 );
 
     const therapies = [
-    "Cognitive Behavioural Therapy (CBT)",
-    "Dialectical Behavioural Therapy (DBT)",
-    "Acceptance & Commitment Therapy (ACT)",
-    "Schema Therapy",
-    "Emotion-Focused Therapy (EFT)",
-    "Emotion-Focused Couples Therapy",
-    "Mindfulness-Based Cognitive Therapy",
-    "Client-Centred Therapy",
+    "Couples",
+    "Children",
+    "Family",
+    "Adults",
   ];
 
   // Page load animation trigger
@@ -1353,7 +1349,7 @@ const rescheduleAppointmentId = useMemo(
           return;
         }
 
-        setSelectedTherapy(session.therapyType || "Cognitive Behavioural Therapy (CBT)");
+        setSelectedTherapy(session.therapyType || "Couples");
         setSessionType(session.sessionType || "online");
         setNote(session.notes || "");
       } catch (err) {
