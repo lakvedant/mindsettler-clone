@@ -153,24 +153,7 @@ const CorporateServices = () => {
       duration: "Ongoing",
       participants: "Individual",
     },
-    {
-      id: 3,
-      title: "Organizational Assessment",
-      shortTitle: "Assessment",
-      description:
-        "Comprehensive evaluation of your organization's mental health landscape, identifying stress points and providing actionable recommendations.",
-      icon: LineChart,
-      color: "#ec4899",
-      features: [
-        "Workplace Stress Audit",
-        "Employee Well-being Survey",
-        "Culture Assessment",
-        "Risk Identification",
-        "Strategic Recommendations",
-      ],
-      duration: "2-4 weeks",
-      participants: "Organization-wide",
-    },
+
   ];
 
   // Stats Data
@@ -178,7 +161,7 @@ const CorporateServices = () => {
     { value: "40%", label: "Reduction in Absenteeism", icon: TrendingUp },
     { value: "85%", label: "Employee Satisfaction", icon: Heart },
     { value: "3x", label: "ROI on Wellness Programs", icon: LineChart },
-    { value: "100+", label: "Organizations Served", icon: Building2 },
+    { value: "10+", label: "Organizations Served", icon: Building2 },
   ];
 
   // Benefits Data
@@ -383,7 +366,7 @@ const CorporateServices = () => {
                   </motion.a>
                 </motion.div>
 
-          
+
               </motion.div>
 
               {/* Right Content - Stats Cards */}
@@ -461,7 +444,7 @@ const CorporateServices = () => {
             </div>
           </div>
 
-  
+
         </section>
 
         {/* Benefits Section */}
@@ -565,11 +548,10 @@ const CorporateServices = () => {
                   onClick={() => setActiveService(index)}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className={`px-6 py-3 rounded-full font-semibold transition-all ${
-                    activeService === index
-                      ? "bg-gradient-to-r from-[#3F2965] to-[#Dd1764] text-white shadow-lg"
-                      : "bg-white/80 text-[#3F2965] border border-[#3F2965]/10 hover:border-[#Dd1764]/30"
-                  }`}
+                  className={`px-6 py-3 rounded-full font-semibold transition-all ${activeService === index
+                    ? "bg-gradient-to-r from-[#3F2965] to-[#Dd1764] text-white shadow-lg"
+                    : "bg-white/80 text-[#3F2965] border border-[#3F2965]/10 hover:border-[#Dd1764]/30"
+                    }`}
                 >
                   {service.shortTitle}
                 </motion.button>
@@ -734,7 +716,7 @@ const CorporateServices = () => {
           </div>
         </section>
 
-     
+
 
         {/* Contact Form Section */}
         <section id="contact" className="py-24 relative overflow-hidden">

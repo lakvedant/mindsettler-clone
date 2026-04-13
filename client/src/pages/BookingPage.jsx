@@ -709,7 +709,7 @@ const OfflinePaymentNotice = () => {
       >
         <AlertCircle size={16} className="text-amber-600 shrink-0 mt-0.5" />
         <p className="text-xs text-amber-700 font-medium">
-          In-person sessions are cash only. Please pay ₹500 at the clinic before your session begins.
+          In-person sessions are cash only. Please pay ₹{selectedTherapyObj?.amount || 500} at the clinic before your session begins.
         </p>
       </motion.div>
     </motion.div>
@@ -764,7 +764,7 @@ const PaymentModal = ({
       const response = await API.post("/session-payments/submit", {
         appointmentId: appointmentId,
         utrNumber: utrNumber.toUpperCase(),
-        amount: 500,
+        amount: selectedTherapyObj?.amount || 500,
         notes: `Payment for ${selectedTherapy} on ${formatTo12Hr(selectedSlot)}`
       });
 
@@ -895,7 +895,7 @@ const PaymentModal = ({
                     </div>
                     <div className="flex items-center justify-between text-[11px]">
                       <span className="text-slate-400 font-bold">Amount</span>
-                      <span className="text-[#3F2965] font-black">₹500</span>
+                      <span className="text-[#3F2965] font-black">₹{selectedTherapyObj?.amount || 500}</span>
                     </div>
                   </motion.div>
 
@@ -909,7 +909,7 @@ const PaymentModal = ({
                     <p className="text-[10px] font-black text-slate-500 uppercase tracking-wider mb-3">Scan & Pay</p>
                     <div className="bg-white p-3 rounded-xl border-2 border-white shadow-md">
                       <img
-                        src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=${upiId}&pn=Mindsettler&am=500&tr=${Date.now()}`}
+                        src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=${upiId}&pn=Mindsettler&am=${selectedTherapyObj?.amount || 500}&tr=${Date.now()}`}
                         alt="UPI QR Code"
                         className="w-40 h-40"
                       />
@@ -1139,7 +1139,7 @@ const ConfirmationModal = ({
                   value: sessionType === "online" ? "Online" : "In-Person",
                   icon: sessionType === "online" ? Video : MapPin,
                 },
-                { label: "Fee", value: "₹500", icon: Wallet },
+                { label: "Fee", value: `₹${selectedTherapyObj?.amount || 500}`, icon: Wallet },
                 {
                   label: "Payment",
                   value: isPaidViaWallet ? "Via Wallet" : "Cash at Clinic",
@@ -1173,7 +1173,7 @@ const ConfirmationModal = ({
                 >
                   <AlertCircle size={16} className="text-amber-600" />
                   <span className="text-xs font-medium text-amber-700">
-                    Please pay ₹500 in cash at the clinic
+                    Please pay ₹{selectedTherapyObj?.amount || 500} in cash at the clinic
                   </span>
                 </motion.div>
               )}
@@ -1292,10 +1292,10 @@ const SessionInfoCard = ({ icon: Icon, label, value }) => (
 
 // ==================== MAIN COMPONENT ====================
 const BookingPage = () => {
-const { user, loading: authLoading } = useAuth();
-const navigate = useNavigate();
-const scrollableRef = useRef(null);
-const isMobile = useIsMobile();
+  let { user, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
+  const scrollableRef = useRef(null);
+  const isMobile = useIsMobile();
 
 // --- States ---
 const [selectedSlot, setSelectedSlot] = useState("");
@@ -1318,12 +1318,32 @@ const rescheduleAppointmentId = useMemo(
   []
 );
 
-    const therapies = [
-    "Couples",
-    "Children",
-    "Family",
-    "Adults",
+  const initialTherapies = [
+    { _id: "1", name: "Couples", amount: 500 },
+    { _id: "2", name: "Children", amount: 500 },
+    { _id: "3", name: "Family", amount: 500 },
+    { _id: "4", name: "Adults", amount: 500 },
   ];
+
+  const [therapies, setTherapies] = useState(initialTherapies);
+
+  const selectedTherapyObj = useMemo(() => {
+    return therapies.find((t) => t.name === selectedTherapy);
+  }, [therapies, selectedTherapy]);
+
+  useEffect(() => {
+    const fetchTherapies = async () => {
+      try {
+        const res = await API.get("/therapy");
+        if (res.data.data && res.data.data.length > 0) {
+          setTherapies(res.data.data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch therapies:", err);
+      }
+    };
+    fetchTherapies();
+  }, []);
 
   // Page load animation trigger
   useEffect(() => {
@@ -1428,6 +1448,10 @@ const rescheduleAppointmentId = useMemo(
   const getIsPaidViaWallet = () => sessionType === "online";
 
   const initiateBooking = async () => {
+    if (!user) {
+      navigate("/auth", { state: { returnUrl: "/booking" } });
+      return;
+    }
         // Reschedule existing appointment from profile page.
         if (rescheduleAppointmentId) {
           setSubmitting(true);
@@ -1554,10 +1578,7 @@ const rescheduleAppointmentId = useMemo(
   };
 
   return (
-    <IsLoginUser user={user} loading={authLoading}>
-      <IsVerifiedUser user={user}>
-        <IsProfileCompleteUser user={user}>
-          <>
+    <>
             {/* Shimmer Animation Keyframes */}
             <style>{`
               @keyframes shimmer {
@@ -1690,10 +1711,10 @@ const rescheduleAppointmentId = useMemo(
                         <div className="space-y-2">
                           {therapies.map((t, index) => (
                             <TherapyCard
-                              key={t}
-                              therapy={t}
-                              isSelected={selectedTherapy === t}
-                              onClick={() => setSelectedTherapy(t)}
+                              key={t._id || t.name}
+                              therapy={t.name}
+                              isSelected={selectedTherapy === t.name}
+                              onClick={() => setSelectedTherapy(t.name)}
                               index={index}
                             />
                           ))}
@@ -1720,7 +1741,7 @@ const rescheduleAppointmentId = useMemo(
                       </h3>
                       <div className="space-y-2 md:space-y-3">
                         <SessionInfoCard icon={Clock} label="Duration" value="60 Minutes" />
-                        <SessionInfoCard icon={Wallet} label="Session Fee" value="₹500" />
+                        <SessionInfoCard icon={Wallet} label="Session Fee" value={`₹${selectedTherapyObj?.amount || 500}`} />
                       </div>
 
                       {/* Additional Info */}
@@ -2037,9 +2058,6 @@ const rescheduleAppointmentId = useMemo(
             {/* Footer */}
             <Footer />
           </>
-        </IsProfileCompleteUser>
-      </IsVerifiedUser>
-    </IsLoginUser>
   );
 };
 

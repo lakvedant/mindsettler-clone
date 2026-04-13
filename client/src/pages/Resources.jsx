@@ -1123,17 +1123,14 @@ const ResourcesPage = () => {
   };
 
   return (
-    <IsLoginUser user={user} loading={authLoading}>
-      <IsVerifiedUser user={user}>
-        <IsProfileCompleteUser user={user}>
-          <>
-            <ResourcesSEO />
-            <ScrollProgressBar />
-            <Navbar />
+    <>
+      <ResourcesSEO />
+      <ScrollProgressBar />
+      <Navbar />
 
-            <div ref={containerRef} className="min-h-screen overflow-hidden">
-              {/* Hero Section */}
-              <section className="relative min-h-[70vh] flex items-center justify-center overflow-hidden">
+      <div ref={containerRef} className="min-h-screen overflow-hidden">
+        {/* Hero Section */}
+        <section className="relative min-h-[70vh] flex items-center justify-center overflow-hidden">
                 {/* Animated Background */}
                 <motion.div
                   className="absolute inset-0 z-0"
@@ -1983,13 +1980,10 @@ const ResourcesPage = () => {
                 )}
               </AnimatePresence>
             </div>
-
             <Footer />
           </>
-        </IsProfileCompleteUser>
-      </IsVerifiedUser>
-    </IsLoginUser>
   );
 };
+
 
 export default ResourcesPage;

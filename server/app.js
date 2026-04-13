@@ -20,6 +20,8 @@ import appointnentRoute from "./routes/appointmentRoute.js";
 import adminRoute from "./routes/adminRoute.js";
 import sessionPaymentRoute from './routes/sessionPaymentRoute.js'
 import chatRoutes from "./routes/chat.routes.js";
+import faqRoute from "./routes/faqRoute.js";
+import therapyRoute from "./routes/therapyRoute.js";
 import { protect } from "./middlewares/userMiddleware.js";
 import connectDB from "./config/db.js";
 import { globalLimiter } from './middlewares/rateLimiter.js';
@@ -65,5 +67,7 @@ app.use("/api/appointment", appointnentRoute);
 app.use("/api/admin", adminRoute);
 app.use('/api/session-payments', protect, sessionPaymentRoute);
 app.use("/api/chat", chatRoutes);
+app.use('/api/faq', faqRoute);
+app.use('/api/therapy', therapyRoute);
 
 export default app;

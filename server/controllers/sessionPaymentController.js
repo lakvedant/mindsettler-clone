@@ -2,6 +2,7 @@ import { SessionPayment } from "../models/transactionModel.js";
 import Appointment from "../models/appointmentModel.js";
 import User from "../models/userModel.js";
 import { Availability } from "../models/adminModel.js";
+import Therapy from "../models/therapyModel.js";
 import { sendSessionPaymentConfirmationEmail, sendSessionPaymentApprovedEmail, sendSessionPaymentRejectedEmail } from "../utils/emailService.js";
 
 /**
@@ -80,7 +81,8 @@ export const submitSessionPayment = async (req, res) => {
     }
 
     // 5. Create the payment record
-    const sessionAmount = Number(process.env.SESSION_PRICE || 500);
+    const therapy = await Therapy.findOne({ name: appointment.therapyType });
+    const sessionAmount = therapy ? therapy.amount : Number(process.env.SESSION_PRICE || 500);
 
     const payment = await SessionPayment.create({
       user: req.user._id,

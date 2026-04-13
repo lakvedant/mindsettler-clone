@@ -80,7 +80,7 @@ const AnimatedNumber = ({ target, suffix = "" }) => {
     const end = target;
     const duration = 2000;
     const stepTime = Math.max(duration / end, 10);
-    
+
     const timer = setInterval(() => {
       start += 1;
       setCount(start);
@@ -101,10 +101,10 @@ const AnimatedNumber = ({ target, suffix = "" }) => {
 // ============== STATS BAR ==============
 const StatsBar = () => {
   const stats = [
-    { number: 10, suffix: "K+", label: "Users Helped" },
+    { number: 200, suffix: "+", label: "Users Helped" },
     { number: 95, suffix: "%", label: "Feel Better" },
     { number: 4, suffix: " Steps", label: "To Clarity" },
-    { number: 30, suffix: " Days", label: "Avg. Progress" },
+    { number: 4, suffix: " Weeks", label: "Avg. Progress" },
   ];
 
   return (
@@ -310,9 +310,8 @@ const MilestoneRow = ({ step, index, isActive, onClick, isMobile }) => {
     >
       {/* Left side label (desktop) */}
       <div
-        className={`hidden md:flex flex-1 ${
-          isLeft ? "justify-end pr-8" : "justify-end pr-8 opacity-0"
-        }`}
+        className={`hidden md:flex flex-1 ${isLeft ? "justify-end pr-8" : "justify-end pr-8 opacity-0"
+          }`}
       >
         {isLeft && (
           <motion.div
@@ -333,9 +332,8 @@ const MilestoneRow = ({ step, index, isActive, onClick, isMobile }) => {
         <motion.div
           className="absolute -inset-4 rounded-full"
           style={{
-            background: `radial-gradient(circle, ${
-              isActive ? "rgba(221,23,100,0.25)" : "rgba(63,41,101,0.15)"
-            }, transparent 70%)`,
+            background: `radial-gradient(circle, ${isActive ? "rgba(221,23,100,0.25)" : "rgba(63,41,101,0.15)"
+              }, transparent 70%)`,
           }}
           animate={{
             scale: isActive ? [1, 1.8, 1] : [1, 1.4, 1],
@@ -374,9 +372,8 @@ const MilestoneRow = ({ step, index, isActive, onClick, isMobile }) => {
 
       {/* Right side label (desktop) */}
       <div
-        className={`hidden md:flex flex-1 ${
-          !isLeft ? "justify-start pl-8" : "justify-start pl-8 opacity-0"
-        }`}
+        className={`hidden md:flex flex-1 ${!isLeft ? "justify-start pl-8" : "justify-start pl-8 opacity-0"
+          }`}
       >
         {!isLeft && (
           <motion.div

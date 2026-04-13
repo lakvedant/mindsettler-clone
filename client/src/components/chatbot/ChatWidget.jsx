@@ -167,9 +167,8 @@ const MessageBubble = ({ message, isUser, isLatest, isRedirecting, onQuickReply 
 
   return (
     <div
-      className={`flex ${isUser ? "justify-end" : "justify-start"} group animate-in fade-in ${
-        isUser ? "slide-in-from-right-2" : "slide-in-from-left-2"
-      } duration-300`}
+      className={`flex ${isUser ? "justify-end" : "justify-start"} group animate-in fade-in ${isUser ? "slide-in-from-right-2" : "slide-in-from-left-2"
+        } duration-300`}
     >
       {/* Bot Avatar */}
       {!isUser && (
@@ -365,7 +364,7 @@ const useDraggable = (initialPosition = null) => {
 const ChatWidget = ({ user }) => {
   const navigate = useNavigate();
   const chatId = useRef(generateChatId()).current;
-  
+
   const [isOpen, setIsOpen] = useState(false);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
@@ -424,7 +423,7 @@ const ChatWidget = ({ user }) => {
   const handleNavigate = useCallback((path) => {
     setIsRedirecting(true);
     setRedirectTarget(path);
-    
+
     setTimeout(() => {
       setIsOpen(false);
       setIsRedirecting(false);
@@ -451,7 +450,7 @@ const ChatWidget = ({ user }) => {
     } catch (err) {
       console.log("Clear chat error:", err);
     }
-    
+
     setHistory([{
       role: "bot",
       content: `✨ Fresh start, ${userName}! What would you like to talk about?`,
@@ -495,7 +494,7 @@ const ChatWidget = ({ user }) => {
       if (!action?.buttons && action?.type !== "navigate") {
         botMessage.action = {
           ...botMessage.action,
-          buttons: intent === "EMOTIONAL_SUPPORT" 
+          buttons: intent === "EMOTIONAL_SUPPORT"
             ? ["Tell me more", "Book a session", "Show resources"]
             : null,
         };
@@ -506,7 +505,7 @@ const ChatWidget = ({ user }) => {
       if (mood_detected) setCurrentMood(mood_detected);
 
       const navigationIntents = ["NAVIGATE_HOME", "BOOK_SESSION", "NAVIGATE_BOOKING", "NAVIGATE_RESOURCES", "NAVIGATE_CONTACT", "NAVIGATE_PROFILE", "NAVIGATE_CORPORATE", "NAVIGATE_LOGOUT"];
-      
+
       if (navigationIntents.includes(intent) && action?.target) {
         handleNavigate(action.target);
       }
@@ -551,33 +550,28 @@ const ChatWidget = ({ user }) => {
 
           {/* Chat Container */}
           <div className="fixed z-50 inset-0 md:inset-auto md:bottom-24 md:left-6 md:w-95 lg:w-105 md:h-145 lg:h-155 md:rounded-3xl bg-linear-to-b from-white/95 to-white/90 backdrop-blur-xl md:shadow-2xl md:border md:border-white/50 flex flex-col overflow-hidden animate-in slide-in-from-bottom-5 duration-500">
-            
-            {/* === HEADER === */}
-            <div className="shrink-0 relative overflow-hidden">
-              <div className="absolute inset-0 bg-linear-to-r from-[#3F2965] via-[#5a3d8a] to-[#DD1764]" />
-              <div className="absolute inset-0 bg-linear-to-b from-transparent to-black/10" />
 
-              <div className="relative px-4 py-4 flex justify-between items-center safe-area-top">
+            {/* === HEADER === */}
+            <div className="shrink-0 relative bg-linear-to-r from-[#3F2965] to-[#DD1764] shadow-md z-10">
+              <div className="absolute inset-0 bg-black/5" />
+              
+              <div className="relative px-5 py-4 flex justify-between items-center safe-area-top">
                 <div className="flex items-center gap-3">
                   {/* Avatar */}
                   <div className="relative">
-                    <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-sm p-0.5 shadow-xl">
-                      <div className="w-full h-full rounded-2xl bg-white flex items-center justify-center overflow-hidden">
-                        <img src={botAvatar} alt="MindSettler" className="w-10 h-10 object-contain" />
-                      </div>
+                    <div className="w-11 h-11 rounded-full bg-white flex items-center justify-center p-1 shadow-md">
+                      <img src={botAvatar} alt="MindSettler" className="w-8 h-8 object-contain" />
                     </div>
-                    <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-white shadow-lg">
-                      <div className="w-full h-full bg-green-400 rounded-full animate-ping opacity-75" />
-                    </div>
+                    <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-400 rounded-full border-2 border-[#3F2965]" />
                   </div>
 
                   {/* Title */}
                   <div className="text-white">
-                    <h3 className="text-sm font-bold flex items-center gap-2">
+                    <h3 className="text-[15px] font-black flex items-center gap-1.5 tracking-tight">
                       MindSettler
-                      <Sparkles size={12} className="text-yellow-300 animate-pulse" />
+                      <Sparkles size={14} className="text-pink-200" />
                     </h3>
-                    <div className="flex items-center gap-2 text-[10px] text-white/70">
+                    <div className="flex items-center gap-1.5 text-[11px] font-medium text-white/80">
                       {isRedirecting ? (
                         <span className="flex items-center gap-1">
                           <Loader2 size={10} className="animate-spin" />
@@ -588,14 +582,8 @@ const ChatWidget = ({ user }) => {
                           <span>Online</span>
                           {currentMood && (
                             <>
-                              <span>•</span>
+                              <span className="opacity-50">•</span>
                               <span className="capitalize">{currentMood}</span>
-                            </>
-                          )}
-                          {messageCount > 0 && (
-                            <>
-                              <span>•</span>
-                              <span>{messageCount} msgs</span>
                             </>
                           )}
                         </>
@@ -605,32 +593,24 @@ const ChatWidget = ({ user }) => {
                 </div>
 
                 {/* Header Actions */}
-                <div className="flex items-center gap-2">
-                  {/* Clear Chat */}
+                <div className="flex items-center gap-1.5">
                   <button
                     onClick={handleClearChat}
                     disabled={isRedirecting}
-                    className="p-2 hover:bg-white/10 rounded-xl transition-colors disabled:opacity-50"
+                    className="p-2 hover:bg-white/10 rounded-full transition-colors disabled:opacity-50"
                     title="Clear chat"
                   >
-                    <RefreshCw size={16} className="text-white/70" />
+                    <RefreshCw size={16} className="text-white" />
                   </button>
 
-                  {/* Close Button */}
                   <button
                     onClick={handleClose}
-                    className="flex items-center gap-1.5 px-3 py-2 bg-white/20 hover:bg-white/30 active:scale-95 rounded-xl transition-all text-white min-h-11"
+                    className="p-2 hover:bg-white/10 rounded-full transition-colors text-white"
                   >
-                    <span className="text-xs font-bold md:hidden">Close</span>
-                    <X size={18} />
+                    <X size={20} />
                   </button>
                 </div>
               </div>
-
-              {/* Wave decoration */}
-              <svg className="absolute -bottom-1 left-0 w-full h-6 text-white/95" viewBox="0 0 1200 120" preserveAspectRatio="none">
-                <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" fill="currentColor" />
-              </svg>
             </div>
 
             {/* === CHAT HISTORY === */}
@@ -649,14 +629,14 @@ const ChatWidget = ({ user }) => {
               {loading && <TypingIndicator />}
 
               {/* Show default quick replies after bot message if none provided and not redirecting */}
-              {!loading && 
-               !isRedirecting &&
-               history.length > 0 && 
-               history[history.length - 1]?.role === "bot" && 
-               !history[history.length - 1]?.action?.buttons && 
-               history[history.length - 1]?.action?.type !== "navigate" && (
-                <QuickActions buttons={defaultQuickReplies} onSelect={handleQuickReply} />
-              )}
+              {!loading &&
+                !isRedirecting &&
+                history.length > 0 &&
+                history[history.length - 1]?.role === "bot" &&
+                !history[history.length - 1]?.action?.buttons &&
+                history[history.length - 1]?.action?.type !== "navigate" && (
+                  <QuickActions buttons={defaultQuickReplies} onSelect={handleQuickReply} />
+                )}
 
               {/* Privacy Badge */}
               <div className="flex justify-center pt-4 pb-2">
@@ -685,11 +665,10 @@ const ChatWidget = ({ user }) => {
                 <button
                   type="submit"
                   disabled={loading || !message.trim() || isRedirecting}
-                  className={`p-3 rounded-xl transition-all duration-300 min-h-12 min-w-12 flex items-center justify-center ${
-                    message.trim() && !isRedirecting
-                      ? "bg-linear-to-r from-[#3F2965] to-[#DD1764] text-white shadow-lg hover:shadow-xl active:scale-95"
-                      : "bg-slate-100 text-slate-300"
-                  }`}
+                  className={`p-3 rounded-xl transition-all duration-300 min-h-12 min-w-12 flex items-center justify-center ${message.trim() && !isRedirecting
+                    ? "bg-linear-to-r from-[#3F2965] to-[#DD1764] text-white shadow-lg hover:shadow-xl active:scale-95"
+                    : "bg-slate-100 text-slate-300"
+                    }`}
                 >
                   {isRedirecting ? (
                     <Loader2 size={18} className="animate-spin" />
@@ -737,15 +716,13 @@ const ChatWidget = ({ user }) => {
           onMouseDown={handleMouseDown}
           onTouchStart={handleTouchStart}
           onClick={handleButtonClick}
-          className={`relative w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center shadow-2xl border-4 border-white select-none transition-all duration-300 ${
-            isDragging ? "cursor-grabbing scale-110" : "cursor-grab"
-          } ${isOpen ? "bg-slate-800 rotate-180" : "bg-linear-to-br from-[#3F2965] via-[#5a3d8a] to-[#DD1764] hover:shadow-purple-500/50"} ${
-            !isDragging && !isOpen ? "hover:scale-110 active:scale-95" : ""
-          }`}
+          className={`relative w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center shadow-2xl border-4 border-white select-none transition-all duration-300 ${isDragging ? "cursor-grabbing scale-110" : "cursor-grab"
+            } ${isOpen ? "bg-slate-800 rotate-180" : "bg-linear-to-br from-[#3F2965] via-[#5a3d8a] to-[#DD1764] hover:shadow-purple-500/50"} ${!isDragging && !isOpen ? "hover:scale-110 active:scale-95" : ""
+            }`}
           style={{ touchAction: "none" }}
         >
           {isDragging && <div className="absolute inset-0 rounded-full border-4 border-white/50 border-dashed animate-spin" style={{ animationDuration: "3s" }} />}
-          
+
           {isOpen ? (
             <X size={24} className="text-white" />
           ) : (

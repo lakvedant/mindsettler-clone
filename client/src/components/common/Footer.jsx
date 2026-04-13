@@ -39,7 +39,7 @@ export default function Footer() {
     ],
     company: [
       { name: "Who We Are", href: "/aboutus" },
-      { name: "Corporat Services", href: "/corporate" },
+      { name: "Corporate Services", href: "/corporate" },
       { name: "Contact Us", href: "/contact" },
     ],
     resources: [
@@ -66,26 +66,26 @@ export default function Footer() {
   const containerVariants = isMobile
     ? { hidden: { opacity: 1 }, visible: { opacity: 1 } }
     : {
-        hidden: { opacity: 0 },
-        visible: {
-          opacity: 1,
-          transition: {
-            staggerChildren: 0.1,
-            delayChildren: 0.2,
-          },
+      hidden: { opacity: 0 },
+      visible: {
+        opacity: 1,
+        transition: {
+          staggerChildren: 0.1,
+          delayChildren: 0.2,
         },
-      };
+      },
+    };
 
   const itemVariants = isMobile
     ? { hidden: { opacity: 1, y: 0 }, visible: { opacity: 1, y: 0 } }
     : {
-        hidden: { opacity: 0, y: 20 },
-        visible: {
-          opacity: 1,
-          y: 0,
-          transition: { duration: 0.5 },
-        },
-      };
+      hidden: { opacity: 0, y: 20 },
+      visible: {
+        opacity: 1,
+        y: 0,
+        transition: { duration: 0.5 },
+      },
+    };
 
   return (
     <footer className="relative overflow-hidden">
@@ -151,7 +151,7 @@ export default function Footer() {
               <div className="flex items-center gap-2">
                 <div className="w-8 h-0.5 bg-gradient-to-r from-[#7c3aed] to-[#Dd1764] rounded-full" />
                 <p className="text-[#Dd1764] text-sm font-medium italic">
-                  Navigate Life with Confidence
+                  Be Kind To Your Mind
                 </p>
               </div>
             </div>
@@ -177,14 +177,14 @@ export default function Footer() {
               </motion.a>
 
               <motion.a
-                href="mailto:contact@mindsettler.com"
+                href="mailto:parnika@mindsetteler.in"
                 className="flex items-center gap-3 text-gray-300/80 hover:text-white transition-colors group"
                 whileHover={isMobile ? {} : { x: 5 }}
               >
                 <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-[#Dd1764]/30 transition-colors">
                   <Mail className="w-4 h-4 text-[#Dd1764]" />
                 </div>
-                <span>contact@mindsettler.com</span>
+                <span>parnika@mindsetteler.in</span>
               </motion.a>
 
               <motion.div

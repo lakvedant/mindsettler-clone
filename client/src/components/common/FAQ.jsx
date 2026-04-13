@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Minus, Search } from 'lucide-react';
 import FAQ_img from '../../assets/images/FAQ_img-removebg-preview.png'
 import useIsMobile from '../../hooks/useIsMobile';
-const faqData = [
+import API from '../../api/axios';
+
+const initialFaqs = [
   {
     id: 1,
     question: "What is MindSettler?",
@@ -27,8 +29,24 @@ const faqData = [
 ];
 
 const FAQSection = () => {
-  const [activeId, setActiveId] = useState(1);
+  const [faqs, setFaqs] = useState(initialFaqs);
+  const [activeId, setActiveId] = useState("1");
   const isMobile = useIsMobile();
+
+  useEffect(() => {
+    const fetchFaqs = async () => {
+      try {
+        const res = await API.get('/faq');
+        if (res.data.data && res.data.data.length > 0) {
+          setFaqs(res.data.data);
+          setActiveId(res.data.data[0]._id);
+        }
+      } catch (error) {
+        console.error("Error fetching FAQs:", error);
+      }
+    };
+    fetchFaqs();
+  }, []);
 
   return (
     <div className="bg-[#FDFCF9] flex items-center justify-center p-6 md:p-12 font-sans overflow-hidden">
@@ -48,17 +66,19 @@ const FAQSection = () => {
           </header>
 
           <div className="space-y-2">
-            {faqData.map((item) => (
-              <div key={item.id} className="border-b border-gray-100">
+            {faqs.map((item) => {
+              const currentId = item._id || item.id;
+              return (
+              <div key={currentId} className="border-b border-gray-100">
                 <button
-                  onClick={() => setActiveId(activeId === item.id ? null : item.id)}
+                  onClick={() => setActiveId(activeId === currentId ? null : currentId)}
                   className="w-full py-5 flex items-center justify-between text-left group"
                 >
-                  <span className={`text-lg font-bold transition-colors ${activeId === item.id ? 'text-[#Dd1764]' : 'text-[#3F2965] group-hover:text-[#Dd1764]'}`}>
+                  <span className={`text-lg font-bold transition-colors ${activeId === currentId ? 'text-[#Dd1764]' : 'text-[#3F2965] group-hover:text-[#Dd1764]'}`}>
                     {item.question}
                   </span>
-                  <div className={`shrink-0 ml-4 transition-transform duration-300 ${activeId === item.id ? 'rotate-180' : ''}`}>
-                    {activeId === item.id ? (
+                  <div className={`shrink-0 ml-4 transition-transform duration-300 ${activeId === currentId ? 'rotate-180' : ''}`}>
+                    {activeId === currentId ? (
                       <div className="w-8 h-8 rounded-full bg-[#Dd1764]/10 flex items-center justify-center">
                         <Minus size={18} className="text-[#Dd1764]" />
                       </div>
@@ -71,7 +91,7 @@ const FAQSection = () => {
                 </button>
 
                 <AnimatePresence>
-                  {activeId === item.id && (
+                  {activeId === currentId && (
                     <motion.div
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: "auto", opacity: 1 }}
@@ -85,7 +105,8 @@ const FAQSection = () => {
                   )}
                 </AnimatePresence>
               </div>
-            ))}
+            );
+            })}
           </div>
         </motion.div>
 
