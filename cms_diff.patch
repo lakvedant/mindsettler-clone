@@ -1,0 +1,775 @@
+diff --git a/client/src/App.jsx b/client/src/App.jsx
+index d232711..1272617 100644
+--- a/client/src/App.jsx
++++ b/client/src/App.jsx
+@@ -13,6 +13,7 @@ import UserProfile from "./pages/UserProfile.jsx";
+ import ChatWidget from "./components/chatbot/ChatWidget.jsx";
+ import AboutUsPage from "./pages/AboutUs.jsx";
+ import ResourcesPage from "./pages/Resources.jsx";
++import ArticlePage from "./pages/ArticlePage.jsx";
+ import VerifyEmail from "./components/auth/VerifyEmail.jsx";
+ import ResetPassword from "./pages/ResetPassword.jsx";
+ 
+@@ -35,6 +36,7 @@ function App() {
+         <Route path="/logout" element={<Logout />} />
+         <Route path="/aboutus" element={<AboutUsPage />} />
+         <Route path="/resources" element={<ResourcesPage />} />
++        <Route path="/resources/:id" element={<ArticlePage />} />
+         <Route path="/verify-email" element={<VerifyEmail setUser={setUser} />}/>
+         <Route path="/reset-password" element={<ResetPassword />} />
+         {/* GROUP 2: Admin Pages (No Public Navbar) */}
+diff --git a/client/src/admin/Dashboard.jsx b/client/src/admin/Dashboard.jsx
+index beb88e7..f002698 100644
+--- a/client/src/admin/Dashboard.jsx
++++ b/client/src/admin/Dashboard.jsx
+@@ -33,11 +33,17 @@ import {
+   ChevronDown,
+   CreditCard,
+   HelpCircle,
+-  Activity
++  Banknote,
++  BookOpen,
++  Activity,
++  Radio
+ } from "lucide-react";
+ import API from "../api/axios";
+ import { useAuth } from "../context/AuthContext";
+ 
++import ManageBlogsView from "./ManageBlogsView";
++import ManageBlogPaymentsView from "./ManageBlogPaymentsView";
++
+ // --- 1. ADMIN PROFILE VIEW ---
+ const AdminProfileView = ({ user, setUser }) => {
+   const [isEditing, setIsEditing] = useState(false);
+@@ -863,6 +869,7 @@ const TimeSlotsView = () => {
+   const [loading, setLoading] = useState(false);
+   const [fetching, setFetching] = useState(false);
+   const [flushing, setFlushing] = useState(false);
++  const [broadcasting, setBroadcasting] = useState(false);
+   const [showSuccess, setShowSuccess] = useState(false);
+   const [errorMsg, setErrorMsg] = useState("");
+   const [availabilityId, setAvailabilityId] = useState(null);
+@@ -882,12 +889,16 @@ const TimeSlotsView = () => {
+       );
+       setSlots(formattedSlots.sort());
+     } catch (e) {
+-      setSlots([]);
+       setAvailabilityId(null);
+-      if (e.response?.status === 400 || e.response?.status === 404) {
+-        setErrorMsg(e.response.data?.message);
++      if (e.response?.status === 404) {
++        setSlots(["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00"]);
+       } else {
+-        setErrorMsg("Failed to fetch existing schedule.");
++        setSlots(["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00"]);
++        if (e.response?.status === 400) {
++          setErrorMsg(e.response.data?.message);
++        } else {
++          setErrorMsg("Failed to fetch existing schedule.");
++        }
+       }
+     } finally {
+       setFetching(false);
+@@ -921,6 +932,26 @@ const TimeSlotsView = () => {
+     }
+   };
+ 
++  const broadcastAvailability = async () => {
++    setBroadcasting(true);
++    setErrorMsg("");
++    try {
++      const res = await API.post("/admin/broadcast-availability", { 
++        startDate: date, 
++        days: 30, 
++        slots 
++      });
++      setShowSuccess(true);
++      setTimeout(() => setShowSuccess(false), 3000);
++    } catch (e) {
++      setErrorMsg(
++        e.response?.data?.message || "Failed to broadcast portal schedule."
++      );
++    } finally {
++      setBroadcasting(false);
++    }
++  };
++
+   const handleDeleteTrigger = (slotToRemove) => {
+     const updatedSlots = slots.filter((t) => t !== slotToRemove);
+     if (updatedSlots.length === 0 && availabilityId) {
+@@ -1087,11 +1118,11 @@ const TimeSlotsView = () => {
+       </div>
+ 
+       {/* Action Buttons */}
+-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
++      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+         <button
+           disabled={flushing}
+           onClick={() => setModalType("flush")}
+-          className="sm:col-span-1 py-3 sm:py-4 bg-slate-100 text-slate-600 font-black text-xs sm:text-sm rounded-xl sm:rounded-2xl border-2 border-slate-200 flex justify-center items-center gap-2 hover:bg-slate-200 disabled:opacity-30 transition-all"
++          className="flex-1 py-3 sm:py-4 bg-slate-100 text-slate-600 font-black text-xs sm:text-sm rounded-xl sm:rounded-2xl border-2 border-slate-200 flex justify-center items-center gap-2 hover:bg-slate-200 disabled:opacity-30 transition-all"
+         >
+           {flushing ? (
+             <Loader2 className="animate-spin" size={18} />
+@@ -1101,16 +1132,31 @@ const TimeSlotsView = () => {
+             </>
+           )}
+         </button>
++
++        <button
++          disabled={broadcasting || !date || slots.length === 0}
++          onClick={broadcastAvailability}
++          className="flex-1 py-3 sm:py-4 bg-purple-600 text-white font-black text-xs sm:text-sm rounded-xl sm:rounded-2xl shadow-xl flex justify-center items-center gap-2 hover:bg-purple-700 disabled:opacity-30 transition-all"
++        >
++          {broadcasting ? (
++            <Loader2 className="animate-spin" size={18} />
++          ) : (
++            <>
++              <Radio size={16} /> Broadcast 30 Days
++            </>
++          )}
++        </button>
++
+         <button
+           disabled={loading || !date || slots.length === 0}
+           onClick={publishAvailability}
+-          className="sm:col-span-2 py-4 sm:py-5 bg-[#Dd1764] text-white font-black text-xs sm:text-sm rounded-xl sm:rounded-2xl shadow-xl flex justify-center items-center gap-2 sm:gap-3 hover:opacity-90 active:scale-[0.98] disabled:opacity-30 transition-all"
++          className="flex-1 py-3 sm:py-4 bg-[#Dd1764] text-white font-black text-xs sm:text-sm rounded-xl sm:rounded-2xl shadow-xl flex justify-center items-center gap-2 sm:gap-3 hover:opacity-90 active:scale-[0.98] disabled:opacity-30 transition-all"
+         >
+           {loading ? (
+             <Loader2 className="animate-spin" size={20} />
+           ) : (
+             <>
+-              <TrendingUp size={18} /> Broadcast Schedule
++              <Check size={20} className="hidden sm:block" /> Publish Schedule
+             </>
+           )}
+         </button>
+@@ -1518,6 +1564,8 @@ const AdminDashboard = () => {
+     { name: "Time Slots", icon: Clock },
+     { name: "FAQs", icon: HelpCircle },
+     { name: "Therapies", icon: Activity },
++    { name: "Manage Blogs", icon: BookOpen },
++    { name: "Blog Payments", icon: Banknote },
+   ];
+ 
+   useEffect(() => {
+@@ -1663,6 +1711,8 @@ const AdminDashboard = () => {
+             {activeTab === "Time Slots" && <TimeSlotsView />}
+             {activeTab === "FAQs" && <ManageFAQsView />}
+             {activeTab === "Therapies" && <ManageTherapiesView />}
++            {activeTab === "Manage Blogs" && <ManageBlogsView />}
++            {activeTab === "Blog Payments" && <ManageBlogPaymentsView />}
+           </div>
+         </div>
+       </main>
+diff --git a/client/src/pages/Resources.jsx b/client/src/pages/Resources.jsx
+index bf3e9f2..af48496 100644
+--- a/client/src/pages/Resources.jsx
++++ b/client/src/pages/Resources.jsx
+@@ -34,7 +34,9 @@ import {
+ import Navbar from "../components/common/Navbar";
+ import Footer from "../components/common/Footer";
+ import { ResourcesSEO } from "../components/common/SEO";
++import { Link } from "react-router-dom";
+ import { useAuth } from "../context/AuthContext";
++import API from "../api/axios";
+ import {
+   IsLoginUser,
+   IsVerifiedUser,
+@@ -574,7 +576,7 @@ const ArticleCard = ({
+ 
+           {/* Tags with animation */}
+           <div className="flex flex-wrap gap-2 mb-4">
+-            {article.tags.slice(0, 3).map((tag, i) => (
++            {article.tags?.slice(0, 3).map((tag, i) => (
+               <motion.span
+                 key={i}
+                 initial={{ opacity: 0, scale: 0.8 }}
+@@ -592,12 +594,10 @@ const ArticleCard = ({
+           </div>
+ 
+           {/* Read More Link */}
+-          <motion.a
+-            href={article.sourceUrl}
+-            target="_blank"
+-            rel="noopener noreferrer"
++          {/* Read More Link */}
++          <Link
++            to={`/resources/${article._id || article.id}`}
+             className="inline-flex items-center gap-2 text-[#Dd1764] font-semibold text-sm group/link"
+-            whileHover={{ x: 5 }}
+             data-hover
+           >
+             Read Full Article
+@@ -607,7 +607,7 @@ const ArticleCard = ({
+             >
+               <ArrowUpRight className="w-4 h-4" />
+             </motion.span>
+-          </motion.a>
++          </Link>
+         </div>
+       </div>
+     </motion.article>
+@@ -700,409 +700,55 @@ const ResourcesPage = () => {
+ 
+   const backgroundY = useTransform(scrollYProgress, [0, 1], ["0%", "20%"]);
+ 
+-  // Categories
+-  const categories = [
+-    { id: "all", name: "All Resources", icon: BookOpen, count: 24 },
+-    { id: "anxiety", name: "Anxiety & Stress", icon: Brain, count: 6 },
+-    { id: "depression", name: "Depression", icon: Heart, count: 5 },
+-    { id: "relationships", name: "Relationships", icon: Users, count: 4 },
+-    { id: "self-care", name: "Self-Care", icon: Smile, count: 5 },
+-    { id: "mindfulness", name: "Mindfulness", icon: Target, count: 4 },
+-  ];
+-
+-  // Articles data (keeping your existing data)
+-  const articles = [
+-    {
+-      id: 1,
+-      title: "Understanding Anxiety: Causes, Symptoms, and Coping Strategies",
+-      excerpt:
+-        "Learn about the different types of anxiety disorders and evidence-based techniques to manage anxiety in your daily life.",
+-      category: "anxiety",
+-      source: "Psychology Today",
+-      sourceUrl: "https://www.psychologytoday.com/us/basics/anxiety",
+-      readTime: "8 min read",
+-      date: "2024",
+-      featured: true,
+-      image:
+-        "https://images.unsplash.com/photo-1474418397713-7ede21d49118?w=800",
+-      tags: ["Anxiety", "Mental Health", "Coping Skills"],
+-    },
+-    {
+-      id: 2,
+-      title: "10 Science-Backed Ways to Reduce Stress",
+-      excerpt:
+-        "Discover practical, research-proven methods to lower your stress levels and improve your overall well-being.",
+-      category: "anxiety",
+-      source: "Harvard Health",
+-      sourceUrl:
+-        "https://www.health.harvard.edu/mind-and-mood/top-ways-to-reduce-daily-stress",
+-      readTime: "6 min read",
+-      date: "2024",
+-      featured: false,
+-      image:
+-        "https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800",
+-      tags: ["Stress Management", "Wellness", "Research"],
+-    },
+-    {
+-      id: 3,
+-      title: "The Connection Between Anxiety and Sleep",
+-      excerpt:
+-        "Explore how anxiety affects your sleep quality and learn strategies to break the cycle of sleepless nights.",
+-      category: "anxiety",
+-      source: "Sleep Foundation",
+-      sourceUrl:
+-        "https://www.sleepfoundation.org/mental-health/anxiety-and-sleep",
+-      readTime: "7 min read",
+-      date: "2024",
+-      featured: false,
+-      image:
+-        "https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?w=800",
+-      tags: ["Sleep", "Anxiety", "Health"],
+-    },
+-    {
+-      id: 4,
+-      title: "Breathing Exercises for Anxiety Relief",
+-      excerpt:
+-        "Master simple breathing techniques that can help calm your nervous system in moments of anxiety.",
+-      category: "anxiety",
+-      source: "Healthline",
+-      sourceUrl:
+-        "https://www.healthline.com/health/breathing-exercises-for-anxiety",
+-      readTime: "5 min read",
+-      date: "2024",
+-      featured: false,
+-      image: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=800",
+-      tags: ["Breathing", "Techniques", "Anxiety Relief"],
+-    },
+-    {
+-      id: 5,
+-      title:
+-        "Social Anxiety: How to Feel More Comfortable in Social Situations",
+-      excerpt:
+-        "Practical tips and strategies for managing social anxiety and building confidence in social settings.",
+-      category: "anxiety",
+-      source: "Verywell Mind",
+-      sourceUrl:
+-        "https://www.verywellmind.com/social-anxiety-disorder-tips-3024209",
+-      readTime: "9 min read",
+-      date: "2024",
+-      featured: false,
+-      image:
+-        "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=800",
+-      tags: ["Social Anxiety", "Confidence", "Social Skills"],
+-    },
+-    {
+-      id: 6,
+-      title: "Workplace Stress: Strategies for a Healthier Work Life",
+-      excerpt:
+-        "Learn how to manage work-related stress and create boundaries for better mental health at work.",
+-      category: "anxiety",
+-      source: "Mind",
+-      sourceUrl:
+-        "https://www.mind.org.uk/information-support/tips-for-everyday-living/workplace-mental-health/",
+-      readTime: "7 min read",
+-      date: "2024",
+-      featured: false,
+-      image:
+-        "https://images.unsplash.com/photo-1497032628192-86f99bcd76bc?w=800",
+-      tags: ["Work Stress", "Boundaries", "Productivity"],
+-    },
+-    {
+-      id: 7,
+-      title: "Depression: What You Need to Know",
+-      excerpt:
+-        "A comprehensive guide to understanding depression, its symptoms, causes, and treatment options.",
+-      category: "depression",
+-      source: "National Institute of Mental Health",
+-      sourceUrl: "https://www.nimh.nih.gov/health/topics/depression",
+-      readTime: "12 min read",
+-      date: "2024",
+-      featured: true,
+-      image:
+-        "https://images.unsplash.com/photo-1493836512294-502baa1986e2?w=800",
+-      tags: ["Depression", "Mental Health", "Treatment"],
+-    },
+-    {
+-      id: 8,
+-      title: "Cognitive Behavioral Therapy for Depression",
+-      excerpt:
+-        "Understand how CBT works and why it's one of the most effective treatments for depression.",
+-      category: "depression",
+-      source: "American Psychological Association",
+-      sourceUrl:
+-        "https://www.apa.org/ptsd-guideline/patients-and-families/cognitive-behavioral",
+-      readTime: "8 min read",
+-      date: "2024",
+-      featured: false,
+-      image:
+-        "https://images.unsplash.com/photo-1573497620053-ea5300f94f21?w=800",
+-      tags: ["CBT", "Therapy", "Depression Treatment"],
+-    },
+-    {
+-      id: 9,
+-      title: "The Role of Exercise in Managing Depression",
+-      excerpt:
+-        "Discover how physical activity can be a powerful tool in combating depression and improving mood.",
+-      category: "depression",
+-      source: "Mayo Clinic",
+-      sourceUrl:
+-        "https://www.mayoclinic.org/diseases-conditions/depression/in-depth/depression-and-exercise/art-20046495",
+-      readTime: "6 min read",
+-      date: "2024",
+-      featured: false,
+-      image:
+-        "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800",
+-      tags: ["Exercise", "Depression", "Physical Health"],
+-    },
+-    {
+-      id: 10,
+-      title: "Supporting a Loved One with Depression",
+-      excerpt:
+-        "Practical advice on how to help someone you care about who is struggling with depression.",
+-      category: "depression",
+-      source: "HelpGuide",
+-      sourceUrl:
+-        "https://www.helpguide.org/articles/depression/helping-someone-with-depression.htm",
+-      readTime: "10 min read",
+-      date: "2024",
+-      featured: false,
+-      image:
+-        "https://images.unsplash.com/photo-1529333166437-7750a6dd5a70?w=800",
+-      tags: ["Support", "Family", "Caregiving"],
+-    },
+-    {
+-      id: 11,
+-      title: "Seasonal Affective Disorder: Light Therapy and Beyond",
+-      excerpt:
+-        "Learn about SAD and effective treatments including light therapy, lifestyle changes, and more.",
+-      category: "depression",
+-      source: "Cleveland Clinic",
+-      sourceUrl:
+-        "https://my.clevelandclinic.org/health/diseases/9293-seasonal-depression",
+-      readTime: "7 min read",
+-      date: "2024",
+-      featured: false,
+-      image:
+-        "https://images.unsplash.com/photo-1516912481808-3406841bd33c?w=800",
+-      tags: ["SAD", "Light Therapy", "Seasonal"],
+-    },
+-    {
+-      id: 12,
+-      title: "Building Healthy Communication in Relationships",
+-      excerpt:
+-        "Master the art of effective communication to strengthen your personal and professional relationships.",
+-      category: "relationships",
+-      source: "Gottman Institute",
+-      sourceUrl:
+-        "https://www.gottman.com/blog/category/column/relationship-research/",
+-      readTime: "9 min read",
+-      date: "2024",
+-      featured: true,
+-      image:
+-        "https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?w=800",
+-      tags: ["Communication", "Relationships", "Connection"],
+-    },
+-    {
+-      id: 13,
+-      title: "Setting Healthy Boundaries in Relationships",
+-      excerpt:
+-        "Learn why boundaries are essential and how to establish them while maintaining loving connections.",
+-      category: "relationships",
+-      source: "Psychology Today",
+-      sourceUrl: "https://www.psychologytoday.com/us/basics/boundaries",
+-      readTime: "8 min read",
+-      date: "2024",
+-      featured: false,
+-      image:
+-        "https://images.unsplash.com/photo-1521791136064-7986c2920216?w=800",
+-      tags: ["Boundaries", "Self-Respect", "Relationships"],
+-    },
+-    {
+-      id: 14,
+-      title: "Attachment Styles and How They Affect Your Relationships",
+-      excerpt:
+-        "Understanding your attachment style can transform how you relate to others and yourself.",
+-      category: "relationships",
+-      source: "Verywell Mind",
+-      sourceUrl: "https://www.verywellmind.com/attachment-styles-2795344",
+-      readTime: "11 min read",
+-      date: "2024",
+-      featured: false,
+-      image:
+-        "https://images.unsplash.com/photo-1518199266791-5375a83190b7?w=800",
+-      tags: ["Attachment", "Psychology", "Self-Awareness"],
+-    },
+-    {
+-      id: 15,
+-      title: "Navigating Conflict in Relationships",
+-      excerpt:
+-        "Healthy conflict resolution strategies that can strengthen rather than damage your relationships.",
+-      category: "relationships",
+-      source: "HelpGuide",
+-      sourceUrl:
+-        "https://www.helpguide.org/articles/relationships-communication/conflict-resolution-skills.htm",
+-      readTime: "8 min read",
+-      date: "2024",
+-      featured: false,
+-      image:
+-        "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=800",
+-      tags: ["Conflict", "Resolution", "Communication"],
+-    },
+-    {
+-      id: 16,
+-      title: "The Science of Self-Care: Why It Matters for Mental Health",
+-      excerpt:
+-        "Explore the research behind self-care practices and how they contribute to psychological well-being.",
+-      category: "self-care",
+-      source: "American Psychological Association",
+-      sourceUrl: "https://www.apa.org/monitor/2022/01/special-self-care",
+-      readTime: "7 min read",
+-      date: "2024",
+-      featured: true,
+-      image: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=800",
+-      tags: ["Self-Care", "Wellness", "Research"],
+-    },
+-    {
+-      id: 17,
+-      title: "Creating a Self-Care Routine That Actually Works",
+-      excerpt:
+-        "Practical steps to build a sustainable self-care routine that fits your lifestyle and needs.",
+-      category: "self-care",
+-      source: "Mind",
+-      sourceUrl:
+-        "https://www.mind.org.uk/information-support/tips-for-everyday-living/self-care/",
+-      readTime: "6 min read",
+-      date: "2024",
+-      featured: false,
+-      image:
+-        "https://images.unsplash.com/photo-1507652313519-d4e9174996dd?w=800",
+-      tags: ["Routine", "Habits", "Self-Care"],
+-    },
+-    {
+-      id: 18,
+-      title: "Digital Detox: Reclaiming Your Mental Space",
+-      excerpt:
+-        "Learn how to create healthy boundaries with technology for better mental health and presence.",
+-      category: "self-care",
+-      source: "Healthline",
+-      sourceUrl: "https://www.healthline.com/health/digital-detox",
+-      readTime: "8 min read",
+-      date: "2024",
+-      featured: false,
+-      image:
+-        "https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=800",
+-      tags: ["Digital Wellness", "Technology", "Balance"],
+-    },
+-    {
+-      id: 19,
+-      title: "The Power of Journaling for Mental Health",
+-      excerpt:
+-        "Discover how journaling can help process emotions, reduce stress, and improve self-awareness.",
+-      category: "self-care",
+-      source: "Positive Psychology",
+-      sourceUrl: "https://positivepsychology.com/journaling-for-mindfulness/",
+-      readTime: "7 min read",
+-      date: "2024",
+-      featured: false,
+-      image:
+-        "https://images.unsplash.com/photo-1517842645767-c639042777db?w=800",
+-      tags: ["Journaling", "Writing", "Self-Reflection"],
+-    },
+-    {
+-      id: 20,
+-      title: "Sleep Hygiene: The Foundation of Mental Wellness",
+-      excerpt:
+-        "Improve your sleep quality with these evidence-based sleep hygiene practices.",
+-      category: "self-care",
+-      source: "Sleep Foundation",
+-      sourceUrl: "https://www.sleepfoundation.org/sleep-hygiene",
+-      readTime: "9 min read",
+-      date: "2024",
+-      featured: false,
+-      image:
+-        "https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?w=800",
+-      tags: ["Sleep", "Rest", "Health"],
+-    },
+-    {
+-      id: 21,
+-      title: "Getting Started with Mindfulness Meditation",
+-      excerpt:
+-        "A beginner's guide to mindfulness meditation and how to incorporate it into your daily routine.",
+-      category: "mindfulness",
+-      source: "Mindful",
+-      sourceUrl:
+-        "https://www.mindful.org/meditation/mindfulness-getting-started/",
+-      readTime: "10 min read",
+-      date: "2024",
+-      featured: true,
+-      image:
+-        "https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800",
+-      tags: ["Meditation", "Mindfulness", "Beginners"],
+-    },
+-    {
+-      id: 22,
+-      title: "The Neuroscience of Mindfulness",
+-      excerpt:
+-        "Explore how mindfulness practice actually changes your brain structure and function.",
+-      category: "mindfulness",
+-      source: "Harvard Gazette",
+-      sourceUrl:
+-        "https://news.harvard.edu/gazette/story/2018/04/harvard-researchers-study-how-mindfulness-may-change-the-brain-in-depressed-patients/",
+-      readTime: "8 min read",
+-      date: "2024",
+-      featured: false,
+-      image: "https://images.unsplash.com/photo-1559757175-5700dde675bc?w=800",
+-      tags: ["Neuroscience", "Brain", "Research"],
+-    },
+-    {
+-      id: 23,
+-      title: "Mindful Eating: A Path to a Healthier Relationship with Food",
+-      excerpt:
+-        "Learn how mindful eating can transform your relationship with food and improve overall well-being.",
+-      category: "mindfulness",
+-      source: "Harvard Health",
+-      sourceUrl:
+-        "https://www.health.harvard.edu/staying-healthy/mindful-eating",
+-      readTime: "6 min read",
+-      date: "2024",
+-      featured: false,
+-      image:
+-        "https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=800",
+-      tags: ["Mindful Eating", "Nutrition", "Awareness"],
+-    },
+-    {
+-      id: 24,
+-      title: "Body Scan Meditation for Stress Relief",
+-      excerpt:
+-        "A step-by-step guide to body scan meditation, a powerful technique for releasing tension.",
+-      category: "mindfulness",
+-      source: "Greater Good Science Center",
+-      sourceUrl:
+-        "https://greatergood.berkeley.edu/article/item/a_five_minute_body_scan_meditation",
+-      readTime: "5 min read",
+-      date: "2024",
+-      featured: false,
+-      image:
+-        "https://images.unsplash.com/photo-1447452001602-7090c7ab2db3?w=800",
+-      tags: ["Body Scan", "Relaxation", "Meditation"],
+-    },
+-  ];
++  const [loading, setLoading] = useState(true);
++  const [categories, setCategories] = useState([
++    { _id: "all", name: "All Resources", icon: "BookOpen" }
++  ]);
++  const [articles, setArticles] = useState([]);
++
++  useEffect(() => {
++    const fetchData = async () => {
++      setLoading(true);
++      try {
++        const catRes = await API.get("/blog/categories");
++        const blogRes = await API.get("/blog");
++        
++        const fetchedCats = catRes.data.data.map(c => ({ ...c, id: c._id }));
++        setCategories([{ id: "all", name: "All Resources", icon: "BookOpen" }, ...fetchedCats]);
++        
++        const fetchedBlogs = blogRes.data.data.map(b => ({
++          ...b,
++          excerpt: b.subtitle,
++          image: b.pictureUrl,
++          categoryId: b.category?._id || "all",
++          featured: b.isSideHighlight || b.isMainHighlight
++        }));
++        setArticles(fetchedBlogs);
++      } catch (err) {
++        console.error("Failed to fetch CMS", err);
++      } finally {
++        setLoading(false);
++      }
++    };
++    fetchData();
++  }, []);
++
+ 
+-  // Filter articles
+   const filteredArticles = articles.filter((article) => {
+     const matchesCategory =
+-      activeCategory === "all" || article.category === activeCategory;
++      activeCategory === "all" || article.categoryId === activeCategory;
+     const matchesSearch =
+-      article.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+-      article.excerpt.toLowerCase().includes(searchQuery.toLowerCase()) ||
+-      article.tags.some((tag) =>
+-        tag.toLowerCase().includes(searchQuery.toLowerCase())
++      article.title?.toLowerCase()?.includes(searchQuery.toLowerCase()) ||
++      article.excerpt?.toLowerCase()?.includes(searchQuery.toLowerCase()) ||
++      article.tags?.some((tag) =>
++        tag?.toLowerCase()?.includes(searchQuery.toLowerCase())
+       );
+     return matchesCategory && matchesSearch;
+   });
+ 
+   // Featured articles
+   const featuredArticles = articles.filter((article) => article.featured);
++  const mainHighlight = articles.find((article) => article.isMainHighlight) || featuredArticles[0];
+ 
+   // Toggle save article
+   const toggleSave = (articleId) => {
+@@ -1349,14 +995,14 @@ const ResourcesPage = () => {
+                   <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                     {featuredArticles.slice(0, 3).map((article, index) => (
+                       <ArticleCard
+-                        key={article.id}
++                        key={article._id || article.id}
+                         article={article}
+                         index={index}
+                         featured={index === 0}
+                         onLike={toggleLike}
+                         onSave={toggleSave}
+-                        isLiked={likedArticles.includes(article.id)}
+-                        isSaved={savedArticles.includes(article.id)}
++                        isLiked={likedArticles.includes(article._id || article.id)}
++                        isSaved={savedArticles.includes(article._id || article.id)}
+                       />
+                     ))}
+                   </div>
+diff --git a/server/app.js b/server/app.js
+index 7e14213..35fc3d9 100644
+--- a/server/app.js
++++ b/server/app.js
+@@ -22,6 +22,8 @@ import sessionPaymentRoute from './routes/sessionPaymentRoute.js'
+ import chatRoutes from "./routes/chat.routes.js";
+ import faqRoute from "./routes/faqRoute.js";
+ import therapyRoute from "./routes/therapyRoute.js";
++import blogRoute from "./routes/blogRoute.js";
++import blogPaymentRoute from "./routes/blogPaymentRoute.js";
+ import { protect } from "./middlewares/userMiddleware.js";
+ import connectDB from "./config/db.js";
+ import { globalLimiter } from './middlewares/rateLimiter.js';
+@@ -69,5 +71,7 @@ app.use('/api/session-payments', protect, sessionPaymentRoute);
+ app.use("/api/chat", chatRoutes);
+ app.use('/api/faq', faqRoute);
+ app.use('/api/therapy', therapyRoute);
++app.use('/api/blog', blogRoute);
++app.use('/api/blog-payment', blogPaymentRoute);
+ 
+ export default app;
+\ No newline at end of file
+diff --git a/server/controllers/adminController.js b/server/controllers/adminController.js
+index 79f2128..df92c7b 100644
+--- a/server/controllers/adminController.js
++++ b/server/controllers/adminController.js
+@@ -61,4 +61,47 @@ export const profileUpdate = async (req, res) => {
+   } catch (error) {
+     res.status(500).json({ message: error.message });
+   }
++};
++
++export const broadcastAvailability = async (req, res) => {
++    try {
++        let { startDate, days, slots } = req.body;
++        slots = Array.isArray(slots) ? slots : JSON.parse(slots);
++        
++        const start = new Date(startDate);
++        let createdCount = 0;
++
++        for (let i = 0; i < Number(days); i++) {
++            const currentDate = new Date(start);
++            currentDate.setDate(start.getDate() + i);
++            const dateString = currentDate.toISOString().split("T")[0];
++
++            const existing = await Availability.findOne({ date: dateString });
++            const newSlotsFormatted = slots.map(time => ({ time, isBooked: false }));
++
++            if (existing) {
++                // Preserve slots that are already booked
++                const bookedSlots = existing.slots.filter(s => s.isBooked);
++                const bookedTimes = bookedSlots.map(s => s.time);
++                
++                // Only add unbooked slots that don't overlap with booked times
++                const newlyAdded = newSlotsFormatted.filter(s => !bookedTimes.includes(s.time));
++
++                existing.slots = [...bookedSlots, ...newlyAdded].sort((a,b) => a.time.localeCompare(b.time));
++                await existing.save();
++                createdCount++;
++            } else {
++                await Availability.create({
++                    date: dateString,
++                    slots: newSlotsFormatted,
++                    isActive: true
++                });
++                createdCount++;
++            }
++        }
++
++        res.status(200).json({ success: true, message: `Successfully published schedule to ${createdCount} days` });
++    } catch (error) {
++        res.status(500).json({ message: error.message });
++    }
+ };
+\ No newline at end of file
+diff --git a/server/routes/adminRoute.js b/server/routes/adminRoute.js
+index 6e04037..8fcd526 100644
+--- a/server/routes/adminRoute.js
++++ b/server/routes/adminRoute.js
+@@ -1,6 +1,6 @@
+ import express from 'express';
+ import { protect } from '../middlewares/userMiddleware.js';
+-import { getPendingAppointments, setAvailability, profileUpdate } from '../controllers/adminController.js';
++import { getPendingAppointments, setAvailability, broadcastAvailability, profileUpdate } from '../controllers/adminController.js';
+ import { admin, validateAvailability } from '../middlewares/adminMiddleware.js';
+ import { body } from "express-validator";
+ import { validate } from '../middlewares/validationMiddleware.js';
+@@ -12,6 +12,7 @@ router.use(protect, admin);
+ 
+ // User routes
+ router.post('/set-availability', validateAvailability, setAvailability);
++router.post('/broadcast-availability', broadcastAvailability);
+ router.get('/pending-appointments', getPendingAppointments);
+ router.patch("/profile", protect,
+   [

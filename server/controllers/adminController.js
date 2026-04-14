@@ -62,3 +62,46 @@ export const profileUpdate = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+export const broadcastAvailability = async (req, res) => {
+    try {
+        let { startDate, days, slots } = req.body;
+        slots = Array.isArray(slots) ? slots : JSON.parse(slots);
+        
+        const start = new Date(startDate);
+        let createdCount = 0;
+
+        for (let i = 0; i < Number(days); i++) {
+            const currentDate = new Date(start);
+            currentDate.setDate(start.getDate() + i);
+            const dateString = currentDate.toISOString().split("T")[0];
+
+            const existing = await Availability.findOne({ date: dateString });
+            const newSlotsFormatted = slots.map(time => ({ time, isBooked: false }));
+
+            if (existing) {
+                // Preserve slots that are already booked
+                const bookedSlots = existing.slots.filter(s => s.isBooked);
+                const bookedTimes = bookedSlots.map(s => s.time);
+                
+                // Only add unbooked slots that don't overlap with booked times
+                const newlyAdded = newSlotsFormatted.filter(s => !bookedTimes.includes(s.time));
+
+                existing.slots = [...bookedSlots, ...newlyAdded].sort((a,b) => a.time.localeCompare(b.time));
+                await existing.save();
+                createdCount++;
+            } else {
+                await Availability.create({
+                    date: dateString,
+                    slots: newSlotsFormatted,
+                    isActive: true
+                });
+                createdCount++;
+            }
+        }
+
+        res.status(200).json({ success: true, message: `Successfully published schedule to ${createdCount} days` });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};

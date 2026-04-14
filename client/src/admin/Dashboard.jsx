@@ -33,10 +33,16 @@ import {
   ChevronDown,
   CreditCard,
   HelpCircle,
-  Activity
+  Banknote,
+  BookOpen,
+  Activity,
+  Radio
 } from "lucide-react";
 import API from "../api/axios";
 import { useAuth } from "../context/AuthContext";
+
+import ManageBlogsView from "./ManageBlogsView";
+import ManageBlogPaymentsView from "./ManageBlogPaymentsView";
 
 // --- 1. ADMIN PROFILE VIEW ---
 const AdminProfileView = ({ user, setUser }) => {
@@ -863,6 +869,7 @@ const TimeSlotsView = () => {
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(false);
   const [flushing, setFlushing] = useState(false);
+  const [broadcasting, setBroadcasting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [availabilityId, setAvailabilityId] = useState(null);
@@ -882,12 +889,16 @@ const TimeSlotsView = () => {
       );
       setSlots(formattedSlots.sort());
     } catch (e) {
-      setSlots([]);
       setAvailabilityId(null);
-      if (e.response?.status === 400 || e.response?.status === 404) {
-        setErrorMsg(e.response.data?.message);
+      if (e.response?.status === 404) {
+        setSlots(["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00"]);
       } else {
-        setErrorMsg("Failed to fetch existing schedule.");
+        setSlots(["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00"]);
+        if (e.response?.status === 400) {
+          setErrorMsg(e.response.data?.message);
+        } else {
+          setErrorMsg("Failed to fetch existing schedule.");
+        }
       }
     } finally {
       setFetching(false);
@@ -918,6 +929,26 @@ const TimeSlotsView = () => {
       );
     } finally {
       setLoading(false);
+    }
+  };
+
+  const broadcastAvailability = async () => {
+    setBroadcasting(true);
+    setErrorMsg("");
+    try {
+      const res = await API.post("/admin/broadcast-availability", { 
+        startDate: date, 
+        days: 30, 
+        slots 
+      });
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 3000);
+    } catch (e) {
+      setErrorMsg(
+        e.response?.data?.message || "Failed to broadcast portal schedule."
+      );
+    } finally {
+      setBroadcasting(false);
     }
   };
 
@@ -1087,11 +1118,11 @@ const TimeSlotsView = () => {
       </div>
 
       {/* Action Buttons */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
         <button
           disabled={flushing}
           onClick={() => setModalType("flush")}
-          className="sm:col-span-1 py-3 sm:py-4 bg-slate-100 text-slate-600 font-black text-xs sm:text-sm rounded-xl sm:rounded-2xl border-2 border-slate-200 flex justify-center items-center gap-2 hover:bg-slate-200 disabled:opacity-30 transition-all"
+          className="flex-1 py-3 sm:py-4 bg-slate-100 text-slate-600 font-black text-xs sm:text-sm rounded-xl sm:rounded-2xl border-2 border-slate-200 flex justify-center items-center gap-2 hover:bg-slate-200 disabled:opacity-30 transition-all"
         >
           {flushing ? (
             <Loader2 className="animate-spin" size={18} />
@@ -1101,16 +1132,31 @@ const TimeSlotsView = () => {
             </>
           )}
         </button>
+
+        <button
+          disabled={broadcasting || !date || slots.length === 0}
+          onClick={broadcastAvailability}
+          className="flex-1 py-3 sm:py-4 bg-purple-600 text-white font-black text-xs sm:text-sm rounded-xl sm:rounded-2xl shadow-xl flex justify-center items-center gap-2 hover:bg-purple-700 disabled:opacity-30 transition-all"
+        >
+          {broadcasting ? (
+            <Loader2 className="animate-spin" size={18} />
+          ) : (
+            <>
+              <Radio size={16} /> Broadcast 30 Days
+            </>
+          )}
+        </button>
+
         <button
           disabled={loading || !date || slots.length === 0}
           onClick={publishAvailability}
-          className="sm:col-span-2 py-4 sm:py-5 bg-[#Dd1764] text-white font-black text-xs sm:text-sm rounded-xl sm:rounded-2xl shadow-xl flex justify-center items-center gap-2 sm:gap-3 hover:opacity-90 active:scale-[0.98] disabled:opacity-30 transition-all"
+          className="flex-1 py-3 sm:py-4 bg-[#Dd1764] text-white font-black text-xs sm:text-sm rounded-xl sm:rounded-2xl shadow-xl flex justify-center items-center gap-2 sm:gap-3 hover:opacity-90 active:scale-[0.98] disabled:opacity-30 transition-all"
         >
           {loading ? (
             <Loader2 className="animate-spin" size={20} />
           ) : (
             <>
-              <TrendingUp size={18} /> Broadcast Schedule
+              <Check size={20} className="hidden sm:block" /> Publish Schedule
             </>
           )}
         </button>
@@ -1518,6 +1564,8 @@ const AdminDashboard = () => {
     { name: "Time Slots", icon: Clock },
     { name: "FAQs", icon: HelpCircle },
     { name: "Therapies", icon: Activity },
+    { name: "Manage Blogs", icon: BookOpen },
+    { name: "Blog Payments", icon: Banknote },
   ];
 
   useEffect(() => {
@@ -1663,6 +1711,8 @@ const AdminDashboard = () => {
             {activeTab === "Time Slots" && <TimeSlotsView />}
             {activeTab === "FAQs" && <ManageFAQsView />}
             {activeTab === "Therapies" && <ManageTherapiesView />}
+            {activeTab === "Manage Blogs" && <ManageBlogsView />}
+            {activeTab === "Blog Payments" && <ManageBlogPaymentsView />}
           </div>
         </div>
       </main>

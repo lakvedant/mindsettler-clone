@@ -13,6 +13,7 @@ import UserProfile from "./pages/UserProfile.jsx";
 import ChatWidget from "./components/chatbot/ChatWidget.jsx";
 import AboutUsPage from "./pages/AboutUs.jsx";
 import ResourcesPage from "./pages/Resources.jsx";
+import ArticlePage from "./pages/ArticlePage.jsx";
 import VerifyEmail from "./components/auth/VerifyEmail.jsx";
 import ResetPassword from "./pages/ResetPassword.jsx";
 
@@ -35,6 +36,7 @@ function App() {
         <Route path="/logout" element={<Logout />} />
         <Route path="/aboutus" element={<AboutUsPage />} />
         <Route path="/resources" element={<ResourcesPage />} />
+        <Route path="/resources/:id" element={<ArticlePage />} />
         <Route path="/verify-email" element={<VerifyEmail setUser={setUser} />}/>
         <Route path="/reset-password" element={<ResetPassword />} />
         {/* GROUP 2: Admin Pages (No Public Navbar) */}

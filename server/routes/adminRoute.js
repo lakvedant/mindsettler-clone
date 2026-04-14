@@ -1,6 +1,6 @@
 import express from 'express';
 import { protect } from '../middlewares/userMiddleware.js';
-import { getPendingAppointments, setAvailability, profileUpdate } from '../controllers/adminController.js';
+import { getPendingAppointments, setAvailability, broadcastAvailability, profileUpdate } from '../controllers/adminController.js';
 import { admin, validateAvailability } from '../middlewares/adminMiddleware.js';
 import { body } from "express-validator";
 import { validate } from '../middlewares/validationMiddleware.js';
@@ -12,6 +12,7 @@ router.use(protect, admin);
 
 // User routes
 router.post('/set-availability', validateAvailability, setAvailability);
+router.post('/broadcast-availability', broadcastAvailability);
 router.get('/pending-appointments', getPendingAppointments);
 router.patch("/profile", protect,
   [

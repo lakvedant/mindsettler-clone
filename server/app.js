@@ -22,6 +22,8 @@ import sessionPaymentRoute from './routes/sessionPaymentRoute.js'
 import chatRoutes from "./routes/chat.routes.js";
 import faqRoute from "./routes/faqRoute.js";
 import therapyRoute from "./routes/therapyRoute.js";
+import blogRoute from "./routes/blogRoute.js";
+import blogPaymentRoute from "./routes/blogPaymentRoute.js";
 import { protect } from "./middlewares/userMiddleware.js";
 import connectDB from "./config/db.js";
 import { globalLimiter } from './middlewares/rateLimiter.js';
@@ -69,5 +71,7 @@ app.use('/api/session-payments', protect, sessionPaymentRoute);
 app.use("/api/chat", chatRoutes);
 app.use('/api/faq', faqRoute);
 app.use('/api/therapy', therapyRoute);
+app.use('/api/blog', blogRoute);
+app.use('/api/blog-payment', blogPaymentRoute);
 
 export default app;

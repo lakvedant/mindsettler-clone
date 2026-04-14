@@ -34,6 +34,8 @@ import {
 import Navbar from "../components/common/Navbar";
 import Footer from "../components/common/Footer";
 import { ResourcesSEO } from "../components/common/SEO";
+import { Link } from "react-router-dom";
+import API from "../api/axios";
 import { useAuth } from "../context/AuthContext";
 import {
   IsLoginUser,
@@ -44,6 +46,7 @@ import { ScrollProgressBar } from "../components/common/ScrollProgressBar";
 import useIsMobile from "../hooks/useIsMobile";
 
 // ============== CUSTOM HOOKS ==============
+const IconMap = { Search, BookOpen, Clock, ArrowRight, Heart, Bookmark, TrendingUp, Star, ExternalLink, Brain, Users, Smile, Lightbulb, Target, Sparkles, Filter, X, ChevronDown, Eye, Share2, ArrowUpRight };
 
 // Custom Hook for Mouse Position
 const useMousePosition = () => {
@@ -574,7 +577,7 @@ const ArticleCard = ({
 
           {/* Tags with animation */}
           <div className="flex flex-wrap gap-2 mb-4">
-            {article.tags.slice(0, 3).map((tag, i) => (
+            {article.tags?.slice(0, 3).map((tag, i) => (
               <motion.span
                 key={i}
                 initial={{ opacity: 0, scale: 0.8 }}
@@ -592,12 +595,9 @@ const ArticleCard = ({
           </div>
 
           {/* Read More Link */}
-          <motion.a
-            href={article.sourceUrl}
-            target="_blank"
-            rel="noopener noreferrer"
+          <Link
+            to={`/resources/${article._id || article.id}`}
             className="inline-flex items-center gap-2 text-[#Dd1764] font-semibold text-sm group/link"
-            whileHover={{ x: 5 }}
             data-hover
           >
             Read Full Article
@@ -607,7 +607,7 @@ const ArticleCard = ({
             >
               <ArrowUpRight className="w-4 h-4" />
             </motion.span>
-          </motion.a>
+          </Link>
         </div>
       </div>
     </motion.article>
@@ -691,6 +691,42 @@ const ResourcesPage = () => {
   const [savedArticles, setSavedArticles] = useState([]);
   const [likedArticles, setLikedArticles] = useState([]);
   const { user, loading: authLoading } = useAuth();
+  
+  const [categories, setCategories] = useState([]);
+  const [articles, setArticles] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [catRes, blogRes] = await Promise.all([
+          API.get("/blog/categories"),
+          API.get("/blog"),
+        ]);
+        const fetchedCats = catRes.data.data.map((c) => ({ ...c, id: c._id }));
+        setCategories([
+          { id: "all", name: "All Resources", icon: BookOpen, count: blogRes.data.data.length },
+          ...fetchedCats,
+        ]);
+        const fetchedBlogs = blogRes.data.data.map((b) => ({
+          ...b,
+          id: b._id,
+          categoryId: b.category ? b.category._id : null,
+          category: b.category ? b.category.name : "Uncategorized",
+          sourceUrl: `/resources/${b._id}`,
+          tags: b.tags || [],
+          image: b.pictureUrl,
+          featured: b.isMainHighlight || b.isPaid,
+        }));
+        setArticles(fetchedBlogs);
+      } catch (err) {
+        console.error("Failed to fetch CMS", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
 
   const { scrollYProgress } = useScroll({
     target: containerRef,
@@ -701,7 +737,7 @@ const ResourcesPage = () => {
   const backgroundY = useTransform(scrollYProgress, [0, 1], ["0%", "20%"]);
 
   // Categories
-  const categories = [
+  const mockCategories = [
     { id: "all", name: "All Resources", icon: BookOpen, count: 24 },
     { id: "anxiety", name: "Anxiety & Stress", icon: Brain, count: 6 },
     { id: "depression", name: "Depression", icon: Heart, count: 5 },
@@ -711,7 +747,7 @@ const ResourcesPage = () => {
   ];
 
   // Articles data (keeping your existing data)
-  const articles = [
+  const mockArticles = [
     {
       id: 1,
       title: "Understanding Anxiety: Causes, Symptoms, and Coping Strategies",
@@ -1091,12 +1127,12 @@ const ResourcesPage = () => {
   // Filter articles
   const filteredArticles = articles.filter((article) => {
     const matchesCategory =
-      activeCategory === "all" || article.category === activeCategory;
+      activeCategory === "all" || article.categoryId === activeCategory;
     const matchesSearch =
-      article.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      article.excerpt.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      article.tags.some((tag) =>
-        tag.toLowerCase().includes(searchQuery.toLowerCase())
+      article.title?.toLowerCase()?.includes(searchQuery.toLowerCase()) ||
+      article.excerpt?.toLowerCase()?.includes(searchQuery.toLowerCase()) ||
+      article.tags?.some((tag) =>
+        tag?.toLowerCase()?.includes(searchQuery.toLowerCase())
       );
     return matchesCategory && matchesSearch;
   });
