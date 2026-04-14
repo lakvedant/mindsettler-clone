@@ -37,13 +37,28 @@ app.use(cookieParser());
 app.use(globalLimiter);
 
 const isProduction = process.env.NODE_ENV === "production";
-app.use(cors({
-  origin: process.env.FRONTEND_URL,
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
-  exposedHeaders: ["set-cookie"],
-}));
+const normalizeOrigin = (value = "") => value.replace(/\/+$/, "");
+const allowedOrigin = normalizeOrigin(process.env.FRONTEND_URL || "");
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Allow non-browser requests (curl/postman/server-to-server)
+      if (!origin) return callback(null, true);
+
+      const normalizedRequestOrigin = normalizeOrigin(origin);
+      if (normalizedRequestOrigin === allowedOrigin) {
+        return callback(null, true);
+      }
+
+      return callback(new Error(`CORS blocked for origin: ${origin}`));
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+    exposedHeaders: ["set-cookie"],
+  })
+);
 
 app.use(session({
   secret: process.env.SESSION_SECRET || "mindsettler_secret_key", 
