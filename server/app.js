@@ -24,6 +24,7 @@ import faqRoute from "./routes/faqRoute.js";
 import therapyRoute from "./routes/therapyRoute.js";
 import blogRoute from "./routes/blogRoute.js";
 import blogPaymentRoute from "./routes/blogPaymentRoute.js";
+import eventRoute from "./routes/eventRoute.js";
 import { protect } from "./middlewares/userMiddleware.js";
 import connectDB from "./config/db.js";
 import { globalLimiter } from './middlewares/rateLimiter.js';
@@ -73,5 +74,6 @@ app.use('/api/faq', faqRoute);
 app.use('/api/therapy', therapyRoute);
 app.use('/api/blog', blogRoute);
 app.use('/api/blog-payment', blogPaymentRoute);
+app.use("/api/events", eventRoute);
 
 export default app;

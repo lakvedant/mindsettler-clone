@@ -43,6 +43,7 @@ import { useAuth } from "../context/AuthContext";
 
 import ManageBlogsView from "./ManageBlogsView";
 import ManageBlogPaymentsView from "./ManageBlogPaymentsView";
+import ManageEventsView from "./ManageEventsView";
 
 // --- 1. ADMIN PROFILE VIEW ---
 const AdminProfileView = ({ user, setUser }) => {
@@ -249,16 +250,29 @@ const AdminProfileView = ({ user, setUser }) => {
 // --- 2. SESSION PAYMENTS VIEW ---
 const SessionPaymentsView = () => {
   const [payments, setPayments] = useState([]);
+  const [appointments, setAppointments] = useState([]);
+  const [therapyRates, setTherapyRates] = useState({});
   const [loading, setLoading] = useState(true);
   const [procId, setProcId] = useState(null);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    API.get("/session-payments/pending")
-      .then((res) => {
-        setPayments(res.data.data || []);
-        setLoading(false);
+    Promise.all([
+      API.get("/session-payments"),
+      API.get("/admin/pending-appointments"),
+      API.get("/therapy"),
+    ])
+      .then(([paymentRes, appointmentRes, therapyRes]) => {
+        setPayments(paymentRes.data.data || []);
+        setAppointments(appointmentRes.data.data || []);
+        const mappedRates = (therapyRes.data.data || []).reduce((acc, therapy) => {
+          acc[therapy.name] = Number(therapy.amount || 0);
+          return acc;
+        }, {});
+        setTherapyRates(mappedRates);
       })
-      .catch(() => setLoading(false));
+      .catch(() => setError("Unable to load payment analytics right now."))
+      .finally(() => setLoading(false));
   }, []);
 
   const handleAction = async (id, status, reason = "") => {
@@ -271,12 +285,49 @@ const SessionPaymentsView = () => {
       } else {
         await API.patch(`/session-payments/approve/${id}`);
       }
-      setPayments((prev) => prev.filter((p) => p._id !== id));
+      setPayments((prev) =>
+        prev.map((payment) =>
+          payment._id === id
+            ? {
+                ...payment,
+                status: status === "approve" ? "approved" : "rejected",
+                rejectionReason:
+                  status === "reject"
+                    ? reason || "Payment verification failed"
+                    : payment.rejectionReason,
+              }
+            : payment
+        )
+      );
     } catch (e) {
       alert("Error processing payment");
     } finally {
       setProcId(null);
     }
+  };
+
+  const pendingPayments = payments.filter((payment) => payment.status === "pending");
+  const pastPayments = payments.filter((payment) => payment.status !== "pending");
+  const approvedUpi = payments.filter((payment) => payment.status === "approved");
+  const upiCollection = approvedUpi.reduce(
+    (total, payment) => total + Number(payment.amount || 0),
+    0
+  );
+  const approvedOfflineSessions = appointments.filter(
+    (appointment) =>
+      appointment.sessionType === "offline" &&
+      ["confirmed", "completed"].includes(appointment.status)
+  );
+  const cashCollection = approvedOfflineSessions.reduce(
+    (total, appointment) => total + Number(therapyRates[appointment.therapyType] || 0),
+    0
+  );
+  const totalCollection = upiCollection + cashCollection;
+
+  const getPaymentStatusStyle = (status) => {
+    if (status === "approved") return "bg-green-100 text-green-700";
+    if (status === "rejected") return "bg-red-100 text-red-600";
+    return "bg-amber-100 text-amber-700";
   };
 
   if (loading)
@@ -287,15 +338,36 @@ const SessionPaymentsView = () => {
     );
 
   return (
-    <div className="space-y-4">
-      {payments.length === 0 ? (
+    <div className="space-y-4 sm:space-y-6">
+      {error && (
+        <div className="p-4 rounded-2xl bg-red-50 border border-red-100 text-red-600 text-sm font-bold">
+          {error}
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="bg-white p-4 rounded-2xl border shadow-sm">
+          <p className="text-[10px] text-slate-400 uppercase font-black">Total Collected</p>
+          <p className="text-2xl font-black text-[#3F2965]">₹{totalCollection}</p>
+        </div>
+        <div className="bg-white p-4 rounded-2xl border shadow-sm">
+          <p className="text-[10px] text-slate-400 uppercase font-black">Cash Collected</p>
+          <p className="text-2xl font-black text-[#Dd1764]">₹{cashCollection}</p>
+        </div>
+        <div className="bg-white p-4 rounded-2xl border shadow-sm">
+          <p className="text-[10px] text-slate-400 uppercase font-black">UPI Collected</p>
+          <p className="text-2xl font-black text-[#3F2965]">₹{upiCollection}</p>
+        </div>
+      </div>
+
+      {pendingPayments.length === 0 ? (
         <div className="text-center py-12 bg-slate-50 rounded-2xl">
           <CreditCard size={48} className="mx-auto text-slate-200 mb-3" />
           <p className="text-slate-500 font-bold">No pending payments</p>
           <p className="text-sm text-slate-400">All payments have been verified</p>
         </div>
       ) : (
-        payments.map((payment) => (
+        pendingPayments.map((payment) => (
           <div
             key={payment._id}
             className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow"
@@ -313,12 +385,16 @@ const SessionPaymentsView = () => {
               </div>
 
               <div>
-                <p className="text-xs text-slate-400 uppercase font-bold">UTR Number</p>
-                <p className="font-mono font-bold text-slate-700">{payment.utrNumber}</p>
+                <p className="text-xs text-slate-400 uppercase font-bold">Payment Mode</p>
+                <p className="font-bold text-slate-700">UPI</p>
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4 p-3 rounded-xl bg-slate-50 border border-slate-100">
+              <div>
+                <p className="text-[10px] text-slate-400 uppercase font-bold">UTR Number</p>
+                <p className="font-mono font-bold text-slate-700">{payment.utrNumber}</p>
+              </div>
               <div>
                 <p className="text-[10px] text-slate-400 uppercase font-bold">Therapy</p>
                 <p className="text-sm font-bold text-slate-700">{payment.appointment?.therapyType || "N/A"}</p>
@@ -372,6 +448,52 @@ const SessionPaymentsView = () => {
           </div>
         ))
       )}
+
+      <div className="bg-white rounded-2xl border shadow-sm overflow-hidden">
+        <div className="p-4 border-b bg-slate-50">
+          <h3 className="text-sm font-black text-[#3F2965] uppercase tracking-wider">Past Payments</h3>
+          <p className="text-xs text-slate-400">Approved and rejected payments are kept for audit.</p>
+        </div>
+        {pastPayments.length === 0 ? (
+          <p className="p-4 text-sm text-slate-500">No past payments yet.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[760px] text-left">
+              <thead className="border-b bg-white">
+                <tr>
+                  <th className="px-4 py-3 text-[10px] uppercase text-slate-400 font-black">User</th>
+                  <th className="px-4 py-3 text-[10px] uppercase text-slate-400 font-black">Date</th>
+                  <th className="px-4 py-3 text-[10px] uppercase text-slate-400 font-black">Mode</th>
+                  <th className="px-4 py-3 text-[10px] uppercase text-slate-400 font-black">Amount</th>
+                  <th className="px-4 py-3 text-[10px] uppercase text-slate-400 font-black">Status</th>
+                  <th className="px-4 py-3 text-[10px] uppercase text-slate-400 font-black">UTR</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pastPayments.map((payment) => (
+                  <tr key={payment._id} className="border-b last:border-0">
+                    <td className="px-4 py-3">
+                      <p className="text-sm font-bold text-slate-700">{payment.user?.name || "N/A"}</p>
+                      <p className="text-xs text-slate-400">{payment.user?.email || "N/A"}</p>
+                    </td>
+                    <td className="px-4 py-3 text-sm font-semibold text-slate-600">
+                      {new Date(payment.createdAt).toLocaleDateString()}
+                    </td>
+                    <td className="px-4 py-3 text-sm font-semibold text-slate-600">UPI</td>
+                    <td className="px-4 py-3 text-sm font-black text-[#3F2965]">₹{payment.amount}</td>
+                    <td className="px-4 py-3">
+                      <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase ${getPaymentStatusStyle(payment.status)}`}>
+                        {payment.status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-xs font-mono text-slate-600">{payment.utrNumber}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
@@ -385,6 +507,7 @@ const AppointmentsView = () => {
   const [selectedApp, setSelectedApp] = useState(null);
   const [modalError, setModalError] = useState("");
   const [tableError, setTableError] = useState("");
+  const [selectedUserId, setSelectedUserId] = useState("all");
 
   // Meet Link specific states
   const [meetLink, setMeetLink] = useState("");
@@ -417,8 +540,10 @@ const AppointmentsView = () => {
 
     try {
       await API.patch(`/appointment/status/${id}`, { status });
-      setAppointments((prev) => prev.filter((app) => app._id !== id));
-      if (selectedApp?._id === id) setSelectedApp(null);
+      setAppointments((prev) =>
+        prev.map((app) => (app._id === id ? { ...app, status } : app))
+      );
+      setSelectedApp((prev) => (prev && prev._id === id ? { ...prev, status } : prev));
     } catch (e) {
       const errorText =
         e.response?.data?.message || "Action failed. Please try again.";
@@ -467,6 +592,33 @@ const AppointmentsView = () => {
       </div>
     );
 
+  const users = Array.from(
+    new Map(
+      appointments
+        .filter((app) => app.user?._id)
+        .map((app) => [app.user._id, { id: app.user._id, name: app.user.name || "Unknown" }])
+    ).values()
+  );
+
+  const filteredAppointments =
+    selectedUserId === "all"
+      ? appointments
+      : appointments.filter((app) => app.user?._id === selectedUserId);
+
+  const statusStyles = {
+    pending: "bg-amber-100 text-amber-700",
+    confirmed: "bg-blue-100 text-blue-700",
+    completed: "bg-green-100 text-green-700",
+    rejected: "bg-red-100 text-red-700",
+  };
+
+  const sessionsForSelectedUser =
+    selectedUserId === "all"
+      ? appointments.length
+      : appointments.filter((app) => app.user?._id === selectedUserId).length;
+
+  const canModerate = (status) => !["completed", "rejected"].includes(status);
+
   return (
     <div className="relative">
       {/* Error Banner */}
@@ -483,17 +635,45 @@ const AppointmentsView = () => {
         </div>
       )}
 
+      <div className="bg-white p-4 sm:p-5 rounded-2xl border shadow-sm mb-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
+          <div>
+            <p className="text-[10px] text-slate-400 uppercase font-black mb-1">Filter by user</p>
+            <select
+              value={selectedUserId}
+              onChange={(e) => setSelectedUserId(e.target.value)}
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-700"
+            >
+              <option value="all">All Users</option>
+              {users.map((user) => (
+                <option key={user.id} value={user.id}>
+                  {user.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="bg-slate-50 rounded-xl p-3">
+            <p className="text-[10px] text-slate-400 uppercase font-black">Showing Sessions</p>
+            <p className="text-xl font-black text-[#3F2965]">{filteredAppointments.length}</p>
+          </div>
+          <div className="bg-slate-50 rounded-xl p-3">
+            <p className="text-[10px] text-slate-400 uppercase font-black">Sessions by selected user</p>
+            <p className="text-xl font-black text-[#Dd1764]">{sessionsForSelectedUser}</p>
+          </div>
+        </div>
+      </div>
+
       {/* Empty State - Show when no appointments */}
-      {appointments.length === 0 ? (
+      {filteredAppointments.length === 0 ? (
         <div className="bg-white rounded-2xl sm:rounded-3xl border shadow-sm p-8 sm:p-12 lg:p-16 text-center animate-in fade-in duration-500">
           <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 sm:mb-6 rounded-full bg-linear-to-tr from-purple-50 to-pink-50 flex items-center justify-center">
             <CalendarCheck className="w-8 h-8 sm:w-10 sm:h-10 text-[#3F2965]/40" />
           </div>
           <h3 className="text-lg sm:text-xl font-black text-[#3F2965] mb-2">
-            No Pending Appointments
+            No Appointments Found
           </h3>
           <p className="text-slate-400 text-xs sm:text-sm font-medium max-w-sm mx-auto">
-            You're all caught up! There are no appointments waiting for your review at the moment.
+            No sessions match the selected user filter.
           </p>
         </div>
       ) : (
@@ -509,13 +689,19 @@ const AppointmentsView = () => {
                   <th className="p-4 lg:p-5 text-[10px] sm:text-xs font-black text-slate-500 uppercase">
                     Client Details
                   </th>
+                  <th className="p-4 lg:p-5 text-[10px] sm:text-xs font-black text-slate-500 uppercase">
+                    Session Details
+                  </th>
+                  <th className="p-4 lg:p-5 text-[10px] sm:text-xs font-black text-slate-500 uppercase">
+                    Status
+                  </th>
                   <th className="p-4 lg:p-5 text-[10px] sm:text-xs font-black text-slate-500 uppercase text-center">
-                    Actions
+                    Action
                   </th>
                 </tr>
               </thead>
               <tbody>
-                {appointments.map((app, idx) => (
+                {filteredAppointments.map((app, idx) => (
                 <tr
                   key={app._id}
                   className="border-b last:border-0 hover:bg-slate-50/50 transition-colors"
@@ -549,31 +735,51 @@ const AppointmentsView = () => {
                       </div>
                     </div>
                   </td>
+                  <td className="p-4 lg:p-5 text-sm font-semibold text-slate-600">
+                    <p>{app.therapyType}</p>
+                    <p className="text-xs text-slate-500 capitalize">
+                      {app.sessionType} | {app.timeSlot}
+                    </p>
+                    <p className="text-xs text-slate-400">
+                      {app.availabilityRef?.date
+                        ? new Date(app.availabilityRef.date).toLocaleDateString()
+                        : "Date unavailable"}
+                    </p>
+                  </td>
+                  <td className="p-4 lg:p-5">
+                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase ${statusStyles[app.status] || "bg-slate-100 text-slate-600"}`}>
+                      {app.status}
+                    </span>
+                  </td>
                   <td className="p-4 lg:p-5 text-center">
-                    <div className="flex justify-center gap-2">
-                      <button
-                        disabled={actionId === app._id}
-                        onClick={() => updateStatus(app._id, "rejected")}
-                        className="px-4 py-2 text-[10px] font-black uppercase text-red-600 bg-red-50 rounded-xl hover:bg-red-100 transition-all"
-                      >
-                        {actionId === app._id ? (
-                          <Loader2 size={14} className="animate-spin" />
-                        ) : (
-                          "Reject"
-                        )}
-                      </button>
-                      <button
-                        disabled={actionId === app._id}
-                        onClick={() => updateStatus(app._id, "completed")}
-                        className="px-4 py-2 text-[10px] font-black uppercase text-white bg-green-500 rounded-xl shadow-md hover:bg-green-600 transition-all"
-                      >
-                        {actionId === app._id ? (
-                          <Loader2 size={14} className="animate-spin" />
-                        ) : (
-                          "Complete"
-                        )}
-                      </button>
-                    </div>
+                    {canModerate(app.status) ? (
+                      <div className="flex justify-center gap-2">
+                        <button
+                          disabled={actionId === app._id}
+                          onClick={() => updateStatus(app._id, "rejected")}
+                          className="px-4 py-2 text-[10px] font-black uppercase text-red-600 bg-red-50 rounded-xl hover:bg-red-100 transition-all"
+                        >
+                          {actionId === app._id ? (
+                            <Loader2 size={14} className="animate-spin" />
+                          ) : (
+                            "Reject"
+                          )}
+                        </button>
+                        <button
+                          disabled={actionId === app._id}
+                          onClick={() => updateStatus(app._id, "completed")}
+                          className="px-4 py-2 text-[10px] font-black uppercase text-white bg-green-500 rounded-xl shadow-md hover:bg-green-600 transition-all"
+                        >
+                          {actionId === app._id ? (
+                            <Loader2 size={14} className="animate-spin" />
+                          ) : (
+                            "Complete"
+                          )}
+                        </button>
+                      </div>
+                    ) : (
+                      <span className="text-xs font-black uppercase text-slate-400">Closed</span>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -583,7 +789,7 @@ const AppointmentsView = () => {
 
         {/* Mobile View */}
         <div className="lg:hidden space-y-3">
-          {appointments.map((app) => (
+          {filteredAppointments.map((app) => (
           <div
             key={app._id}
             className="bg-white rounded-2xl border shadow-sm p-4 space-y-3"
@@ -609,19 +815,33 @@ const AppointmentsView = () => {
                 <Info size={16} />
               </button>
             </div>
+            <div className="text-xs text-slate-600 space-y-1">
+              <p className="font-bold">{app.therapyType}</p>
+              <p className="capitalize">{app.sessionType} | {app.timeSlot}</p>
+              <p>{app.availabilityRef?.date ? new Date(app.availabilityRef.date).toLocaleDateString() : "Date unavailable"}</p>
+              <span className={`inline-block mt-1 px-2 py-1 rounded-full text-[10px] font-black uppercase ${statusStyles[app.status] || "bg-slate-100 text-slate-600"}`}>
+                {app.status}
+              </span>
+            </div>
             <div className="flex gap-2">
-              <button
-                onClick={() => updateStatus(app._id, "rejected")}
-                className="flex-1 py-2.5 text-[10px] font-black uppercase text-red-600 bg-red-50 rounded-xl"
-              >
-                Reject
-              </button>
-              <button
-                onClick={() => updateStatus(app._id, "completed")}
-                className="flex-1 py-2.5 text-[10px] font-black uppercase text-white bg-green-500 rounded-xl shadow-md"
-              >
-                Complete
-              </button>
+              {canModerate(app.status) ? (
+                <>
+                  <button
+                    onClick={() => updateStatus(app._id, "rejected")}
+                    className="flex-1 py-2.5 text-[10px] font-black uppercase text-red-600 bg-red-50 rounded-xl"
+                  >
+                    Reject
+                  </button>
+                  <button
+                    onClick={() => updateStatus(app._id, "completed")}
+                    className="flex-1 py-2.5 text-[10px] font-black uppercase text-white bg-green-500 rounded-xl shadow-md"
+                  >
+                    Complete
+                  </button>
+                </>
+              ) : (
+                <p className="text-[10px] font-black uppercase text-slate-400">Closed</p>
+              )}
             </div>
           </div>
         ))}
@@ -676,6 +896,9 @@ const AppointmentsView = () => {
                     <Phone size={12} className="text-slate-400" />
                     <p className="text-slate-600">{selectedApp.user?.phone || "N/A"}</p>
                   </div>
+                  <p className="text-xs font-black text-[#3F2965]">
+                    Total sessions by user: {appointments.filter((app) => app.user?._id === selectedApp.user?._id).length}
+                  </p>
                 </div>
               </div>
 
@@ -703,7 +926,9 @@ const AppointmentsView = () => {
                       Date
                     </p>
                     <p className="text-sm font-bold text-slate-700">
-                      {new Date(selectedApp.date).toLocaleDateString()}
+                      {selectedApp.availabilityRef?.date
+                        ? new Date(selectedApp.availabilityRef.date).toLocaleDateString()
+                        : "Date unavailable"}
                     </p>
                   </div>
                 </div>
@@ -829,28 +1054,36 @@ const AppointmentsView = () => {
 
             {/* Modal Footer */}
             <div className="p-4 sm:p-6 bg-slate-50 border-t flex gap-3 shrink-0">
-              <button
-                disabled={actionId === selectedApp._id}
-                onClick={() => updateStatus(selectedApp._id, "rejected")}
-                className="flex-1 py-4 bg-white border text-red-600 font-black text-[10px] uppercase rounded-xl"
-              >
-                {actionId === selectedApp._id ? (
-                  <Loader2 size={16} className="animate-spin mx-auto" />
-                ) : (
-                  "Reject"
-                )}
-              </button>
-              <button
-                disabled={actionId === selectedApp._id}
-                onClick={() => updateStatus(selectedApp._id, "completed")}
-                className="flex-1 py-4 bg-[#3F2965] text-white font-black text-[10px] uppercase rounded-xl shadow-lg"
-              >
-                {actionId === selectedApp._id ? (
-                  <Loader2 size={16} className="animate-spin mx-auto" />
-                ) : (
-                  "Complete"
-                )}
-              </button>
+              {canModerate(selectedApp.status) ? (
+                <>
+                  <button
+                    disabled={actionId === selectedApp._id}
+                    onClick={() => updateStatus(selectedApp._id, "rejected")}
+                    className="flex-1 py-4 bg-white border text-red-600 font-black text-[10px] uppercase rounded-xl"
+                  >
+                    {actionId === selectedApp._id ? (
+                      <Loader2 size={16} className="animate-spin mx-auto" />
+                    ) : (
+                      "Reject"
+                    )}
+                  </button>
+                  <button
+                    disabled={actionId === selectedApp._id}
+                    onClick={() => updateStatus(selectedApp._id, "completed")}
+                    className="flex-1 py-4 bg-[#3F2965] text-white font-black text-[10px] uppercase rounded-xl shadow-lg"
+                  >
+                    {actionId === selectedApp._id ? (
+                      <Loader2 size={16} className="animate-spin mx-auto" />
+                    ) : (
+                      "Complete"
+                    )}
+                  </button>
+                </>
+              ) : (
+                <div className="w-full py-3 text-center text-xs font-black uppercase text-slate-400 bg-white rounded-xl border">
+                  Session already closed
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -1561,6 +1794,7 @@ const AdminDashboard = () => {
     { name: "Profile", icon: UserCircle },
     { name: "Session Payments", icon: CreditCard },
     { name: "Appointments", icon: CalendarCheck },
+    { name: "Events", icon: Calendar },
     { name: "Time Slots", icon: Clock },
     { name: "FAQs", icon: HelpCircle },
     { name: "Therapies", icon: Activity },
@@ -1708,6 +1942,7 @@ const AdminDashboard = () => {
             )}
             {activeTab === "Session Payments" && <SessionPaymentsView />}
             {activeTab === "Appointments" && <AppointmentsView />}
+            {activeTab === "Events" && <ManageEventsView />}
             {activeTab === "Time Slots" && <TimeSlotsView />}
             {activeTab === "FAQs" && <ManageFAQsView />}
             {activeTab === "Therapies" && <ManageTherapiesView />}

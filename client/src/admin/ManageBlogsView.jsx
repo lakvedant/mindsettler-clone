@@ -2,6 +2,14 @@ import { useState, useEffect } from "react";
 import { Plus, Trash2, Check, X, Loader2, Image as ImageIcon } from "lucide-react";
 import API from "../api/axios";
 
+const fileToDataUrl = (file) =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(new Error("Failed to read image file"));
+    reader.readAsDataURL(file);
+  });
+
 const ManageBlogsView = () => {
   const [activeSubTab, setActiveSubTab] = useState("categories");
   const [categories, setCategories] = useState([]);
@@ -14,6 +22,7 @@ const ManageBlogsView = () => {
     title: "", subtitle: "", body: "", pictureUrl: "", category: "", 
     tags: "", readTime: "5 min read", isMainHighlight: false, isSideHighlight: false, isPaid: false, price: 0
   });
+  const [blogImageName, setBlogImageName] = useState("");
 
   const fetchData = async () => {
     setLoading(true);
@@ -68,6 +77,7 @@ const ManageBlogsView = () => {
         title: "", subtitle: "", body: "", pictureUrl: "", category: "", 
         tags: "", readTime: "5 min read", isMainHighlight: false, isSideHighlight: false, isPaid: false, price: 0
       });
+      setBlogImageName("");
       fetchData();
     } catch (err) {
       alert("Error adding blog");
@@ -88,6 +98,7 @@ const ManageBlogsView = () => {
         title: "", subtitle: "", body: "", pictureUrl: "", category: "", 
         tags: "", readTime: "5 min read", isMainHighlight: false, isSideHighlight: false, isPaid: false, price: 0
       });
+      setBlogImageName("");
       fetchData();
     } catch (err) {
       alert("Error updating blog");
@@ -109,6 +120,7 @@ const ManageBlogsView = () => {
       isPaid: b.isPaid || false,
       price: b.price || 0
     });
+    setBlogImageName("");
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -118,6 +130,19 @@ const ManageBlogsView = () => {
       title: "", subtitle: "", body: "", pictureUrl: "", category: "", 
       tags: "", readTime: "5 min read", isMainHighlight: false, isSideHighlight: false, isPaid: false, price: 0
     });
+    setBlogImageName("");
+  };
+
+  const handleBlogImageChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const dataUrl = await fileToDataUrl(file);
+      setNewBlog((prev) => ({ ...prev, pictureUrl: dataUrl }));
+      setBlogImageName(file.name);
+    } catch (err) {
+      alert("Failed to load selected image.");
+    }
   };
 
   const handleDeleteBlog = async (id) => {
@@ -185,7 +210,18 @@ const ManageBlogsView = () => {
               <input type="text" placeholder="Subtitle" value={newBlog.subtitle} onChange={e => setNewBlog({...newBlog, subtitle: e.target.value})} className="col-span-2 p-3 border rounded-xl" />
               <textarea placeholder="Article Content (Supports markdown/HTML)" required value={newBlog.body} onChange={e => setNewBlog({...newBlog, body: e.target.value})} className="col-span-2 p-3 border rounded-xl min-h-[200px]" />
               
-              <input type="text" placeholder="Image URL" value={newBlog.pictureUrl} onChange={e => setNewBlog({...newBlog, pictureUrl: e.target.value})} className="col-span-1 p-3 border rounded-xl" />
+              <div className="col-span-1 p-3 border rounded-xl bg-slate-50 space-y-2">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Article Image</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleBlogImageChange}
+                  className="w-full text-sm"
+                />
+                {blogImageName && (
+                  <p className="text-xs text-slate-500 font-semibold truncate">{blogImageName}</p>
+                )}
+              </div>
               <select required value={newBlog.category} onChange={e => setNewBlog({...newBlog, category: e.target.value})} className="col-span-1 p-3 border rounded-xl">
                 <option value="">Select Category...</option>
                 {categories.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}

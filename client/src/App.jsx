@@ -16,11 +16,13 @@ import ResourcesPage from "./pages/Resources.jsx";
 import ArticlePage from "./pages/ArticlePage.jsx";
 import VerifyEmail from "./components/auth/VerifyEmail.jsx";
 import ResetPassword from "./pages/ResetPassword.jsx";
+import EventsPage from "./pages/Events.jsx";
 
 // A small component to wrap public pages with the Navbar
 
 function App() {
   const { user, setUser } = useAuth();
+
   return (
     <BrowserRouter>
       <ScrollToTop />
@@ -37,6 +39,7 @@ function App() {
         <Route path="/aboutus" element={<AboutUsPage />} />
         <Route path="/resources" element={<ResourcesPage />} />
         <Route path="/resources/:id" element={<ArticlePage />} />
+        <Route path="/events" element={<EventsPage />} />
         <Route path="/verify-email" element={<VerifyEmail setUser={setUser} />}/>
         <Route path="/reset-password" element={<ResetPassword />} />
         {/* GROUP 2: Admin Pages (No Public Navbar) */}

@@ -25,9 +25,10 @@ export const setAvailability = async (req, res) => {
 
 export const getPendingAppointments = async (req, res) => {
     try {
-        const appointments = await Appointment.find({ status:"confirmed" })
+        const appointments = await Appointment.find({})
             .populate('user', 'name email phone')
-            .sort({ date: 1, timeSlot: 1 });
+            .populate('availabilityRef', 'date')
+            .sort({ createdAt: -1 });
 
         res.status(200).json({ success: true, count:appointments.length, data: appointments });
     } catch (error) {
