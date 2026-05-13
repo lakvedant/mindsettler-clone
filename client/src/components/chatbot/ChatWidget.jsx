@@ -736,12 +736,7 @@ const ChatWidget = ({ user }) => {
             </div>
           )}
 
-          {/* Message count badge */}
-          {!isOpen && messageCount > 0 && (
-            <div className={`absolute -bottom-1 -left-1 min-w-5 h-5 px-1.5 bg-[#DD1764] rounded-full border-2 border-white shadow-lg flex items-center justify-center transition-transform ${isDragging ? "scale-0" : "scale-100"}`}>
-              <span className="text-[10px] font-bold text-white">{messageCount > 99 ? "99+" : messageCount}</span>
-            </div>
-          )}
+          {/* Message count badge removed as requested */}
         </button>
 
         {/* Reset position button */}
