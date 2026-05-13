@@ -245,10 +245,9 @@ const GlowingCard = ({ children, className, color = "purple", isMobile = false }
           background: useTransform(
             [mouseX, mouseY],
             ([x, y]) =>
-              `radial-gradient(400px circle at ${x}px ${y}px, ${
-                color === "pink"
-                  ? "rgba(221,23,100,0.15)"
-                  : "rgba(63,41,101,0.15)"
+              `radial-gradient(400px circle at ${x}px ${y}px, ${color === "pink"
+                ? "rgba(221,23,100,0.15)"
+                : "rgba(63,41,101,0.15)"
               }, transparent 40%)`
           ),
         }}
@@ -356,12 +355,10 @@ const BubbleBackground = ({ isMobile = false }) => {
             top: bubble.y,
             background:
               bubble.color === "purple"
-                ? `radial-gradient(circle at 30% 30%, rgba(139, 92, 246, ${
-                    bubble.opacity + 0.05
-                  }), rgba(63, 41, 101, ${bubble.opacity}))`
-                : `radial-gradient(circle at 30% 30%, rgba(251, 207, 232, ${
-                    bubble.opacity + 0.1
-                  }), rgba(221, 23, 100, ${bubble.opacity}))`,
+                ? `radial-gradient(circle at 30% 30%, rgba(139, 92, 246, ${bubble.opacity + 0.05
+                }), rgba(63, 41, 101, ${bubble.opacity}))`
+                : `radial-gradient(circle at 30% 30%, rgba(251, 207, 232, ${bubble.opacity + 0.1
+                }), rgba(221, 23, 100, ${bubble.opacity}))`,
             filter: "blur(1px)",
           }}
           initial={{ scale: 0, opacity: 0 }}
@@ -506,17 +503,16 @@ const ContactCard = ({
 
       {/* Icon with enhanced animation */}
       <motion.div
-        className={`relative w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center mb-4 ${
-          color === "pink"
+        className={`relative w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center mb-4 ${color === "pink"
             ? "bg-gradient-to-br from-[#DD1764]/15 to-[#DD1764]/5 text-[#DD1764]"
             : "bg-gradient-to-br from-[#3F2965]/15 to-[#3F2965]/5 text-[#3F2965]"
-        }`}
+          }`}
         animate={
           isHovered
             ? {
-                scale: [1, 1.2, 1.1],
-                rotate: [0, -10, 10, 0],
-              }
+              scale: [1, 1.2, 1.1],
+              rotate: [0, -10, 10, 0],
+            }
             : { scale: 1, rotate: 0 }
         }
         transition={{ duration: 0.5 }}
@@ -541,9 +537,8 @@ const ContactCard = ({
         {title}
       </motion.h3>
       <motion.p
-        className={`relative text-sm sm:text-base font-semibold mb-1 ${
-          color === "pink" ? "text-[#DD1764]" : "text-[#3F2965]/80"
-        }`}
+        className={`relative text-sm sm:text-base font-semibold mb-1 ${color === "pink" ? "text-[#DD1764]" : "text-[#3F2965]/80"
+          }`}
         animate={isHovered ? { x: 5 } : { x: 0 }}
         transition={{ duration: 0.3, delay: 0.05 }}
       >
@@ -579,9 +574,8 @@ const ContactCard = ({
 
       {/* Corner decoration */}
       <motion.div
-        className={`absolute -bottom-2 -right-2 w-16 h-16 rounded-full blur-2xl ${
-          color === "pink" ? "bg-[#DD1764]" : "bg-[#3F2965]"
-        }`}
+        className={`absolute -bottom-2 -right-2 w-16 h-16 rounded-full blur-2xl ${color === "pink" ? "bg-[#DD1764]" : "bg-[#3F2965]"
+          }`}
         initial={{ opacity: 0, scale: 0 }}
         animate={
           isHovered ? { opacity: 0.15, scale: 1 } : { opacity: 0, scale: 0 }
@@ -902,9 +896,9 @@ const TestimonialCard = ({ item, index }) => {
             animate={
               isHovered
                 ? {
-                    scale: [1, 1.3, 1],
-                    rotate: [0, 15, -15, 0],
-                  }
+                  scale: [1, 1.3, 1],
+                  rotate: [0, 15, -15, 0],
+                }
                 : {}
             }
           >
@@ -1025,7 +1019,7 @@ const ContactPage = () => {
       icon: <Phone />,
       title: "Call Us",
       detail: "+91 9974631313",
-      description: "Mon-Fri, 9am-6pm",
+      description: "Mon-Sat, 9am-6pm",
       color: "purple",
       href: "tel:+919974631313",
       isExternal: false,
@@ -1042,10 +1036,10 @@ const ContactPage = () => {
     {
       icon: <Mail />,
       title: "Email",
-      detail: "contact@mindsettler.com",
+      detail: "parnika@mindsettler.in",
       description: "We reply within 24h",
       color: "purple",
-      href: "mailto:contact@mindsettler.com?subject=Inquiry%20from%20Website",
+      href: "mailto:parnika@mindsettler.in?subject=Inquiry%20from%20Website",
       isExternal: false,
     },
     {
@@ -1328,7 +1322,7 @@ const ContactPage = () => {
                       delay={0.8}
                     />
                     <SocialButton
-                      href="mailto:contact@mindsettler.com?subject=Inquiry%20from%20Website"
+                      href="mailto:parnika@mindsettler.in?subject=Inquiry%20from%20Website"
                       icon={<Mail size={22} />}
                       gradient="from-[#3F2965] to-[#5a3d8a]"
                       shadowColor="shadow-purple-500/30"

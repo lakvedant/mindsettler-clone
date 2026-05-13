@@ -219,7 +219,7 @@ export const sendBookingConfirmationEmail = async (email, bookingDetails) => {
           <div style="border-top: 1px solid #eee; padding-top: 20px; margin-top: 20px;">
             <p style="color: #999; font-size: 12px; line-height: 1.6; margin: 0;">
               <strong>Cancellation Policy:</strong> You can reschedule or cancel your appointment up to 24 hours before the scheduled time. 
-              For any assistance, please contact us at support@mindsettler.com
+              For any assistance, please contact us at parnika@mindsettler.in
             </p>
           </div>
           
@@ -228,7 +228,7 @@ export const sendBookingConfirmationEmail = async (email, bookingDetails) => {
         <!-- Footer -->
         <div style="text-align: center; margin-top: 30px;">
           <p style="color: #999; font-size: 12px; margin: 0 0 10px 0;">
-            Need help? Contact us at <a href="mailto:support@mindsettler.com" style="color: #DD1764;">support@mindsettler.com</a>
+            Need help? Contact us at <a href="mailto:parnika@mindsettler.in" style="color: #DD1764;">parnika@mindsettler.in</a>
           </p>
           <p style="color: #999; font-size: 12px; margin: 0;">
             © ${new Date().getFullYear()} MindSettler. All rights reserved.
@@ -260,7 +260,7 @@ export const sendBookingConfirmationEmail = async (email, bookingDetails) => {
     
     ${isOnline ? "You will receive a video call link 30 minutes before your session." : "Clinic Address: MindSettler Wellness Center, 123 Healing Street, Wellness District, City - 123456"}
     
-    For any assistance, contact us at support@mindsettler.com
+    For any assistance, contact us at parnika@mindsettler.in
     
     © ${new Date().getFullYear()} MindSettler
   `;
@@ -429,7 +429,7 @@ export const sendSessionRejectedEmail = async (email, bookingDetails) => {
             <p style="color: #999; font-size: 13px; line-height: 1.6; margin: 0;">
               <strong>Need assistance?</strong> If you have any questions or concerns about this cancellation, 
               please don't hesitate to reach out to our support team at 
-              <a href="mailto:support@mindsettler.com" style="color: #DD1764;">support@mindsettler.com</a>
+              <a href="mailto:parnika@mindsettler.in" style="color: #DD1764;">parnika@mindsettler.in</a>
             </p>
           </div>
           
@@ -475,7 +475,7 @@ export const sendSessionRejectedEmail = async (email, bookingDetails) => {
     
     Book Another Session: ${process.env.FRONTEND_URL}/book-session
     
-    Need help? Contact us at support@mindsettler.com
+    Need help? Contact us at parnika@mindsettler.in
     
     © ${new Date().getFullYear()} MindSettler
   `;
@@ -614,7 +614,7 @@ export const sendSessionPaymentConfirmationEmail = async (email, paymentDetails)
           <div style="border-top: 1px solid #eee; padding-top: 20px; margin-top: 20px;">
             <p style="color: #999; font-size: 12px; line-height: 1.6; margin: 0;">
               <strong>Questions?</strong> If you have any concerns about your payment, please contact our support team at 
-              <a href="mailto:support@mindsettler.com" style="color: #DD1764;">support@mindsettler.com</a>
+              <a href="mailto:parnika@mindsettler.in" style="color: #DD1764;">parnika@mindsettler.in</a>
             </p>
           </div>
           
@@ -656,7 +656,7 @@ export const sendSessionPaymentConfirmationEmail = async (email, paymentDetails)
     
     View My Bookings: ${process.env.FRONTEND_URL}/profile#My%20Bookings
     
-    If you have any questions, please contact us at support@mindsettler.com
+    If you have any questions, please contact us at parnika@mindsettler.in
     
     © ${new Date().getFullYear()} MindSettler
   `;
@@ -780,7 +780,7 @@ export const sendSessionPaymentApprovedEmail = async (email, paymentDetails) => 
           <div style="border-top: 1px solid #eee; padding-top: 20px; margin-top: 20px;">
             <p style="color: #999; font-size: 12px; line-height: 1.6; margin: 0;">
               <strong>Questions or need to reschedule?</strong> Contact us at 
-              <a href="mailto:support@mindsettler.com" style="color: #DD1764;">support@mindsettler.com</a>
+              <a href="mailto:parnika@mindsettler.in" style="color: #DD1764;">parnika@mindsettler.in</a>
             </p>
           </div>
           
@@ -824,7 +824,7 @@ export const sendSessionPaymentApprovedEmail = async (email, paymentDetails) => 
     
     View My Session: ${process.env.FRONTEND_URL}/profile#My%20Bookings
     
-    Need help? Contact us at support@mindsettler.com
+    Need help? Contact us at parnika@mindsettler.in
     
     © ${new Date().getFullYear()} MindSettler
   `;
@@ -962,7 +962,7 @@ export const sendSessionPaymentRejectedEmail = async (email, paymentDetails) => 
           <div style="border-top: 1px solid #eee; padding-top: 20px; margin-top: 20px;">
             <p style="color: #999; font-size: 12px; line-height: 1.6; margin: 0;">
               <strong>Need help?</strong> Our support team is here to assist. Contact us at 
-              <a href="mailto:support@mindsettler.com" style="color: #DD1764;">support@mindsettler.com</a>
+              <a href="mailto:parnika@mindsettler.in" style="color: #DD1764;">parnika@mindsettler.in</a>
             </p>
           </div>
           
@@ -1008,7 +1008,7 @@ export const sendSessionPaymentRejectedEmail = async (email, paymentDetails) => 
     
     Important: Your session is on hold. Please resubmit as soon as possible.
     
-    Need help? Contact us at support@mindsettler.com
+    Need help? Contact us at parnika@mindsettler.in
     
     © ${new Date().getFullYear()} MindSettler
   `;

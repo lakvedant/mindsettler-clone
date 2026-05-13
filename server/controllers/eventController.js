@@ -2,7 +2,7 @@ import Event from "../models/eventModel.js";
 
 export const getPublishedEvents = async (req, res) => {
   try {
-    const events = await Event.find({ status: "published" }).sort({ eventDate: 1 });
+    const events = await Event.find({ status: { $in: ["published", "completed"] } }).sort({ eventDate: 1 });
     return res.status(200).json({ success: true, count: events.length, data: events });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });

@@ -1300,7 +1300,7 @@ const BookingPage = () => {
 // --- States ---
 const [selectedSlot, setSelectedSlot] = useState("");
 const [sessionType, setSessionType] = useState("online");
-const [selectedTherapy, setSelectedTherapy] = useState("Couples");
+const [selectedTherapy, setSelectedTherapy] = useState("Individual Adult");
 const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0]);
 const [note, setNote] = useState("");
 const [availableSlots, setAvailableSlots] = useState([]);
@@ -1319,10 +1319,10 @@ const rescheduleAppointmentId = useMemo(
 );
 
   const initialTherapies = [
-    { _id: "1", name: "Couples", amount: 500 },
-    { _id: "2", name: "Children", amount: 500 },
-    { _id: "3", name: "Family", amount: 500 },
-    { _id: "4", name: "Adults", amount: 500 },
+    { _id: "1", name: "Individual Adult", amount: 500 },
+    { _id: "2", name: "Couples", amount: 300 },
+    { _id: "3", name: "Family", amount: 1000 },
+    { _id: "4", name: "Individual Child", amount: 700 },
   ];
 
   const [therapies, setTherapies] = useState(initialTherapies);
@@ -1369,7 +1369,7 @@ const rescheduleAppointmentId = useMemo(
           return;
         }
 
-        setSelectedTherapy(session.therapyType || "Couples");
+        setSelectedTherapy(session.therapyType || "Individual Adult");
         setSessionType(session.sessionType || "online");
         setNote(session.notes || "");
       } catch (err) {
@@ -1436,7 +1436,7 @@ const rescheduleAppointmentId = useMemo(
 
   useEffect(() => {
     fetchSlots();
-  }, []);
+  }, [selectedDate]);
 
   const morningSlots = availableSlots.filter(
     (slot) => parseInt(slot.split(":")[0]) < 12
@@ -1803,26 +1803,6 @@ const rescheduleAppointmentId = useMemo(
                               
                             </motion.div>
                           </motion.div>
-                          
-                          <AnimatedButton
-                            onClick={fetchSlots}
-                            disabled={loadingSlots}
-                            className="px-8 py-4 bg-gradient-to-r from-[#3F2965] to-[#4a3275] text-white rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-purple-200 hover:opacity-90 transition-all disabled:opacity-50"
-                          >
-                            {loadingSlots ? (
-                              <motion.div
-                                animate={{ rotate: 360 }}
-                                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                              >
-                                <Loader2 size={18} />
-                              </motion.div>
-                            ) : (
-                              <>
-                                <Search size={16} className="md:w-4 md:h-4" />
-                                <span className="hidden sm:inline">Find Slots</span>
-                              </>
-                            )}
-                          </AnimatedButton>
                         </div>
                       </motion.div>
 

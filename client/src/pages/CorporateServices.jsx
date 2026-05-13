@@ -172,7 +172,7 @@ const CorporateServices = () => {
       icon: Zap,
     },
     {
-      title: "Reduce Turnover",
+      title: "Reduce Staff Absence",
       description: "Investing in mental health shows employees you care, increasing retention.",
       icon: UserCheck,
     },
@@ -490,7 +490,7 @@ const CorporateServices = () => {
                   viewport={{ once: true }}
                   transition={{ delay: index * 0.1 }}
                   whileHover={{ y: -5, scale: 1.02 }}
-                  className="group bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-lg border border-white/50 hover:shadow-xl hover:border-[#Dd1764]/20 transition-all"
+                  className="group bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-lg border border-white/50 hover:shadow-xl hover:border-[#Dd1764]/20 transition-all h-full flex flex-col"
                 >
                   <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#3F2965]/10 to-[#Dd1764]/10 flex items-center justify-center mb-6 group-hover:from-[#3F2965] group-hover:to-[#Dd1764] transition-all">
                     <benefit.icon className="w-7 h-7 text-[#Dd1764] group-hover:text-white transition-colors" />
@@ -693,14 +693,14 @@ const CorporateServices = () => {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: index * 0.15 }}
-                  className="relative"
+                  className="relative h-full"
                 >
                   {/* Connector Line */}
                   {index < processSteps.length - 1 && (
                     <div className="hidden lg:block absolute top-12 left-[60%] w-full h-0.5 bg-gradient-to-r from-[#Dd1764]/30 to-transparent" />
                   )}
 
-                  <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-lg border border-white/50 text-center relative">
+                  <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-lg border border-white/50 text-center relative h-full flex flex-col">
                     {/* Step Number */}
                     <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-gradient-to-br from-[#3F2965] to-[#Dd1764] flex items-center justify-center">
                       <span className="text-white font-bold text-xl">{step.step}</span>
@@ -775,7 +775,7 @@ const CorporateServices = () => {
 
                       <div className="space-y-6">
                         <motion.a
-                          href="mailto:corporate@mindsettler.com"
+                          href="mailto:parnika@mindsettler.in"
                           className="flex items-center gap-4 text-white/90 hover:text-white transition-colors group"
                           whileHover={{ x: 5 }}
                         >
@@ -784,7 +784,7 @@ const CorporateServices = () => {
                           </div>
                           <div>
                             <p className="text-sm text-white/60">Email</p>
-                            <p className="font-medium">corporate@mindsettler.com</p>
+                            <p className="font-medium">parnika@mindsettler.in</p>
                           </div>
                         </motion.a>
 
@@ -1016,7 +1016,7 @@ const CorporateServices = () => {
                   Schedule a Call
                 </motion.a>
                 <motion.a
-                  href="mailto:corporate@mindsettler.com"
+                  href="mailto:parnika@mindsettler.in"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   className="px-10 py-4 bg-white text-[#3F2965] font-bold rounded-full border border-[#3F2965]/20 shadow-lg"

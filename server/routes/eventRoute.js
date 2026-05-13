@@ -21,19 +21,6 @@ router.post(
   "/admin/create",
   protect,
   admin,
-  [
-    body("title").trim().isLength({ min: 3, max: 120 }).withMessage("Title must be 3-120 characters"),
-    body("description")
-      .trim()
-      .isLength({ min: 20, max: 1200 })
-      .withMessage("Description must be 20-1200 characters"),
-    body("eventDate").isISO8601().withMessage("Valid event date is required"),
-    body("therapistName")
-      .trim()
-      .isLength({ min: 3, max: 80 })
-      .withMessage("Therapist name must be 3-80 characters"),
-  ],
-  validate,
   createEvent
 );
 

@@ -38,9 +38,11 @@ const EventCard = ({ event }) => {
           <p className="flex items-center gap-1.5">
             <MapPin size={14} /> {event.location || "Online"}
           </p>
-          <p className="flex items-center gap-1.5">
-            <UserRound size={14} /> Led by {event.therapistName}
-          </p>
+          {event.therapistName && (
+            <p className="flex items-center gap-1.5">
+              <UserRound size={14} /> Led by {event.therapistName}
+            </p>
+          )}
         </div>
 
         {Array.isArray(event.highlights) && event.highlights.length > 0 && (
@@ -84,12 +86,16 @@ const EventsPage = () => {
   }, []);
 
   const { upcomingEvents, pastEvents } = useMemo(() => {
-    const now = new Date();
+    const now = new Date().getTime();
     const upcoming = [];
     const past = [];
     events.forEach((event) => {
-      if (new Date(event.eventDate).getTime() >= now.getTime()) upcoming.push(event);
-      else past.push(event);
+      const eventTime = new Date(event.eventDate).getTime();
+      if (event.status === "completed" || eventTime < now) {
+        past.push(event);
+      } else {
+        upcoming.push(event);
+      }
     });
     return {
       upcomingEvents: upcoming.sort((a, b) => new Date(a.eventDate) - new Date(b.eventDate)),
@@ -106,7 +112,7 @@ const EventsPage = () => {
             <p className="text-xs font-black uppercase tracking-[0.3em] text-[#Dd1764] mb-3">
               Therapist-led community programs
             </p>
-            <h1 className="text-4xl md:text-5xl font-black text-[#3F2965]">Psychological Events</h1>
+            <h1 className="text-4xl md:text-5xl font-black text-[#3F2965]">MindSettler Events</h1>
             <p className="text-slate-500 mt-3 max-w-3xl mx-auto">
               Join workshops, awareness drives, and group therapy experiences organized by
               MindSettler therapists to support emotional resilience, clarity, and healing.

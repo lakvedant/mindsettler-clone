@@ -17,17 +17,27 @@ import ArticlePage from "./pages/ArticlePage.jsx";
 import VerifyEmail from "./components/auth/VerifyEmail.jsx";
 import ResetPassword from "./pages/ResetPassword.jsx";
 import EventsPage from "./pages/Events.jsx";
+import { useState } from "react";
+import { AnimatePresence } from "framer-motion";
+import Preloader from "./components/common/Preloader.jsx";
 
 // A small component to wrap public pages with the Navbar
 
 function App() {
   const { user, setUser } = useAuth();
+  const [loading, setLoading] = useState(true);
 
   return (
-    <BrowserRouter>
-      <ScrollToTop />
-      <ChatWidget user={user} />
-      <Routes>
+    <>
+      <AnimatePresence mode="wait">
+        {loading && <Preloader key="preloader" onLoaded={() => setLoading(false)} />}
+      </AnimatePresence>
+      
+      {!loading && (
+        <BrowserRouter>
+          <ScrollToTop />
+          <ChatWidget user={user} />
+          <Routes>
         {/* GROUP 1: Public Pages (With Navbar) */}
         <Route path="/" element={<Home />} />
         <Route path="/booking" element={<BookingPage />} />
@@ -48,6 +58,8 @@ function App() {
         <Route path="*" element={<PageNotFound />} />
       </Routes>
     </BrowserRouter>
+      )}
+    </>
   );
 }
 

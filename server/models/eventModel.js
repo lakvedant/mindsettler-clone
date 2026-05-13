@@ -12,7 +12,7 @@ const eventSchema = new mongoose.Schema(
       enum: ["online", "offline", "hybrid"],
       default: "online",
     },
-    therapistName: { type: String, required: true, trim: true, maxlength: 80 },
+    therapistName: { type: String, trim: true, maxlength: 80, default: "" },
     category: {
       type: String,
       enum: ["workshop", "group-therapy", "webinar", "awareness-drive", "retreat"],
@@ -24,7 +24,7 @@ const eventSchema = new mongoose.Schema(
     imageUrl: { type: String, trim: true, default: "" },
     status: {
       type: String,
-      enum: ["draft", "published", "cancelled"],
+      enum: ["draft", "published", "cancelled", "completed"],
       default: "published",
     },
   },
