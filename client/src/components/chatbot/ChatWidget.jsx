@@ -245,8 +245,8 @@ const MessageBubble = ({ message, isUser, isLatest, isRedirecting, onQuickReply 
 
       {/* User Avatar */}
       {isUser && (
-        <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-2xl bg-linear-to-br from-slate-600 to-slate-800 flex items-center justify-center text-white font-bold text-sm shadow-lg ml-2 mt-1 shrink-0">
-          {message.userName?.charAt(0) || "U"}
+        <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-2xl bg-linear-to-br from-slate-600 to-slate-800 flex items-center justify-center shadow-lg ml-2 mt-1 shrink-0 overflow-hidden">
+          <img src="/user.png" alt="User" className="w-full h-full object-cover" />
         </div>
       )}
     </div>
