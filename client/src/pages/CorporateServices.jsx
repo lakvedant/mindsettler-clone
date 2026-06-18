@@ -137,8 +137,8 @@ const CorporateServices = () => {
     },
     {
       id: 2,
-      title: "Employee Counseling Program",
-      shortTitle: "Counseling",
+      title: "Employee Counselling Program",
+      shortTitle: "Counselling",
       description:
         "Confidential one-on-one sessions for employees through our structured MindSettler framework, providing personalized support for mental well-being.",
       icon: HeartHandshake,
@@ -335,7 +335,7 @@ const CorporateServices = () => {
                   className="text-[#3F2965]/70 text-lg md:text-xl leading-relaxed mb-10 max-w-xl"
                 >
                   Partner with MindSettler to build resilient workplace cultures. From
-                  psycho-education workshops to personalized counseling, we provide the
+                  psycho-education workshops to personalized counselling, we provide the
                   tools your team needs to thrive.
                 </motion.p>
 

@@ -176,8 +176,8 @@ export const ContactSEO = () => (
 export const CorporateSEO = () => (
   <SEO
     title="Corporate Mental Health Services - Employee Wellness Programs"
-    description="Mindsettler's corporate mental health services. Boost employee wellbeing with our workplace wellness programs, stress management workshops, and corporate counseling solutions."
-    keywords="corporate wellness, employee mental health, workplace wellness, corporate counseling, employee assistance, workplace stress, corporate therapy, business wellness, team mental health, HR wellness program"
+    description="Mindsettler's corporate mental health services. Boost employee wellbeing with our workplace wellness programs, stress management workshops, and corporate counselling solutions."
+    keywords="corporate wellness, employee mental health, workplace wellness, corporate counselling, employee assistance, workplace stress, corporate therapy, business wellness, team mental health, HR wellness program"
     canonical="/corporate-services"
   />
 );

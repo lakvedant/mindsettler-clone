@@ -75,7 +75,7 @@ Self-harm/suicide: Stay calm → Validate → Encourage professional help/crisis
 export const geminiReply = async (msg, userName, sessionHistory = [], context = {}) => {
   try {
     const history = sessionHistory || [];
-    
+
     const messages = [
       { role: "system", content: getPrompt(userName, context) },
       ...history,
@@ -92,7 +92,7 @@ export const geminiReply = async (msg, userName, sessionHistory = [], context = 
         response_format: { type: "json_object" },
       },
       {
-        headers: { 
+        headers: {
           Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
           "Content-Type": "application/json",
         },
@@ -100,7 +100,7 @@ export const geminiReply = async (msg, userName, sessionHistory = [], context = 
     );
 
     const content = response.data.choices[0].message.content.trim();
-    
+
     // Parse JSON response
     let parsed;
     try {
