@@ -128,14 +128,15 @@ export default function Footer() {
       </div>
 
       {/* Main Footer Content */}
+      {/* Main Footer Content */}
       <motion.div
-        className="relative z-10 max-w-7xl mx-auto px-6 py-16"
+        className="relative z-10 max-w-7xl mx-auto px-6 py-10 md:py-16"
         variants={containerVariants}
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true }}
       >
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 lg:gap-12">
           {/* Brand Section */}
           <motion.div variants={itemVariants} className="lg:col-span-4">
             {/* Logo */}
@@ -157,7 +158,7 @@ export default function Footer() {
             </div>
 
             {/* Description */}
-            <p className="text-gray-300/80 leading-relaxed mb-6">
+            <p className="text-gray-300/80 leading-relaxed mb-6 text-sm">
               An online psycho-education and mental well-being platform helping
               individuals understand their mental health through structured
               sessions in a safe, confidential environment.
@@ -167,10 +168,10 @@ export default function Footer() {
             <div className="space-y-3">
               <motion.a
                 href="+91 9974631313"
-                className="flex items-center gap-3 text-gray-300/80 hover:text-white transition-colors group"
+                className="flex items-center gap-3 text-gray-300/80 hover:text-white transition-colors group text-sm"
                 whileHover={isMobile ? {} : { x: 5 }}
               >
-                <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-[#Dd1764]/30 transition-colors">
+                <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-[#Dd1764]/30 transition-colors shrink-0">
                   <Phone className="w-4 h-4 text-[#Dd1764]" />
                 </div>
                 <span>+91 9974631313</span>
@@ -178,20 +179,20 @@ export default function Footer() {
 
               <motion.a
                 href="mailto:parnika@mindsetteler.in"
-                className="flex items-center gap-3 text-gray-300/80 hover:text-white transition-colors group"
+                className="flex items-center gap-3 text-gray-300/80 hover:text-white transition-colors group text-sm"
                 whileHover={isMobile ? {} : { x: 5 }}
               >
-                <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-[#Dd1764]/30 transition-colors">
+                <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-[#Dd1764]/30 transition-colors shrink-0">
                   <Mail className="w-4 h-4 text-[#Dd1764]" />
                 </div>
                 <span>parnika@mindsetteler.in</span>
               </motion.a>
 
               <motion.div
-                className="flex items-center gap-3 text-gray-300/80 group"
+                className="flex items-center gap-3 text-gray-300/80 group text-sm"
                 whileHover={isMobile ? {} : { x: 5 }}
               >
-                <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-[#Dd1764]/30 transition-colors">
+                <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-[#Dd1764]/30 transition-colors shrink-0">
                   <MapPin className="w-4 h-4 text-[#Dd1764]" />
                 </div>
                 <span>Surat, Gujarat, India</span>
@@ -199,80 +200,83 @@ export default function Footer() {
             </div>
           </motion.div>
 
-          {/* Services Links */}
-          <motion.div variants={itemVariants} className="lg:col-span-2">
-            <h3 className="text-white font-bold text-lg mb-6 flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-gradient-to-r from-[#7c3aed] to-[#Dd1764]" />
-              Services
-            </h3>
-            <ul className="space-y-3">
-              {footerLinks.services.map((link, index) => (
-                <motion.li
-                  key={index}
-                  whileHover={isMobile ? {} : { x: 5 }}
-                  transition={isMobile ? {} : { type: "spring", stiffness: 300 }}
-                >
-                  <a
-                    href={link.href}
-                    className="text-gray-300/70 hover:text-[#Dd1764] transition-colors flex items-center gap-2 group"
+          {/* Links Subgrid (Services, Company, Resources) */}
+          <div className="lg:col-span-6 grid grid-cols-2 sm:grid-cols-3 gap-8">
+            {/* Services Links */}
+            <motion.div variants={itemVariants}>
+              <h3 className="text-white font-bold text-base mb-4 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-gradient-to-r from-[#7c3aed] to-[#Dd1764]" />
+                Services
+              </h3>
+              <ul className="space-y-2.5">
+                {footerLinks.services.map((link, index) => (
+                  <motion.li
+                    key={index}
+                    whileHover={isMobile ? {} : { x: 5 }}
+                    transition={isMobile ? {} : { type: "spring", stiffness: 300 }}
                   >
-                    <ArrowRight className="w-3 h-3 opacity-0 -ml-5 group-hover:opacity-100 group-hover:ml-0 transition-all text-[#Dd1764]" />
-                    {link.name}
-                  </a>
-                </motion.li>
-              ))}
-            </ul>
-          </motion.div>
+                    <a
+                      href={link.href}
+                      className="text-gray-300/70 hover:text-[#Dd1764] transition-colors flex items-center gap-2 group text-sm"
+                    >
+                      <ArrowRight className="w-3 h-3 opacity-0 -ml-5 group-hover:opacity-100 group-hover:ml-0 transition-all text-[#Dd1764]" />
+                      {link.name}
+                    </a>
+                  </motion.li>
+                ))}
+              </ul>
+            </motion.div>
 
-          {/* Company Links */}
-          <motion.div variants={itemVariants} className="lg:col-span-2">
-            <h3 className="text-white font-bold text-lg mb-6 flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-gradient-to-r from-[#7c3aed] to-[#Dd1764]" />
-              Company
-            </h3>
-            <ul className="space-y-3">
-              {footerLinks.company.map((link, index) => (
-                <motion.li
-                  key={index}
-                  whileHover={isMobile ? {} : { x: 5 }}
-                  transition={isMobile ? {} : { type: "spring", stiffness: 300 }}
-                >
-                  <a
-                    href={link.href}
-                    className="text-gray-300/70 hover:text-[#Dd1764] transition-colors flex items-center gap-2 group"
+            {/* Company Links */}
+            <motion.div variants={itemVariants}>
+              <h3 className="text-white font-bold text-base mb-4 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-gradient-to-r from-[#7c3aed] to-[#Dd1764]" />
+                Company
+              </h3>
+              <ul className="space-y-2.5">
+                {footerLinks.company.map((link, index) => (
+                  <motion.li
+                    key={index}
+                    whileHover={isMobile ? {} : { x: 5 }}
+                    transition={isMobile ? {} : { type: "spring", stiffness: 300 }}
                   >
-                    <ArrowRight className="w-3 h-3 opacity-0 -ml-5 group-hover:opacity-100 group-hover:ml-0 transition-all text-[#Dd1764]" />
-                    {link.name}
-                  </a>
-                </motion.li>
-              ))}
-            </ul>
-          </motion.div>
+                    <a
+                      href={link.href}
+                      className="text-gray-300/70 hover:text-[#Dd1764] transition-colors flex items-center gap-2 group text-sm"
+                    >
+                      <ArrowRight className="w-3 h-3 opacity-0 -ml-5 group-hover:opacity-100 group-hover:ml-0 transition-all text-[#Dd1764]" />
+                      {link.name}
+                    </a>
+                  </motion.li>
+                ))}
+              </ul>
+            </motion.div>
 
-          {/* Resources Links */}
-          <motion.div variants={itemVariants} className="lg:col-span-2">
-            <h3 className="text-white font-bold text-lg mb-6 flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-gradient-to-r from-[#7c3aed] to-[#Dd1764]" />
-              Resources
-            </h3>
-            <ul className="space-y-3">
-              {footerLinks.resources.map((link, index) => (
-                <motion.li
-                  key={index}
-                  whileHover={isMobile ? {} : { x: 5 }}
-                  transition={isMobile ? {} : { type: "spring", stiffness: 300 }}
-                >
-                  <a
-                    href={link.href}
-                    className="text-gray-300/70 hover:text-[#Dd1764] transition-colors flex items-center gap-2 group"
+            {/* Resources Links */}
+            <motion.div variants={itemVariants}>
+              <h3 className="text-white font-bold text-base mb-4 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-gradient-to-r from-[#7c3aed] to-[#Dd1764]" />
+                Resources
+              </h3>
+              <ul className="space-y-2.5">
+                {footerLinks.resources.map((link, index) => (
+                  <motion.li
+                    key={index}
+                    whileHover={isMobile ? {} : { x: 5 }}
+                    transition={isMobile ? {} : { type: "spring", stiffness: 300 }}
                   >
-                    <ArrowRight className="w-3 h-3 opacity-0 -ml-5 group-hover:opacity-100 group-hover:ml-0 transition-all text-[#Dd1764]" />
-                    {link.name}
-                  </a>
-                </motion.li>
-              ))}
-            </ul>
-          </motion.div>
+                    <a
+                      href={link.href}
+                      className="text-gray-300/70 hover:text-[#Dd1764] transition-colors flex items-center gap-2 group text-sm"
+                    >
+                      <ArrowRight className="w-3 h-3 opacity-0 -ml-5 group-hover:opacity-100 group-hover:ml-0 transition-all text-[#Dd1764]" />
+                      {link.name}
+                    </a>
+                  </motion.li>
+                ))}
+              </ul>
+            </motion.div>
+          </div>
 
           {/* Follow Us Section */}
           <motion.div variants={itemVariants} className="lg:col-span-2">
@@ -313,9 +317,9 @@ export default function Footer() {
               ))}
             </div>
 
-            {/* Additional CTA */}
+            {/* Additional CTA - Hidden on mobile/tablets */}
             <motion.div
-              className="mt-8 p-4 rounded-xl bg-gradient-to-r from-[#Dd1764]/20 to-[#7c3aed]/20 border border-white/10"
+              className="hidden md:block mt-8 p-4 rounded-xl bg-gradient-to-r from-[#Dd1764]/20 to-[#7c3aed]/20 border border-white/10"
               whileHover={isMobile ? {} : { scale: 1.02, borderColor: "rgba(221,23,100,0.3)" }}
             >
               <p className="text-white font-medium text-sm mb-2">
