@@ -1,4 +1,4 @@
-import { BrowserRouter, Route, Routes } from "react-router";
+import { BrowserRouter, Route, Routes, useLocation } from "react-router";
 import Home from "./pages/Home.jsx";
 import ContactPage from "./pages/Contact.jsx";
 import AuthPage from "./pages/Authentication.jsx";
@@ -23,6 +23,12 @@ import Preloader from "./components/common/Preloader.jsx";
 
 // A small component to wrap public pages with the Navbar
 
+function ChatWidgetGate({ user }) {
+  const { pathname } = useLocation();
+  if (pathname.startsWith("/admin")) return null;
+  return <ChatWidget user={user} />;
+}
+
 function App() {
   const { user, setUser } = useAuth();
   const [loading, setLoading] = useState(true);
@@ -36,7 +42,7 @@ function App() {
       {!loading && (
         <BrowserRouter>
           <ScrollToTop />
-          <ChatWidget user={user} />
+          <ChatWidgetGate user={user} />
           <Routes>
         {/* GROUP 1: Public Pages (With Navbar) */}
         <Route path="/" element={<Home />} />

@@ -1,5 +1,3 @@
-import { json } from "express";
-
 export const admin = (req, res, next) => {
     // BYPASS START
     return next();
@@ -11,6 +9,17 @@ export const admin = (req, res, next) => {
     }
 };
 
+export const requirePrimaryAdmin = (req, res, next) => {
+    const adminEmail = process.env.ADMIN_EMAIL?.toLowerCase();
+    const userEmail = req.user?.email?.toLowerCase();
+
+    if (!adminEmail || userEmail !== adminEmail) {
+        return res.status(403).json({
+            message: "Not authorized. Only the primary administrator can perform this action.",
+        });
+    }
+    next();
+};
 
 /**
  * Middleware to validate availability creation/updates

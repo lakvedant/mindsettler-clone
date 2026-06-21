@@ -1,7 +1,7 @@
 import express from 'express';
 import { protect } from '../middlewares/userMiddleware.js';
-import { getPendingAppointments, setAvailability, broadcastAvailability, profileUpdate } from '../controllers/adminController.js';
-import { admin, validateAvailability } from '../middlewares/adminMiddleware.js';
+import { getPendingAppointments, setAvailability, broadcastAvailability, profileUpdate, createAdmin } from '../controllers/adminController.js';
+import { admin, requirePrimaryAdmin, validateAvailability } from '../middlewares/adminMiddleware.js';
 import { body } from "express-validator";
 import { validate } from '../middlewares/validationMiddleware.js';
 
@@ -11,6 +11,7 @@ const router = express.Router();
 router.use(protect, admin);
 
 // User routes
+router.post('/create-admin', requirePrimaryAdmin, createAdmin);
 router.post('/set-availability', validateAvailability, setAvailability);
 router.post('/broadcast-availability', broadcastAvailability);
 router.get('/pending-appointments', getPendingAppointments);

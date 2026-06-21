@@ -12,6 +12,14 @@ const generateToken = (id) => {
   });
 };
 
+const withPrimaryAdminFlag = (user) => {
+  const userObj = user.toObject ? user.toObject() : { ...user };
+  delete userObj.password;
+  userObj.isPrimaryAdmin =
+    userObj.email?.toLowerCase() === process.env.ADMIN_EMAIL?.toLowerCase();
+  return userObj;
+};
+
 export const userSignup = async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -149,8 +157,7 @@ export const login = async (req, res) => {
       sameSite: isProduction ? "none" : "lax",
       path: "/",
     };
-    const userResponse = user.toObject();
-    delete userResponse.password;
+    const userResponse = withPrimaryAdminFlag(user);
     res.cookie("token", token, cookieOptions).status(200).json({
       success: true,
       user: userResponse,
@@ -178,7 +185,7 @@ export const getUserProfile = async (req, res) => {
 export const getMe = async (req, res) => {
   try {
     const user = await User.findById(req.user._id).select("-password");
-    res.status(200).json({ success: true, user });
+    res.status(200).json({ success: true, user: withPrimaryAdminFlag(user) });
   } catch (error) {
     res.status(500).json({ message: "Server Error" });
   }

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import Logo from "../assets/icons/MindsettlerLogo-removebg-preview.png";
 import { useNavigate, Link, Navigate } from "react-router-dom";
 import {
@@ -1672,6 +1672,114 @@ const ManageFAQsView = () => {
   );
 };
 
+// --- CREATE ADMIN VIEW ---
+const CreateAdminView = () => {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!name || !email || !password) {
+      setErrorMsg("Please fill all fields.");
+      return;
+    }
+    setLoading(true);
+    setErrorMsg("");
+    setSuccessMsg("");
+    try {
+      await API.post("/admin/create-admin", { name, email, password });
+      setSuccessMsg("Admin created successfully!");
+      setName("");
+      setEmail("");
+      setPassword("");
+    } catch (error) {
+      setErrorMsg(error.response?.data?.message || "Failed to create admin");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="max-w-4xl mx-auto space-y-6 animate-in slide-in-from-bottom-4 duration-500">
+      <div className="flex items-center gap-3 mb-6">
+        <div className="w-12 h-12 rounded-2xl bg-[#3F2965]/10 flex items-center justify-center text-[#3F2965]">
+          <Users size={24} />
+        </div>
+        <div>
+          <h2 className="text-2xl font-bold text-[#3F2965]">Create Admin</h2>
+          <p className="text-sm text-slate-500">Register new administrative accounts.</p>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-slate-100">
+        <h3 className="text-lg font-bold text-[#3F2965] mb-4">New Admin Credentials</h3>
+        {errorMsg && (
+          <div className="p-3 sm:p-4 bg-red-50 border border-red-100 text-red-600 rounded-xl sm:rounded-2xl flex items-start gap-2 mb-4">
+            <AlertCircle className="shrink-0 mt-0.5" size={16} />
+            <p className="text-xs sm:text-sm font-bold flex-1">{errorMsg}</p>
+          </div>
+        )}
+        {successMsg && (
+          <div className="p-3 sm:p-4 bg-green-50 border border-green-100 text-green-600 rounded-xl sm:rounded-2xl flex items-start gap-2 mb-4">
+            <Check className="shrink-0 mt-0.5" size={16} />
+            <p className="text-xs sm:text-sm font-bold flex-1">{successMsg}</p>
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-1 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Full Name</label>
+              <input
+                type="text"
+                placeholder="e.g. John Doe"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:border-[#3F2965]/30 focus:ring-2 focus:ring-[#3F2965]/10 text-slate-800 outline-none"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Email Address</label>
+              <input
+                type="email"
+                placeholder="e.g. admin.new@mindsettler.in"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:border-[#3F2965]/30 focus:ring-2 focus:ring-[#3F2965]/10 text-slate-800 outline-none"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Password</label>
+              <input
+                type="password"
+                placeholder="Minimum 6 characters"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:border-[#3F2965]/30 focus:ring-2 focus:ring-[#3F2965]/10 text-slate-800 outline-none"
+                required
+              />
+            </div>
+          </div>
+          <button
+            type="submit"
+            disabled={loading}
+            className="px-6 py-3 bg-[#3F2965] text-white rounded-xl font-bold flex items-center gap-2 hover:bg-[#5a3d8a] transition-colors disabled:opacity-70"
+          >
+            {loading ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
+            Create Admin Account
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+};
+
 // --- MOBILE SIDEBAR COMPONENT ---
 const MobileSidebar = ({
   isOpen,
@@ -1784,23 +1892,31 @@ const BottomNavigation = ({ navItems, activeTab, setActiveTab }) => {
 };
 
 // --- MAIN DASHBOARD COMPONENT ---
+const BASE_NAV_ITEMS = [
+  { name: "Profile", icon: UserCircle },
+  { name: "Session Payments", icon: CreditCard },
+  { name: "Appointments", icon: CalendarCheck },
+  { name: "Events", icon: Calendar },
+  { name: "Time Slots", icon: Clock },
+  { name: "FAQs", icon: HelpCircle },
+  { name: "Therapies", icon: Activity },
+  { name: "Manage Blogs", icon: BookOpen },
+  { name: "Blog Payments", icon: Banknote },
+];
+
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState("Profile");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
   const { user, setUser, loading: authLoading } = useAuth();
 
-  const navItems = [
-    { name: "Profile", icon: UserCircle },
-    { name: "Session Payments", icon: CreditCard },
-    { name: "Appointments", icon: CalendarCheck },
-    { name: "Events", icon: Calendar },
-    { name: "Time Slots", icon: Clock },
-    { name: "FAQs", icon: HelpCircle },
-    { name: "Therapies", icon: Activity },
-    { name: "Manage Blogs", icon: BookOpen },
-    { name: "Blog Payments", icon: Banknote },
-  ];
+  const navItems = useMemo(() => {
+    const items = [...BASE_NAV_ITEMS];
+    if (user?.isPrimaryAdmin) {
+      items.push({ name: "Create Admin", icon: Users });
+    }
+    return items;
+  }, [user]);
 
   useEffect(() => {
     const syncTabFromHash = () => {
@@ -1811,7 +1927,14 @@ const AdminDashboard = () => {
     syncTabFromHash();
     window.addEventListener("hashchange", syncTabFromHash);
     return () => window.removeEventListener("hashchange", syncTabFromHash);
-  }, []);
+  }, [navItems]);
+
+  useEffect(() => {
+    if (activeTab === "Create Admin" && !user?.isPrimaryAdmin) {
+      setActiveTab("Profile");
+      window.location.hash = "Profile";
+    }
+  }, [activeTab, user]);
 
   // Lock body scroll when mobile menu is open
   useEffect(() => {
@@ -1928,10 +2051,20 @@ const AdminDashboard = () => {
             </h1>
           </div>
 
-          {/* Mobile Logo */}
-          <Link to="/" className="lg:hidden">
-            <img src={Logo} className="h-7 sm:h-8 w-auto" alt="Mindsettler" />
-          </Link>
+          {/* Header actions */}
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold text-red-500 hover:bg-red-50 transition-colors"
+              aria-label="Logout"
+            >
+              <LogOut size={18} strokeWidth={2.5} />
+              <span className="hidden sm:inline">Logout</span>
+            </button>
+            <Link to="/" className="lg:hidden">
+              <img src={Logo} className="h-7 sm:h-8 w-auto" alt="Mindsettler" />
+            </Link>
+          </div>
         </header>
 
         {/* Content Area */}
@@ -1948,6 +2081,9 @@ const AdminDashboard = () => {
             {activeTab === "Therapies" && <ManageTherapiesView />}
             {activeTab === "Manage Blogs" && <ManageBlogsView />}
             {activeTab === "Blog Payments" && <ManageBlogPaymentsView />}
+            {activeTab === "Create Admin" && user?.isPrimaryAdmin && (
+              <CreateAdminView />
+            )}
           </div>
         </div>
       </main>

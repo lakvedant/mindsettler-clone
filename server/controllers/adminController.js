@@ -1,6 +1,7 @@
 import { Availability } from '../models/adminModel.js';
 import Appointment from '../models/appointmentModel.js';
 import User from '../models/userModel.js';
+import bcrypt from 'bcryptjs';
 
 export const setAvailability = async (req, res) => {
     try {
@@ -55,9 +56,13 @@ export const profileUpdate = async (req, res) => {
       runValidators: true,
     }).select("-password");
 
+    const user = updatedUser.toObject();
+    user.isPrimaryAdmin =
+      user.email?.toLowerCase() === process.env.ADMIN_EMAIL?.toLowerCase();
+
     res.status(200).json({
       success: true,
-      user: updatedUser,
+      user,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -102,6 +107,53 @@ export const broadcastAvailability = async (req, res) => {
         }
 
         res.status(200).json({ success: true, message: `Successfully published schedule to ${createdCount} days` });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+export const createAdmin = async (req, res) => {
+    try {
+        const { name, email, password } = req.body;
+
+        if (!name || !email || !password) {
+            return res.status(400).json({ message: "All fields (name, email, password) are required." });
+        }
+
+        const emailRegex = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({ message: "Please provide a valid email address." });
+        }
+
+        if (password.length < 6) {
+            return res.status(400).json({ message: "Password must be at least 6 characters long." });
+        }
+
+        const existingUser = await User.findOne({ email: email.toLowerCase() });
+        if (existingUser) {
+            return res.status(400).json({ message: "User with this email already exists." });
+        }
+
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+
+        const newAdmin = await User.create({
+            name,
+            email: email.toLowerCase(),
+            password: hashedPassword,
+            role: "admin",
+            isVerified: true,
+            verificationExpires: null
+        });
+
+        const adminResponse = newAdmin.toObject();
+        delete adminResponse.password;
+
+        res.status(201).json({
+            success: true,
+            message: "Admin created successfully.",
+            admin: adminResponse
+        });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
