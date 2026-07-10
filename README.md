@@ -59,17 +59,6 @@
 
 ---
 
-## 🛠️ Technical Problem Solving
-
-* **Vercel Cookie Persistence:** Solved the "Cookie not saving" issue on serverless functions by setting `app.set("trust proxy", 1)` and configuring JWT cookies with `SameSite: "None"` and `Secure: true`.
-* **Async Email Dispatch:** Integrated professional HTML templates with `Nodemailer` to handle concurrent user notifications without blocking the main event loop.
-* **Rate Limiting on Edge:** Implemented `express-rate-limit` with `trust proxy` enabled to accurately track user IPs across Vercel’s serverless infrastructure.
-* **Google Calendar IST Fix:** Developed a custom helper to generate GCal links that force the `Asia/Kolkata` timezone, preventing 5.5-hour shifts caused by UTC conversion.
-* **Smart Availability Merging:** Built backend logic to handle 30-day schedule broadcasts that merge new slots while preserving existing booked appointments, avoiding database record duplication or conflict issues.
-* **Paywalled Article Blur:** Implemented client-side paywall overlays while maintaining backend support for verification checks against UTR transactions, enabling secure offline resource purchase loops.
-
----
-
 ## 🏗️ Architecture & Data Modeling
 
 * **Mongoose Referencing:** Utilizes `DocumentReferences` for relational integrity between `Appointments`, `Blogs`, `BlogPayments`, and `Users`.
