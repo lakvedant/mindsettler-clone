@@ -1,5 +1,21 @@
 {
-  "dependencies": {
-    "styled-components": "^6.3.5"
+  "name": "mindsettler",
+  "private": true,
+  "description": "MindSettler mental wellness platform",
+  "scripts": {
+    "analyze": "node scripts/analyze.mjs",
+    "analyze:json": "node scripts/analyze.mjs --json",
+    "analyze:fix": "node scripts/analyze.mjs --fix",
+    "lint": "npm run lint --prefix client && npm run lint --prefix server",
+    "lint:fix": "npm run lint:fix --prefix client && npm run lint:fix --prefix server",
+    "build": "npm run build --prefix client",
+    "build:client": "npm run build --prefix client",
+    "dev:client": "npm run dev --prefix client",
+    "dev:server": "npm run dev --prefix server",
+    "start:server": "npm run start --prefix server",
+    "check:env": "node scripts/check-env.mjs",
+    "check:env:strict": "node scripts/check-env.mjs --strict",
+    "audit:security": "node scripts/security-audit.mjs",
+    "predeploy": "npm run analyze"
   }
 }
