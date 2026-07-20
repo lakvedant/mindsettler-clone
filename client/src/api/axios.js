@@ -5,29 +5,12 @@ const API = axios.create({
   withCredentials: true,
 });
 
-API.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
-
 API.interceptors.response.use(
-  (response) => {
-    if (response.data && response.data.token) {
-      localStorage.setItem('token', response.data.token);
-    }
-    return response;
-  },
+  (response) => response,
   (error) => {
     if (error.response && error.response.status === 401) {
-      localStorage.removeItem('token');
+      // Authentication is stored in an HTTP-only cookie, so there is no
+      // client-readable token to clear here.
     }
     return Promise.reject(error);
   }

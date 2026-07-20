@@ -14,7 +14,6 @@ const Logout = () => {
       } catch (error) {
         console.error(error);
       } finally {
-        localStorage.removeItem('token');
         setUser(null);
         navigate("/auth", { replace: true });
       }

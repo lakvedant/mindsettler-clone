@@ -57,7 +57,6 @@ export const adminLogin = async (req, res) => {
         res.cookie("token", token, cookieOptions).status(200).json({
             success: true,
             user: withPrimaryAdminFlag(user),
-            token,
         });
     } catch (error) {
         res.status(500).json({ message: error.message });

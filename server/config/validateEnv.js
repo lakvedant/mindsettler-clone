@@ -27,11 +27,15 @@ export function validateEnv() {
     }
 
     if (process.env.FRONTEND_URL?.includes("localhost")) {
-      warnings.push("FRONTEND_URL points to localhost in production");
+      errors.push("FRONTEND_URL must not point to localhost in production");
     }
 
     if (process.env.JWT_SECRET && process.env.JWT_SECRET.length < 32) {
-      warnings.push("JWT_SECRET should be at least 32 characters in production");
+      errors.push("JWT_SECRET must be at least 32 characters in production");
+    }
+
+    if (process.env.SESSION_SECRET && process.env.SESSION_SECRET.length < 32) {
+      errors.push("SESSION_SECRET must be at least 32 characters in production");
     }
   }
 

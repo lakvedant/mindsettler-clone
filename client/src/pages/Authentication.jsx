@@ -315,7 +315,7 @@ const AuthPage = () => {
           setView("success");
           setTimeout(() => {
             setUser(resData.user);
-            navigate("/");
+            navigate(resData.user?.role === "admin" ? "/admin" : "/");
           }, 2500);
         }
       }

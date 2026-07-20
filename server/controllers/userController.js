@@ -149,13 +149,6 @@ export const login = async (req, res) => {
     if (!isMatch)
       return res.status(401).json({ message: "Invalid credentials" });
 
-    if (user.role === "admin") {
-      return res.status(403).json({
-        message: "Administrator accounts must sign in at /admin/login.",
-        adminLoginRequired: true,
-      });
-    }
-
     const token = generateToken(user._id);
     const isProduction = process.env.NODE_ENV === "production";
     const cookieOptions = {
@@ -169,7 +162,6 @@ export const login = async (req, res) => {
     res.cookie("token", token, cookieOptions).status(200).json({
       success: true,
       user: userResponse,
-      token,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -502,7 +494,6 @@ export const verifyEmailToken = async (req, res) => {
     res.cookie("token", authToken, cookieOptions).status(200).json({
       success: true,
       message: "Email verified successfully! Logging you in...",
-      token: authToken,
       user: userResponse,
     });
 

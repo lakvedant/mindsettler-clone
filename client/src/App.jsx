@@ -5,7 +5,6 @@ import AuthPage from "./pages/Authentication.jsx";
 import PageNotFound from "./pages/404.jsx";
 import ScrollToTop from "./components/common/ScrollToTop.jsx";
 import AdminDashboard from "./admin/Dashboard.jsx";
-import AdminLogin from "./admin/AdminLogin.jsx";
 import PrivateRoute from "./components/auth/PrivateRoute.jsx";
 import Logout from "./components/auth/Logout.jsx";
 import { useAuth } from "./context/AuthContext.jsx";
@@ -61,11 +60,10 @@ function App() {
         <Route path="/verify-email" element={<VerifyEmail setUser={setUser} />}/>
         <Route path="/reset-password" element={<ResetPassword />} />
         {/* GROUP 2: Admin Pages (No Public Navbar) */}
-        <Route path="/admin/login" element={<AdminLogin />} />
         <Route
           path="/admin"
           element={
-            <PrivateRoute roleRequired="admin" loginPath="/admin/login">
+            <PrivateRoute roleRequired="admin" loginPath="/auth">
               <AdminDashboard />
             </PrivateRoute>
           }

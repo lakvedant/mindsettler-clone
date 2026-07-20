@@ -30,10 +30,7 @@ const VerifyEmail = ({ setUser }) => {
         setStatus("success");
         setMessage(response.data.message);
 
-        // Auto-authenticate: store token and set user in context
-        if (response.data.token) {
-          localStorage.setItem("token", response.data.token);
-        }
+        // The API has set an HTTP-only authentication cookie.
         if (setUser && response.data.user) {
           setUser(response.data.user);
         }
