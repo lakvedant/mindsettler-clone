@@ -168,18 +168,16 @@ GitHub Actions protects every pull request and deployment:
 
 | Workflow | When it runs | What it enforces |
 | --- | --- | --- |
-| `Quality Gate` | Pull requests and pushes | Locked installs, configuration checks, security scan, lint, production build, and high-severity dependency audit |
-| `Dependency Review` | Pull requests | Blocks newly introduced high-severity vulnerable dependencies |
-| `CodeQL` | Pull requests, main pushes, weekly | Static security analysis for JavaScript/TypeScript |
+| `Quality Gate` | Branch pushes and manual runs | Locked installs, configuration checks, security scan, lint, production build, and high-severity dependency audit |
+| `CodeQL` | Main pushes, manual runs, weekly | Static security analysis for JavaScript/TypeScript |
 | `Deploy Production` | Pushes to `main` or manual run | Deploys the client to Vercel and API to Render after production secrets are configured |
-| Dependabot | Weekly | Opens grouped dependency-update pull requests for the client, server, and GitHub Actions |
 
 Before enabling production deployment, set the `ENABLE_PRODUCTION_DEPLOY` repository variable to `true`, then add these repository or `production` environment secrets in GitHub:
 
 - `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`
 - `RENDER_DEPLOY_HOOK_URL`
 
-Set branch protection on `main` to require the **Quality Gate**, **Dependency Review**, and **CodeQL** checks before merging. Require at least one approving review, disallow force pushes, and restrict direct pushes to `main`. The deploy jobs intentionally skip until their respective secrets are configured; no credentials are stored in the repository.
+Optionally set branch protection on `main` to require the **Quality Gate** and **CodeQL** checks before merging. The deploy jobs intentionally skip until their respective secrets are configured; no credentials are stored in the repository.
 
 For Render, set every secret marked `sync: false` in `render.yaml`, use a production `FRONTEND_URL`, and use 32+-character JWT/session secrets. For Vercel, configure `VITE_SERVER_URL` as the public HTTPS API URL.
 
