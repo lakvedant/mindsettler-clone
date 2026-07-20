@@ -1954,7 +1954,6 @@ const AdminDashboard = () => {
   }, [navigate]);
 
   // Show loading state while auth is being checked
-  /* BYPASS START
   if (authLoading) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-white">
@@ -1969,8 +1968,9 @@ const AdminDashboard = () => {
     );
   }
 
-  if (!user || user.role !== "admin") return <Navigate to="/auth" replace />;
-  BYPASS END */
+  if (!user || user.role !== "admin") {
+    return <Navigate to="/admin/login" replace />;
+  }
 
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden font-sans">

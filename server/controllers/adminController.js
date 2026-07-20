@@ -2,6 +2,67 @@ import { Availability } from '../models/adminModel.js';
 import Appointment from '../models/appointmentModel.js';
 import User from '../models/userModel.js';
 import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+
+const generateToken = (id) => {
+    return jwt.sign({ id }, process.env.JWT_SECRET, {
+        expiresIn: process.env.JWT_EXPIRE,
+    });
+};
+
+const withPrimaryAdminFlag = (user) => {
+    const userObj = user.toObject ? user.toObject() : { ...user };
+    delete userObj.password;
+    userObj.isPrimaryAdmin =
+        userObj.email?.toLowerCase() === process.env.ADMIN_EMAIL?.toLowerCase();
+    return userObj;
+};
+
+export const adminLogin = async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        const user = await User.findOne({ email }).select("+password");
+        if (!user) {
+            return res.status(401).json({ message: "Invalid credentials" });
+        }
+
+        if (user.role !== "admin") {
+            return res.status(403).json({
+                message: "Access denied. This login is for administrators only.",
+            });
+        }
+
+        if (!user.isVerified) {
+            return res.status(403).json({
+                message: "Your admin account is not verified. Contact the primary administrator.",
+                notVerified: true,
+            });
+        }
+
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            return res.status(401).json({ message: "Invalid credentials" });
+        }
+
+        const token = generateToken(user._id);
+        const isProduction = process.env.NODE_ENV === "production";
+        const cookieOptions = {
+            expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+            httpOnly: true,
+            secure: isProduction,
+            sameSite: isProduction ? "none" : "lax",
+            path: "/",
+        };
+
+        res.cookie("token", token, cookieOptions).status(200).json({
+            success: true,
+            user: withPrimaryAdminFlag(user),
+            token,
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
 
 export const setAvailability = async (req, res) => {
     try {

@@ -1,7 +1,4 @@
 export const admin = (req, res, next) => {
-    // BYPASS START
-    return next();
-    // BYPASS END
     if (req.user && req.user.role === 'admin') {
         next();
     } else {

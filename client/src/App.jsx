@@ -5,6 +5,8 @@ import AuthPage from "./pages/Authentication.jsx";
 import PageNotFound from "./pages/404.jsx";
 import ScrollToTop from "./components/common/ScrollToTop.jsx";
 import AdminDashboard from "./admin/Dashboard.jsx";
+import AdminLogin from "./admin/AdminLogin.jsx";
+import PrivateRoute from "./components/auth/PrivateRoute.jsx";
 import Logout from "./components/auth/Logout.jsx";
 import { useAuth } from "./context/AuthContext.jsx";
 import BookingPage from "./pages/BookingPage.jsx";
@@ -59,8 +61,15 @@ function App() {
         <Route path="/verify-email" element={<VerifyEmail setUser={setUser} />}/>
         <Route path="/reset-password" element={<ResetPassword />} />
         {/* GROUP 2: Admin Pages (No Public Navbar) */}
-        {/* Your AdminDashboard has its own Sidebar, so it doesn't need a wrapper */}
-        <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/admin/login" element={<AdminLogin />} />
+        <Route
+          path="/admin"
+          element={
+            <PrivateRoute roleRequired="admin" loginPath="/admin/login">
+              <AdminDashboard />
+            </PrivateRoute>
+          }
+        />
         <Route path="*" element={<PageNotFound />} />
       </Routes>
     </BrowserRouter>

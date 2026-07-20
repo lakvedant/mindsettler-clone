@@ -278,7 +278,9 @@ const AuthPage = () => {
     setShowPassword(false);
   }, [view]);
 
-  if (user) return <Navigate to="/" replace />;
+  if (user) {
+    return <Navigate to={user.role === "admin" ? "/admin" : "/"} replace />;
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();

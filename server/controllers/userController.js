@@ -148,6 +148,14 @@ export const login = async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch)
       return res.status(401).json({ message: "Invalid credentials" });
+
+    if (user.role === "admin") {
+      return res.status(403).json({
+        message: "Administrator accounts must sign in at /admin/login.",
+        adminLoginRequired: true,
+      });
+    }
+
     const token = generateToken(user._id);
     const isProduction = process.env.NODE_ENV === "production";
     const cookieOptions = {
