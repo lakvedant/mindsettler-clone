@@ -194,7 +194,7 @@ export const getMe = async (req, res) => {
   try {
     const user = await User.findById(req.user._id).select("-password");
     res.status(200).json({ success: true, user: withPrimaryAdminFlag(user) });
-  } catch (error) {
+  } catch (_error) {
     res.status(500).json({ message: "Server Error" });
   }
 };
@@ -213,7 +213,7 @@ export const logout = async (req, res) => {
       success: true,
       message: "Logged out successfully",
     });
-  } catch (error) {
+  } catch (_error) {
     res.status(500).json({ message: "Server Error" });
   }
 };

@@ -142,6 +142,13 @@ const GlowingCard = ({ children, className, color = "purple", isMobile = false }
     mouseX.set(0);
     mouseY.set(0);
   };
+  const glowBackground = useTransform(
+    [mouseX, mouseY],
+    ([x, y]) =>
+      `radial-gradient(400px circle at ${x}px ${y}px, ${
+        color === "pink" ? "rgba(221,23,100,0.15)" : "rgba(63,41,101,0.15)"
+      }, transparent 40%)`
+  );
 
   // On mobile, render simple div
   if (isMobile) {
@@ -162,13 +169,7 @@ const GlowingCard = ({ children, className, color = "purple", isMobile = false }
       <motion.div
         className="pointer-events-none absolute -inset-px rounded-3xl opacity-0 group-hover:opacity-100 transition duration-300"
         style={{
-          background: useTransform(
-            [mouseX, mouseY],
-            ([x, y]) =>
-              `radial-gradient(400px circle at ${x}px ${y}px, ${
-                color === "pink" ? "rgba(221,23,100,0.15)" : "rgba(63,41,101,0.15)"
-              }, transparent 40%)`
-          ),
+          background: glowBackground,
         }}
       />
       {children}
@@ -688,7 +689,7 @@ const SessionTypeToggle = ({ sessionType, setSessionType }) => {
 };
 
 // Offline in-person payment notice
-const OfflinePaymentNotice = () => {
+const OfflinePaymentNotice = ({ amount = 500 }) => {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -709,7 +710,7 @@ const OfflinePaymentNotice = () => {
       >
         <AlertCircle size={16} className="text-amber-600 shrink-0 mt-0.5" />
         <p className="text-xs text-amber-700 font-medium">
-          In-person sessions are cash only. Please pay ₹{selectedTherapyObj?.amount || 500} at the clinic before your session begins.
+          In-person sessions are cash only. Please pay ₹{amount} at the clinic before your session begins.
         </p>
       </motion.div>
     </motion.div>
@@ -724,8 +725,8 @@ const PaymentModal = ({
   selectedDate, 
   selectedSlot, 
   selectedTherapy,
+  therapyAmount = 500,
   appointmentId,
-  user,
   formatTo12Hr
 }) => {
   const [utrNumber, setUtrNumber] = useState("");
@@ -764,7 +765,7 @@ const PaymentModal = ({
       const response = await API.post("/session-payments/submit", {
         appointmentId: appointmentId,
         utrNumber: utrNumber.toUpperCase(),
-        amount: selectedTherapyObj?.amount || 500,
+        amount: therapyAmount,
         notes: `Payment for ${selectedTherapy} on ${formatTo12Hr(selectedSlot)}`
       });
 
@@ -895,7 +896,7 @@ const PaymentModal = ({
                     </div>
                     <div className="flex items-center justify-between text-[11px]">
                       <span className="text-slate-400 font-bold">Amount</span>
-                      <span className="text-[#3F2965] font-black">₹{selectedTherapyObj?.amount || 500}</span>
+                      <span className="text-[#3F2965] font-black">₹{therapyAmount}</span>
                     </div>
                   </motion.div>
 
@@ -909,7 +910,7 @@ const PaymentModal = ({
                     <p className="text-[10px] font-black text-slate-500 uppercase tracking-wider mb-3">Scan & Pay</p>
                     <div className="bg-white p-3 rounded-xl border-2 border-white shadow-md">
                       <img
-                        src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=${upiId}&pn=Mindsettler&am=${selectedTherapyObj?.amount || 500}&tr=${Date.now()}`}
+                        src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=${upiId}&pn=Mindsettler&am=${therapyAmount}&tr=${Date.now()}`}
                         alt="UPI QR Code"
                         className="w-40 h-40"
                       />
@@ -1039,6 +1040,7 @@ const ConfirmationModal = ({
   formatTo12Hr,
   sessionType,
   paymentMethod,
+  therapyAmount = 500,
 }) => {
   const isPaidViaWallet = sessionType === "online" || paymentMethod === "wallet";
 
@@ -1139,7 +1141,7 @@ const ConfirmationModal = ({
                   value: sessionType === "online" ? "Online" : "In-Person",
                   icon: sessionType === "online" ? Video : MapPin,
                 },
-                { label: "Fee", value: `₹${selectedTherapyObj?.amount || 500}`, icon: Wallet },
+                { label: "Fee", value: `₹${therapyAmount}`, icon: Wallet },
                 {
                   label: "Payment",
                   value: isPaidViaWallet ? "Via Wallet" : "Cash at Clinic",
@@ -1173,7 +1175,7 @@ const ConfirmationModal = ({
                 >
                   <AlertCircle size={16} className="text-amber-600" />
                   <span className="text-xs font-medium text-amber-700">
-                    Please pay ₹{selectedTherapyObj?.amount || 500} in cash at the clinic
+                    Please pay ₹{therapyAmount} in cash at the clinic
                   </span>
                 </motion.div>
               )}
@@ -1631,6 +1633,7 @@ const rescheduleAppointmentId = useMemo(
                 formatTo12Hr={formatTo12Hr}
                 sessionType={sessionType}
                 paymentMethod="cash"
+                therapyAmount={selectedTherapyObj?.amount || 500}
               />
 
               <PaymentModal
@@ -1640,8 +1643,8 @@ const rescheduleAppointmentId = useMemo(
                 selectedDate={selectedDate}
                 selectedSlot={selectedSlot}
                 selectedTherapy={selectedTherapy}
+                therapyAmount={selectedTherapyObj?.amount || 500}
                 appointmentId={appointmentIdForPayment}
-                user={user}
                 formatTo12Hr={formatTo12Hr}
               />
 
@@ -1821,7 +1824,7 @@ const rescheduleAppointmentId = useMemo(
                             exit={{ opacity: 0, height: 0 }}
                             transition={{ duration: 0.3 }}
                           >
-                            <OfflinePaymentNotice />
+                            <OfflinePaymentNotice amount={selectedTherapyObj?.amount || 500} />
                           </motion.div>
                         )}
                       </AnimatePresence>

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { CalendarDays, Loader2, Plus, Save, Trash2, Sparkles } from "lucide-react";
+import { CalendarDays, Loader2, Save, Trash2, Sparkles } from "lucide-react";
 import API from "../api/axios";
 
 const fileToDataUrl = (file) =>
@@ -38,7 +38,7 @@ const ManageEventsView = () => {
     try {
       const res = await API.get("/events/admin/all");
       setEvents(res.data.data || []);
-    } catch (e) {
+    } catch {
       setError("Failed to load events.");
     } finally {
       setLoading(false);
@@ -110,7 +110,7 @@ const ManageEventsView = () => {
       const dataUrl = await fileToDataUrl(file);
       setFormData((prev) => ({ ...prev, imageUrl: dataUrl }));
       setEventImageName(file.name);
-    } catch (err) {
+    } catch {
       setError("Failed to read selected image.");
     }
   };
@@ -120,7 +120,7 @@ const ManageEventsView = () => {
     try {
       await API.delete(`/events/admin/delete/${id}`);
       fetchEvents();
-    } catch (e) {
+    } catch {
       setError("Could not delete event.");
     }
   };

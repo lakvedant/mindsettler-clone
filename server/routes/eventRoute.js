@@ -1,5 +1,4 @@
 import express from "express";
-import { body } from "express-validator";
 import {
   createEvent,
   deleteEvent,
@@ -9,7 +8,6 @@ import {
 } from "../controllers/eventController.js";
 import { protect } from "../middlewares/userMiddleware.js";
 import { admin } from "../middlewares/adminMiddleware.js";
-import { validate } from "../middlewares/validationMiddleware.js";
 
 const router = express.Router();
 

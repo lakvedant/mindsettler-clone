@@ -181,7 +181,7 @@ export const createAdmin = async (req, res) => {
             return res.status(400).json({ message: "All fields (name, email, password) are required." });
         }
 
-        const emailRegex = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/;
+        const emailRegex = /^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/;
         if (!emailRegex.test(email)) {
             return res.status(400).json({ message: "Please provide a valid email address." });
         }

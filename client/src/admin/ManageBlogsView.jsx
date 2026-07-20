@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Trash2, Check, X, Loader2, Image as ImageIcon } from "lucide-react";
+import { Trash2, Loader2 } from "lucide-react";
 import API from "../api/axios";
 
 const fileToDataUrl = (file) =>
@@ -49,7 +49,7 @@ const ManageBlogsView = () => {
       await API.post("/blog/category", newCat, { withCredentials: true });
       setNewCat({ name: "", icon: "BookOpen" });
       fetchData();
-    } catch (err) {
+    } catch {
       alert("Error adding category");
     }
   };
@@ -59,7 +59,7 @@ const ManageBlogsView = () => {
     try {
       await API.delete(`/blog/category/${id}`, { withCredentials: true });
       fetchData();
-    } catch (err) {
+    } catch {
       alert("Error deleting category");
     }
   };
@@ -79,7 +79,7 @@ const ManageBlogsView = () => {
       });
       setBlogImageName("");
       fetchData();
-    } catch (err) {
+    } catch {
       alert("Error adding blog");
     }
   };
@@ -100,7 +100,7 @@ const ManageBlogsView = () => {
       });
       setBlogImageName("");
       fetchData();
-    } catch (err) {
+    } catch {
       alert("Error updating blog");
     }
   };
@@ -140,7 +140,7 @@ const ManageBlogsView = () => {
       const dataUrl = await fileToDataUrl(file);
       setNewBlog((prev) => ({ ...prev, pictureUrl: dataUrl }));
       setBlogImageName(file.name);
-    } catch (err) {
+    } catch {
       alert("Failed to load selected image.");
     }
   };
@@ -150,7 +150,7 @@ const ManageBlogsView = () => {
     try {
       await API.delete(`/blog/${id}`, { withCredentials: true });
       fetchData();
-    } catch (err) {
+    } catch {
       alert("Error deleting blog");
     }
   };

@@ -497,7 +497,6 @@ export const sendSessionPaymentConfirmationEmail = async (email, paymentDetails)
 
   const {
     userName,
-    appointmentId,
     sessionPrice,
     utrNumber,
     date,
@@ -678,7 +677,6 @@ export const sendSessionPaymentApprovedEmail = async (email, paymentDetails) => 
 
   const {
     userName,
-    appointmentId,
     sessionPrice,
     date,
     timeSlot,
@@ -846,7 +844,6 @@ export const sendSessionPaymentRejectedEmail = async (email, paymentDetails) => 
 
   const {
     userName,
-    appointmentId,
     sessionPrice,
     rejectionReason,
     date,

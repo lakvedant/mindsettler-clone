@@ -16,7 +16,11 @@ export default [
       ...js.configs.recommended.rules,
       "no-unused-vars": [
         "error",
-        { varsIgnorePattern: "^_", argsIgnorePattern: "^_" },
+        {
+          varsIgnorePattern: "^_",
+          argsIgnorePattern: "^_",
+          caughtErrors: "none",
+        },
       ],
       "no-console": "off",
     },

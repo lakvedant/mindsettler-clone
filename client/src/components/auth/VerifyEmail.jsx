@@ -18,15 +18,6 @@ const VerifyEmail = ({ setUser }) => {
   const [status, setStatus] = useState("loading"); // loading, success, error, expired, already_verified
   const [message, setMessage] = useState("");
 
-  useEffect(() => {
-    if (token) {
-      verifyToken();
-    } else {
-      setStatus("error");
-      setMessage("No verification token provided.");
-    }
-  }, [token]);
-
   const verifyToken = async () => {
     try {
       setStatus("loading");
@@ -64,6 +55,15 @@ const VerifyEmail = ({ setUser }) => {
       }
     }
   };
+
+  useEffect(() => {
+    if (token) {
+      verifyToken();
+    } else {
+      setStatus("error");
+      setMessage("No verification token provided.");
+    }
+  }, [token, verifyToken]);
 
   // Render different states
   const renderContent = () => {

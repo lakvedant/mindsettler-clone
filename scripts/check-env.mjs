@@ -9,6 +9,7 @@ const SERVER_REQUIRED = [
   "MONGO_URI",
   "JWT_SECRET",
   "JWT_EXPIRE",
+  "SESSION_SECRET",
   "FRONTEND_URL",
   "SENDER_EMAIL",
   "SENDER_PASSWORD",
@@ -30,7 +31,7 @@ function parseEnvFile(filePath) {
   return vars;
 }
 
-function checkPlaceholders(vars, keys) {
+function checkPlaceholders(vars, keys, { allowLocalhost = false } = {}) {
   const issues = [];
   for (const key of keys) {
     const value = vars[key];
@@ -38,7 +39,10 @@ function checkPlaceholders(vars, keys) {
       issues.push(`Missing ${key}`);
       continue;
     }
-    if (/your_|example\.com|localhost|change_me|here$/i.test(value)) {
+    if (
+      /your_|example\.com|change_me|here$/i.test(value) ||
+      (!allowLocalhost && /localhost/i.test(value))
+    ) {
       issues.push(`${key} still looks like a placeholder: ${value}`);
     }
   }
@@ -66,12 +70,18 @@ export function runEnvCheck({ strict = false } = {}) {
 
   if (existsSync(serverEnv)) {
     const vars = parseEnvFile(serverEnv);
-    const issues = checkPlaceholders(vars, SERVER_REQUIRED);
+    const issues = checkPlaceholders(vars, SERVER_REQUIRED, {
+      allowLocalhost: !strict,
+    });
     if (issues.length) {
       messages.push(`server/.env issues:\n  - ${issues.join("\n  - ")}`);
       if (strict) ok = false;
     } else {
-      messages.push("server/.env: all required keys present");
+      messages.push(
+        strict
+          ? "server/.env: all required keys present"
+          : "server/.env: all required keys present (development URLs allowed)"
+      );
     }
   } else {
     messages.push("server/.env not found — copy from server/.env.example");
@@ -80,12 +90,18 @@ export function runEnvCheck({ strict = false } = {}) {
 
   if (existsSync(clientEnv)) {
     const vars = parseEnvFile(clientEnv);
-    const issues = checkPlaceholders(vars, CLIENT_REQUIRED);
+    const issues = checkPlaceholders(vars, CLIENT_REQUIRED, {
+      allowLocalhost: !strict,
+    });
     if (issues.length) {
       messages.push(`client/.env issues:\n  - ${issues.join("\n  - ")}`);
       if (strict) ok = false;
     } else {
-      messages.push("client/.env: all required keys present");
+      messages.push(
+        strict
+          ? "client/.env: all required keys present"
+          : "client/.env: all required keys present (development URLs allowed)"
+      );
     }
   } else {
     messages.push("client/.env not found — copy from client/.env.example");

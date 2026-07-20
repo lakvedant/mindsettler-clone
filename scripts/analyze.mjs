@@ -94,7 +94,7 @@ console.log(clientBuild.ok ? "✅ Client build" : "❌ Client build");
 const clientAudit = runStep(
   "Client npm audit",
   "npm",
-  ["audit", "--audit-level=high", "--prefix", "client"],
+  ["--prefix", "client", "audit", "--audit-level=high"],
   { cwd: root }
 );
 console.log(clientAudit.ok ? "✅ Client npm audit" : "⚠️  Client npm audit");
@@ -102,7 +102,7 @@ console.log(clientAudit.ok ? "✅ Client npm audit" : "⚠️  Client npm audit"
 const serverAudit = runStep(
   "Server npm audit",
   "npm",
-  ["audit", "--audit-level=high", "--prefix", "server"],
+  ["--prefix", "server", "audit", "--audit-level=high"],
   { cwd: root }
 );
 console.log(serverAudit.ok ? "✅ Server npm audit" : "⚠️  Server npm audit");

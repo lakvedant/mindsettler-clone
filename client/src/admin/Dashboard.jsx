@@ -16,7 +16,6 @@ import {
   User,
   Phone,
   Save,
-  TrendingUp,
   Info,
   BrainCircuit,
   Video,
@@ -299,7 +298,7 @@ const SessionPaymentsView = () => {
             : payment
         )
       );
-    } catch (e) {
+    } catch {
       alert("Error processing payment");
     } finally {
       setProcId(null);
@@ -1047,7 +1046,7 @@ const AppointmentsView = () => {
                   </p>
                 </div>
                 <p className="text-xs text-slate-600 italic">
-                  "{selectedApp.notes || "No additional notes provided."}"
+                  &ldquo;{selectedApp.notes || "No additional notes provided."}&rdquo;
                 </p>
               </div>
             </div>
@@ -1169,7 +1168,7 @@ const TimeSlotsView = () => {
     setBroadcasting(true);
     setErrorMsg("");
     try {
-      const res = await API.post("/admin/broadcast-availability", { 
+      await API.post("/admin/broadcast-availability", { 
         startDate: date, 
         days: 30, 
         slots 
@@ -1553,7 +1552,7 @@ const ManageFAQsView = () => {
     try {
       const res = await API.get("/faq");
       setFaqs(res.data.data || []);
-    } catch (e) {
+    } catch {
       setErrorMsg("Failed to load FAQs.");
     }
   };

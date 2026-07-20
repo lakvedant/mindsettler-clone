@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Loader2, Check, X, Search } from "lucide-react";
+import { Loader2, Check, X } from "lucide-react";
 import API from "../api/axios";
 
 const ManageBlogPaymentsView = () => {
@@ -25,7 +25,7 @@ const ManageBlogPaymentsView = () => {
     try {
       await API.patch(`/blog-payment/status/${id}`, { status }, { withCredentials: true });
       fetchPayments();
-    } catch (err) {
+    } catch {
       alert("Error updating payment status");
     }
   };

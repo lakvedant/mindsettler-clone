@@ -1,5 +1,6 @@
 import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { join, relative } from "node:path";
+import { spawnSync } from "node:child_process";
 
 const SECURITY_PATTERNS = [
   {
@@ -52,6 +53,14 @@ function walk(dir, files = []) {
   return files;
 }
 
+function isGitIgnored(rootDir, file) {
+  const gitCheck = spawnSync("git", ["check-ignore", "-q", file], {
+    cwd: rootDir,
+    shell: process.platform === "win32",
+  });
+  return gitCheck.status === 0;
+}
+
 export function runSecurityAudit(rootDir) {
   const findings = [];
   const scanRoots = [
@@ -89,20 +98,45 @@ export function runSecurityAudit(rootDir) {
   }
 
   if (existsSync(join(rootDir, "server", ".env"))) {
-    findings.push({
-      severity: "high",
-      rule: "env-in-repo",
-      file: "server/.env",
-      message: "server/.env exists — ensure it is gitignored and never committed",
-    });
+    let isTracked = false;
+    try {
+      const gitCheck = spawnSync("git", ["ls-files", "--error-unmatch", "server/.env"], {
+        cwd: rootDir,
+        shell: process.platform === "win32",
+      });
+      if (gitCheck.status === 0) {
+        isTracked = true;
+      }
+    } catch {
+      // ignore
+    }
+
+    if (isTracked) {
+      findings.push({
+        severity: "critical",
+        rule: "env-tracked-in-repo",
+        file: "server/.env",
+        message: "server/.env is tracked/committed in git! Remove it from git history immediately.",
+      });
+    } else if (!isGitIgnored(rootDir, "server/.env")) {
+      findings.push({
+        severity: "medium",
+        rule: "env-in-repo",
+        file: "server/.env",
+        message: "server/.env exists locally but is not gitignored",
+      });
+    }
   }
 
-  if (existsSync(join(rootDir, "client", ".env"))) {
+  if (
+    existsSync(join(rootDir, "client", ".env")) &&
+    !isGitIgnored(rootDir, "client/.env")
+  ) {
     findings.push({
       severity: "medium",
       rule: "client-env-local",
       file: "client/.env",
-      message: "client/.env exists locally — verify VITE_SERVER_URL points to production API when deploying",
+      message: "client/.env exists locally but is not gitignored",
     });
   }
 

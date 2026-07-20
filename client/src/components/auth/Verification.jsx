@@ -263,7 +263,7 @@ export const IsVerifiedUser = ({ user, children }) => {
                     <span className="font-bold">Email Sent!</span>
                   </div>
                   <p className="text-green-600 text-sm">
-                    We've sent a verification link to your email.
+                    We&apos;ve sent a verification link to your email.
                   </p>
                 </div>
 
@@ -279,7 +279,7 @@ export const IsVerifiedUser = ({ user, children }) => {
                     </div>
                     <div className="flex items-start gap-2 text-sm text-slate-600">
                       <AlertCircle size={14} className="text-amber-500 shrink-0 mt-0.5" />
-                      <span>Don't forget to check your spam folder</span>
+                      <span>Don&apos;t forget to check your spam folder</span>
                     </div>
                     <div className="flex items-start gap-2 text-sm text-slate-600">
                       <CheckCircle size={14} className="text-green-500 shrink-0 mt-0.5" />

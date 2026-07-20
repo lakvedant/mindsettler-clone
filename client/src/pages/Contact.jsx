@@ -223,6 +223,13 @@ const GlowingCard = ({ children, className, color = "purple", isMobile = false }
     },
     [mouseX, mouseY, isMobile]
   );
+  const glowBackground = useTransform(
+    [mouseX, mouseY],
+    ([x, y]) =>
+      `radial-gradient(400px circle at ${x}px ${y}px, ${color === "pink"
+        ? "rgba(221,23,100,0.15)"
+        : "rgba(63,41,101,0.15)"}, transparent 40%)`
+  );
 
   // On mobile, render simple div
   if (isMobile) {
@@ -242,14 +249,7 @@ const GlowingCard = ({ children, className, color = "purple", isMobile = false }
       <motion.div
         className="pointer-events-none absolute -inset-px rounded-3xl opacity-0 group-hover:opacity-100 transition duration-300"
         style={{
-          background: useTransform(
-            [mouseX, mouseY],
-            ([x, y]) =>
-              `radial-gradient(400px circle at ${x}px ${y}px, ${color === "pink"
-                ? "rgba(221,23,100,0.15)"
-                : "rgba(63,41,101,0.15)"
-              }, transparent 40%)`
-          ),
+          background: glowBackground,
         }}
       />
       {children}
