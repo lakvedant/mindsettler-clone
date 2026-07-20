@@ -2,6 +2,7 @@
 
 import express from "express";
 import { geminiReply } from "../utils/ai.js";
+import { chatLimiter } from "../middlewares/rateLimiter.js";
 
 const router = express.Router();
 
@@ -10,6 +11,7 @@ const chatSessions = new Map();
 
 // Session cleanup (remove old sessions after 30 minutes)
 const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes
+const MAX_SESSIONS = 1_000;
 
 const cleanupOldSessions = () => {
   const now = Date.now();
@@ -26,6 +28,9 @@ setInterval(cleanupOldSessions, 10 * 60 * 1000);
 // Get or create session
 const getSession = (chatId) => {
   if (!chatSessions.has(chatId)) {
+    if (chatSessions.size >= MAX_SESSIONS) {
+      chatSessions.delete(chatSessions.keys().next().value);
+    }
     chatSessions.set(chatId, {
       history: [],
       mood: null,
@@ -38,13 +43,14 @@ const getSession = (chatId) => {
 };
 
 // Main chat endpoint
-router.post("/", async (req, res) => {
+router.post("/", chatLimiter, async (req, res) => {
   const { message, chatId, user } = req.body;
-  const userName = user?.name?.split(" ")[0] || "Friend";
-  const userId = user?._id;
+  const userName = typeof user?.name === "string"
+    ? user.name.trim().split(" ")[0].slice(0, 50) || "Friend"
+    : "Friend";
 
   // Validate input
-  if (!chatId) {
+  if (typeof chatId !== "string" || !/^[a-zA-Z0-9_-]{1,100}$/.test(chatId)) {
     return res.status(400).json({
       intent: "ERROR",
       reply: "Something went wrong. Please refresh and try again.",
@@ -52,7 +58,7 @@ router.post("/", async (req, res) => {
     });
   }
 
-  if (!message || message.trim().length === 0) {
+  if (typeof message !== "string" || message.trim().length === 0 || message.length > 2_000) {
     return res.status(400).json({
       intent: "ERROR",
       reply: "I didn't catch that. Could you say that again?",
@@ -69,7 +75,7 @@ router.post("/", async (req, res) => {
     const context = {
       mood: session.mood,
       visitCount: session.visitCount,
-      userId: userId,
+      userId: undefined,
     };
 
     // Get AI response

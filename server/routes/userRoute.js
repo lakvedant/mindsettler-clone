@@ -31,8 +31,8 @@ router.post(
       .withMessage("Name must be between 3 and 50 characters"),
     body("email").isEmail().withMessage("Please provide a valid email address"),
     body("password")
-      .isLength({ min: 6 })
-      .withMessage("Password must be at least 6 characters long"),
+      .isLength({ min: 8, max: 128 })
+      .withMessage("Password must be between 8 and 128 characters long"),
   ],
   validate,
   userSignup
@@ -49,7 +49,7 @@ router.post(
   login
 );
 
-router.get("/logout", authLimiter, protect, logout);
+router.post("/logout", protect, logout);
 
 router.get("/me", protect, getMe);
 router.patch(
@@ -72,8 +72,31 @@ router.patch(
   profileUpdate
 );
 
-router.post("/contact/send", sendContactEmail);
-router.post("/corporate/send", sendCorporateEmail);
+router.post(
+  "/contact/send",
+  authLimiter,
+  [
+    body("name").trim().isLength({ min: 2, max: 100 }).withMessage("Name must be between 2 and 100 characters"),
+    body("email").isEmail().normalizeEmail().withMessage("Please provide a valid email address"),
+    body("subject").optional().trim().isLength({ max: 150 }).withMessage("Subject must be at most 150 characters"),
+    body("message").trim().isLength({ min: 1, max: 5000 }).withMessage("Message must be between 1 and 5000 characters"),
+  ],
+  validate,
+  sendContactEmail
+);
+router.post(
+  "/corporate/send",
+  authLimiter,
+  [
+    body("companyName").trim().isLength({ min: 2, max: 150 }).withMessage("Company name must be between 2 and 150 characters"),
+    body("contactPerson").trim().isLength({ min: 2, max: 100 }).withMessage("Contact name must be between 2 and 100 characters"),
+    body("workEmail").isEmail().normalizeEmail().withMessage("Please provide a valid work email address"),
+    body("subject").optional().trim().isLength({ max: 150 }).withMessage("Subject must be at most 150 characters"),
+    body("message").trim().isLength({ min: 1, max: 5000 }).withMessage("Message must be between 1 and 5000 characters"),
+  ],
+  validate,
+  sendCorporateEmail
+);
 
 router.post(
   "/auth/send-verification-email",
@@ -103,8 +126,8 @@ router.post(
   [
     body("token").notEmpty().withMessage("Reset token is required"),
     body("password")
-      .isLength({ min: 6 })
-      .withMessage("Password must be at least 6 characters long"),
+      .isLength({ min: 8, max: 128 })
+      .withMessage("Password must be between 8 and 128 characters long"),
     body("confirmPassword")
       .custom((value, { req }) => value === req.body.password)
       .withMessage("Passwords do not match"),

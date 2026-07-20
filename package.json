@@ -2,6 +2,10 @@
   "name": "mindsettler",
   "private": true,
   "description": "MindSettler mental wellness platform",
+  "engines": {
+    "node": ">=20.19.0",
+    "npm": ">=10"
+  },
   "scripts": {
     "analyze": "node scripts/analyze.mjs",
     "analyze:json": "node scripts/analyze.mjs --json",

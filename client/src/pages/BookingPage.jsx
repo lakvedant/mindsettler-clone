@@ -35,6 +35,8 @@ import { ScrollProgressBar } from "../components/common/ScrollProgressBar";
 import useIsMobile from "../hooks/useIsMobile";
 import { BookingSEO } from "../components/common/SEO";
 
+const BOOKING_DRAFT_KEY = "mindsettler.booking-draft";
+
 const useMousePosition = () => {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
@@ -1315,6 +1317,7 @@ const [showPaymentModal, setShowPaymentModal] = useState(false);
 const [appointmentIdForPayment, setAppointmentIdForPayment] = useState("");
 const [showSuccess, setShowSuccess] = useState(false);
 const [pageLoaded, setPageLoaded] = useState(false);
+const restoredDraftDateRef = useRef(null);
 const rescheduleAppointmentId = useMemo(
   () => new URLSearchParams(window.location.search).get("reschedule"),
   []
@@ -1328,6 +1331,25 @@ const rescheduleAppointmentId = useMemo(
   ];
 
   const [therapies, setTherapies] = useState(initialTherapies);
+
+  useEffect(() => {
+    try {
+      const savedDraft = sessionStorage.getItem(BOOKING_DRAFT_KEY);
+      if (!savedDraft) return;
+
+      const draft = JSON.parse(savedDraft);
+      restoredDraftDateRef.current = draft.selectedDate || null;
+      setSelectedTherapy(draft.selectedTherapy || "Individual Adult");
+      setSelectedDate(draft.selectedDate || new Date().toISOString().split("T")[0]);
+      setSelectedSlot(draft.selectedSlot || "");
+      setSessionType(draft.sessionType || "online");
+      setNote(draft.note || "");
+      setAvailabilityId(draft.availabilityId || "");
+      sessionStorage.removeItem(BOOKING_DRAFT_KEY);
+    } catch {
+      sessionStorage.removeItem(BOOKING_DRAFT_KEY);
+    }
+  }, []);
 
   const selectedTherapyObj = useMemo(() => {
     return therapies.find((t) => t.name === selectedTherapy);
@@ -1400,11 +1422,13 @@ const rescheduleAppointmentId = useMemo(
     return `${h12}:${minutes} ${ampm}`;
   };
 
-  const fetchSlots = async () => {
+  const fetchSlots = async (preserveSelectedSlot = false) => {
     setLoadingSlots(true);
     setErrorMsg("");
-    setSelectedSlot("");
-    setAvailabilityId("");
+    if (!preserveSelectedSlot) {
+      setSelectedSlot("");
+      setAvailabilityId("");
+    }
     try {
       const res = await API.get(`/appointment/get-availability?date=${selectedDate}`);
       let fetchedSlots = res.data.data?.slots || [];
@@ -1437,7 +1461,15 @@ const rescheduleAppointmentId = useMemo(
   };
 
   useEffect(() => {
-    fetchSlots();
+    // When returning from login, wait for the restored booking date before
+    // loading availability so the previously selected slot is not discarded.
+    if (restoredDraftDateRef.current && restoredDraftDateRef.current !== selectedDate) {
+      return;
+    }
+
+    const preserveSelectedSlot = restoredDraftDateRef.current === selectedDate;
+    restoredDraftDateRef.current = null;
+    fetchSlots(preserveSelectedSlot);
   }, [selectedDate]);
 
   const morningSlots = availableSlots.filter(
@@ -1450,7 +1482,24 @@ const rescheduleAppointmentId = useMemo(
   const getIsPaidViaWallet = () => sessionType === "online";
 
   const initiateBooking = async () => {
+    setErrorMsg("");
+    if (!selectedSlot) {
+      setErrorMsg("Please select a time slot first.");
+      return;
+    }
+
     if (!user) {
+      sessionStorage.setItem(
+        BOOKING_DRAFT_KEY,
+        JSON.stringify({
+          selectedTherapy,
+          selectedDate,
+          selectedSlot,
+          sessionType,
+          note,
+          availabilityId,
+        })
+      );
       navigate("/auth", { state: { returnUrl: "/booking" } });
       return;
     }
@@ -1471,12 +1520,6 @@ const rescheduleAppointmentId = useMemo(
           }
           return;
         }
-
-    setErrorMsg("");
-    if (!selectedSlot) {
-      setErrorMsg("Please select a time slot first.");
-      return;
-    }
 
     // For online sessions, create appointment first then show payment modal
     if (sessionType === "online") {

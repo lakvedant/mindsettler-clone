@@ -1,20 +1,28 @@
-name: CI
+name: Quality Gate
 
 on:
   push:
     branches: [main, master, develop]
   pull_request:
     branches: [main, master, develop]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  analyze:
+  quality:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 20.x
           cache: npm
           cache-dependency-path: |
             client/package-lock.json
@@ -26,12 +34,31 @@ jobs:
       - name: Install server dependencies
         run: npm ci --prefix server
 
-      - name: Run code analysis
-        run: node scripts/analyze.mjs --json
+      - name: Verify deployment configuration
+        run: |
+          test -f server/.env.example
+          test -f client/.env.example
+          node scripts/check-env.mjs
 
-      - name: Upload analysis report
+      - name: Run security checks
+        run: npm run audit:security
+
+      - name: Lint client and server
+        run: npm run lint
+
+      - name: Build production client
+        run: npm run build
+
+      - name: Audit client dependencies
+        run: npm audit --prefix client --audit-level=high
+
+      - name: Audit server dependencies
+        run: npm audit --prefix server --audit-level=high
+
+      - name: Upload production build
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: analysis-report
-          path: reports/
+          name: client-production-build
+          path: client/dist/
+          if-no-files-found: warn

@@ -1,26 +1,29 @@
 import { BrowserRouter, Route, Routes, useLocation } from "react-router";
-import Home from "./pages/Home.jsx";
-import ContactPage from "./pages/Contact.jsx";
-import AuthPage from "./pages/Authentication.jsx";
-import PageNotFound from "./pages/404.jsx";
 import ScrollToTop from "./components/common/ScrollToTop.jsx";
-import AdminDashboard from "./admin/Dashboard.jsx";
 import PrivateRoute from "./components/auth/PrivateRoute.jsx";
-import Logout from "./components/auth/Logout.jsx";
 import { useAuth } from "./context/AuthContext.jsx";
-import BookingPage from "./pages/BookingPage.jsx";
-import CorporateServices from "./pages/CorporateServices.jsx";
-import UserProfile from "./pages/UserProfile.jsx";
 import ChatWidget from "./components/chatbot/ChatWidget.jsx";
-import AboutUsPage from "./pages/AboutUs.jsx";
-import ResourcesPage from "./pages/Resources.jsx";
-import ArticlePage from "./pages/ArticlePage.jsx";
-import VerifyEmail from "./components/auth/VerifyEmail.jsx";
-import ResetPassword from "./pages/ResetPassword.jsx";
-import EventsPage from "./pages/Events.jsx";
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { AnimatePresence } from "framer-motion";
 import Preloader from "./components/common/Preloader.jsx";
+
+// Route-level splitting keeps the first visit fast; each page loads only when
+// the visitor navigates to it.
+const Home = lazy(() => import("./pages/Home.jsx"));
+const ContactPage = lazy(() => import("./pages/Contact.jsx"));
+const AuthPage = lazy(() => import("./pages/Authentication.jsx"));
+const PageNotFound = lazy(() => import("./pages/404.jsx"));
+const AdminDashboard = lazy(() => import("./admin/Dashboard.jsx"));
+const Logout = lazy(() => import("./components/auth/Logout.jsx"));
+const BookingPage = lazy(() => import("./pages/BookingPage.jsx"));
+const CorporateServices = lazy(() => import("./pages/CorporateServices.jsx"));
+const UserProfile = lazy(() => import("./pages/UserProfile.jsx"));
+const AboutUsPage = lazy(() => import("./pages/AboutUs.jsx"));
+const ResourcesPage = lazy(() => import("./pages/Resources.jsx"));
+const ArticlePage = lazy(() => import("./pages/ArticlePage.jsx"));
+const VerifyEmail = lazy(() => import("./components/auth/VerifyEmail.jsx"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword.jsx"));
+const EventsPage = lazy(() => import("./pages/Events.jsx"));
 
 // A small component to wrap public pages with the Navbar
 
@@ -44,6 +47,7 @@ function App() {
         <BrowserRouter>
           <ScrollToTop />
           <ChatWidgetGate user={user} />
+          <Suspense fallback={null}>
           <Routes>
         {/* GROUP 1: Public Pages (With Navbar) */}
         <Route path="/" element={<Home />} />
@@ -69,7 +73,8 @@ function App() {
           }
         />
         <Route path="*" element={<PageNotFound />} />
-      </Routes>
+          </Routes>
+          </Suspense>
     </BrowserRouter>
       )}
     </>

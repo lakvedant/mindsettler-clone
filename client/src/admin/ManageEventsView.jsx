@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { CalendarDays, Loader2, Save, Trash2, Sparkles } from "lucide-react";
 import API from "../api/axios";
 
+const MAX_EVENT_IMAGE_SIZE = 3 * 1024 * 1024;
+
 const fileToDataUrl = (file) =>
   new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -106,6 +108,16 @@ const ManageEventsView = () => {
   const handleImageChange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setError("Please select a valid image file.");
+      e.target.value = "";
+      return;
+    }
+    if (file.size > MAX_EVENT_IMAGE_SIZE) {
+      setError("Event images must be 3 MB or smaller.");
+      e.target.value = "";
+      return;
+    }
     try {
       const dataUrl = await fileToDataUrl(file);
       setFormData((prev) => ({ ...prev, imageUrl: dataUrl }));
@@ -241,7 +253,7 @@ const ManageEventsView = () => {
               <Sparkles size={14} className="text-[#DD1764]" />
               Event Cover Image
             </label>
-            <p className="text-[10px] text-slate-500 mb-2">Upload a high-quality image representing the event</p>
+            <p className="text-[10px] text-slate-500 mb-2">Upload a high-quality image representing the event (3 MB maximum)</p>
             <input type="file" accept="image/*" onChange={handleImageChange} className="w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-white file:text-[#DD1764] file:shadow-sm hover:file:bg-pink-50 transition-all cursor-pointer" />
             {eventImageName && (
               <p className="text-xs text-[#DD1764] font-semibold truncate mt-2 bg-white inline-block px-3 py-1 rounded-md border border-pink-100">Selected: {eventImageName}</p>

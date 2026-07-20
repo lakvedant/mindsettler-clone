@@ -12,6 +12,13 @@ const generateToken = (id) => {
   });
 };
 
+const escapeHtml = (value) => String(value ?? "")
+  .replace(/&/g, "&amp;")
+  .replace(/</g, "&lt;")
+  .replace(/>/g, "&gt;")
+  .replace(/"/g, "&quot;")
+  .replace(/'/g, "&#039;");
+
 const withPrimaryAdminFlag = (user) => {
   const userObj = user.toObject ? user.toObject() : { ...user };
   delete userObj.password;
@@ -220,10 +227,10 @@ export const sendContactEmail = async (req, res) => {
     let htmlContent = fs.readFileSync(templatePath, "utf-8");
 
     htmlContent = htmlContent
-      .replace(/{{name}}/g, name)
-      .replace(/{{email}}/g, email)
-      .replace(/{{subject}}/g, subject || "General Inquiry")
-      .replace(/{{message}}/g, message)
+      .replace(/{{name}}/g, escapeHtml(name))
+      .replace(/{{email}}/g, escapeHtml(email))
+      .replace(/{{subject}}/g, escapeHtml(subject || "General Inquiry"))
+      .replace(/{{message}}/g, escapeHtml(message))
       .replace(/{{timestamp}}/g, new Date().toLocaleString());
 
     const transporter = nodemailer.createTransport({
@@ -285,11 +292,11 @@ export const sendCorporateEmail = async (req, res) => {
     let htmlContent = fs.readFileSync(templatePath, "utf-8");
 
     htmlContent = htmlContent
-      .replace(/{{companyName}}/g, companyName)
-      .replace(/{{contactPerson}}/g, contactPerson)
-      .replace(/{{workEmail}}/g, workEmail)
-      .replace(/{{subject}}/g, subject || "Corporate Inquiry")
-      .replace(/{{message}}/g, message)
+      .replace(/{{companyName}}/g, escapeHtml(companyName))
+      .replace(/{{contactPerson}}/g, escapeHtml(contactPerson))
+      .replace(/{{workEmail}}/g, escapeHtml(workEmail))
+      .replace(/{{subject}}/g, escapeHtml(subject || "Corporate Inquiry"))
+      .replace(/{{message}}/g, escapeHtml(message))
       .replace(/{{timestamp}}/g, new Date().toLocaleString());
 
     const transporter = nodemailer.createTransport({

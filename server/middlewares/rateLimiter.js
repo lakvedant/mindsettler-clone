@@ -14,8 +14,18 @@ export const globalLimiter = rateLimit({
 // Stricter limiter for Auth & Corporate Form
 export const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes window
-  max: 15, // Start blocking after 10 failed attempts/requests
+  max: 15,
   message: {
     message: "Too many attempts. For security, please try again in an hour."
   },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+export const chatLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: "Too many chat requests. Please try again shortly." },
 });

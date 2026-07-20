@@ -6,7 +6,11 @@ import { body, validationResult } from 'express-validator';
 
 const router = express.Router();
 
-// middleware to protect routes
+// Availability is intentionally public so visitors can choose a session time
+// before creating an account. Booking itself remains protected below.
+router.get('/get-availability', getAvailability);
+
+// All remaining appointment operations require an authenticated user.
 router.use(protect);
 
 // Middleware to handle validation errors
@@ -38,7 +42,6 @@ router.patch('/status/:id', admin, updateStatus);
 router.patch('/reschedule/:id', isProfileComplete, rescheduleSession);
 router.delete('/delete-availability/:id', admin, deleteAvailability);
 router.get('/my-sessions', isProfileComplete, getMyAppointments);
-router.get('/get-availability', getAvailability);
 router.delete('/flush-availability', admin, flushAvailability);
 router.put('/meet-link-update/:id', admin, updateMeetLink);
 

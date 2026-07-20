@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import API from "../api/axios";
 import logo from "../assets/icons/MindsettlerLogo-removebg-preview.png";
-import { Link, Navigate, useNavigate } from "react-router-dom";
+import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import Login_img from "../assets/images/Login_img-removebg-preview.png";
 import useIsMobile from "../hooks/useIsMobile";
@@ -271,7 +271,12 @@ const AuthPage = () => {
   const [forgotEmail, setForgotEmail] = useState("");
   const [signupEmail, setSignupEmail] = useState("");
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, setUser } = useAuth();
+  const returnUrl = location.state?.returnUrl;
+  const safeReturnUrl = typeof returnUrl === "string" && returnUrl.startsWith("/") && !returnUrl.startsWith("//")
+    ? returnUrl
+    : "/";
 
   useEffect(() => {
     setErrors([]);
@@ -279,7 +284,7 @@ const AuthPage = () => {
   }, [view]);
 
   if (user) {
-    return <Navigate to={user.role === "admin" ? "/admin" : "/"} replace />;
+    return <Navigate to={user.role === "admin" ? "/admin" : safeReturnUrl} replace />;
   }
 
   const handleSubmit = async (e) => {
@@ -315,7 +320,7 @@ const AuthPage = () => {
           setView("success");
           setTimeout(() => {
             setUser(resData.user);
-            navigate(resData.user?.role === "admin" ? "/admin" : "/");
+            navigate(resData.user?.role === "admin" ? "/admin" : safeReturnUrl, { replace: true });
           }, 2500);
         }
       }

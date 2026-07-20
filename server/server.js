@@ -13,4 +13,18 @@ assertEnvOrExit();
 const { default: app } = await import("./app.js");
 
 const PORT = process.env.PORT || 4000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+const server = app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+const shutdown = (signal) => {
+  console.log(`${signal} received; closing HTTP server.`);
+  server.close(async () => {
+    const mongoose = await import("mongoose");
+    await mongoose.default.connection.close();
+    process.exit(0);
+  });
+
+  setTimeout(() => process.exit(1), 10_000).unref();
+};
+
+process.once("SIGTERM", () => shutdown("SIGTERM"));
+process.once("SIGINT", () => shutdown("SIGINT"));

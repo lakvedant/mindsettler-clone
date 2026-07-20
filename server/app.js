@@ -32,6 +32,20 @@ import { globalLimiter } from './middlewares/rateLimiter.js';
 await connectDB();
 const app = express();
 app.set("trust proxy", 1);
+app.disable("x-powered-by");
+
+// Baseline headers without introducing another runtime dependency. Keep the
+// CSP deliberately conservative because the client currently loads third-party
+// assets and inline styles.
+app.use((_req, res, next) => {
+  res.set({
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY",
+    "Referrer-Policy": "strict-origin-when-cross-origin",
+    "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
+  });
+  next();
+});
 
 app.use(cookieParser());
 app.use(globalLimiter);
@@ -76,9 +90,9 @@ app.use(session({
   }
 }));
 
-app.use(express.json({ limit: '50mb' }));
-app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
-app.use(morgan("dev"));
+app.use(express.json({ limit: "5mb" }));
+app.use(bodyParser.urlencoded({ limit: "5mb", extended: false }));
+app.use(morgan(isProduction ? "combined" : "dev"));
 
 // Used by Render and other deployment platforms to determine whether the
 // process is alive and able to receive requests.
@@ -96,5 +110,22 @@ app.use('/api/therapy', therapyRoute);
 app.use('/api/blog', blogRoute);
 app.use('/api/blog-payment', blogPaymentRoute);
 app.use("/api/events", eventRoute);
+
+app.use((_req, res) => {
+  res.status(404).json({ success: false, message: "Route not found" });
+});
+
+app.use((error, _req, res, _next) => {
+  if (error.message?.startsWith("CORS blocked")) {
+    return res.status(403).json({ success: false, message: "Origin is not allowed" });
+  }
+
+  if (error.type === "entity.too.large") {
+    return res.status(413).json({ success: false, message: "Request body is too large" });
+  }
+
+  console.error("Unhandled request error:", error);
+  return res.status(500).json({ success: false, message: "Internal server error" });
+});
 
 export default app;
