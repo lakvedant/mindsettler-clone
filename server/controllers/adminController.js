@@ -73,7 +73,7 @@ export const setAvailability = async (req, res) => {
         // Optimistic concurrency prevents an admin save from overwriting a
         // booking that was made after the schedule was read.
         for (let attempt = 0; attempt < 3 && !availability; attempt++) {
-            const existingAvailability = await Availability.findOne({ date });
+            const existingAvailability = await Availability.findOne({ date: { $eq: String(date) } });
             const mergedSlots = mergeAvailabilitySlots(
                 existingAvailability?.slots || [],
                 slots
