@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import Logo from "../assets/icons/MindsettlerLogo-removebg-preview.png";
-import { useNavigate, Link, Navigate } from "react-router-dom";
+import { useNavigate, Link, Navigate } from 'react-router';
 import {
   CalendarCheck,
   Clock,

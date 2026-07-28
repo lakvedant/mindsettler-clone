@@ -7,7 +7,7 @@ import {
   useMotionValue,
   useInView,
 } from "framer-motion";
-import { Link } from "react-router-dom";
+import { Link } from 'react-router';
 import useIsMobile from "../../hooks/useIsMobile";
 
 // ============== PARTICLE SYSTEM ==============

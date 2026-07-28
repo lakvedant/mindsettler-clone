@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import logo from "../../assets/icons/MindsettlerLogo-removebg-preview.png";
-import { Link, NavLink, useLocation } from "react-router-dom";
+import { Link, NavLink, useLocation } from 'react-router';
 import { useAuth } from "../../context/AuthContext";
 
 const Navbar = () => {

@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import API from "../api/axios";
 import logo from "../assets/icons/MindsettlerLogo-removebg-preview.png";
-import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
+import { Link, Navigate, useLocation, useNavigate } from 'react-router';
 import { useAuth } from "../context/AuthContext";
 import Login_img from "../assets/images/Login_img-removebg-preview.png";
 import useIsMobile from "../hooks/useIsMobile";

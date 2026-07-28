@@ -34,7 +34,7 @@ import {
 import Navbar from "../components/common/Navbar";
 import Footer from "../components/common/Footer";
 import { ResourcesSEO } from "../components/common/SEO";
-import { Link } from "react-router-dom";
+import { Link } from 'react-router';
 import API from "../api/axios";
 import { useAuth } from "../context/AuthContext";
 import {

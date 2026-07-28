@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link } from 'react-router';
 import { motion } from "framer-motion";
 import { ArrowLeft, Clock, Calendar, Lock, CheckCircle2, Loader2, IndianRupee } from "lucide-react";
 import API from "../api/axios";
