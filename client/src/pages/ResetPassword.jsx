@@ -130,14 +130,6 @@ const ResetPassword = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState([]);
 
-  useEffect(() => {
-    if (!token) {
-      setStatus(STATUS.INVALID);
-      return;
-    }
-    verifyToken();
-  }, [token]);
-
   const verifyToken = async () => {
     try {
       const response = await API.post("/user/auth/verify-reset-password", { token });
@@ -155,6 +147,14 @@ const ResetPassword = () => {
       }
     }
   };
+
+  useEffect(() => {
+    if (!token) {
+      setStatus(STATUS.INVALID);
+      return;
+    }
+    verifyToken();
+  }, [token]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
