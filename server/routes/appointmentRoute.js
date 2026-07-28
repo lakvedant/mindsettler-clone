@@ -27,6 +27,7 @@ const validateRequest = (req, res, next) => {
 
 router.post(
   '/book', 
+  isProfileComplete,
   [
     body('notes')
       .optional({ checkFalsy: true }) // Notes are usually optional

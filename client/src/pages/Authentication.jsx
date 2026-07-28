@@ -273,6 +273,7 @@ const AuthPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, setUser } = useAuth();
+  const isAdminLogin = location.pathname === "/admin/login";
   const returnUrl = location.state?.returnUrl;
   const safeReturnUrl = typeof returnUrl === "string" && returnUrl.startsWith("/") && !returnUrl.startsWith("//")
     ? returnUrl
@@ -281,10 +282,11 @@ const AuthPage = () => {
   useEffect(() => {
     setErrors([]);
     setShowPassword(false);
-  }, [view]);
+    if (isAdminLogin) setView("login");
+  }, [view, isAdminLogin]);
 
   if (user) {
-    return <Navigate to={user.role === "admin" ? "/admin" : safeReturnUrl} replace />;
+    return <Navigate to={user.role === "admin" ? "/admin" : isAdminLogin ? "/" : safeReturnUrl} replace />;
   }
 
   const handleSubmit = async (e) => {
@@ -298,7 +300,7 @@ const AuthPage = () => {
     // Determine endpoint based on view
     let endpoint;
     if (view === "login") {
-      endpoint = "/user/login";
+      endpoint = isAdminLogin ? "/admin/login" : "/user/login";
     } else if (view === "signup") {
       endpoint = "/user/signup";
     } else if (view === "forgot") {
@@ -320,7 +322,7 @@ const AuthPage = () => {
           setView("success");
           setTimeout(() => {
             setUser(resData.user);
-            navigate(resData.user?.role === "admin" ? "/admin" : safeReturnUrl, { replace: true });
+            navigate(resData.user?.role === "admin" ? "/admin" : isAdminLogin ? "/" : safeReturnUrl, { replace: true });
           }, 2500);
         }
       }
@@ -479,7 +481,7 @@ const AuthPage = () => {
                 <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#3F2965] mb-2 leading-tight">
                   {view === "login" && (
                     <>
-                      Welcome Back!{" "}
+                      {isAdminLogin ? "Administrator Sign In" : "Welcome Back!"}{" "}
                       <span className="inline-block animate-bounce">👋</span>
                     </>
                   )}
@@ -499,8 +501,11 @@ const AuthPage = () => {
                   )}
                 </h1>
                 <p className="text-[#6B4D8A]/60 text-sm sm:text-base">
-                  {view === "login" &&
-                    "Sign in to continue your mental wellness journey."}
+                  {view === "login" && (
+                    isAdminLogin
+                      ? "Use your authorized administrator account."
+                      : "Sign in to continue your mental wellness journey."
+                  )}
                   {view === "signup" &&
                     "Create an account to start healing today."}
                   {view === "forgot" &&
@@ -604,7 +609,7 @@ const AuthPage = () => {
                 </AnimatePresence>
 
                 {/* Forgot password link */}
-                {view === "login" && (
+                {view === "login" && !isAdminLogin && (
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -667,17 +672,28 @@ const AuthPage = () => {
                 </motion.button>
               </form>
 
+              {view === "login" && !isAdminLogin && (
+                <div className="mt-4 text-center">
+                  <Link
+                    to="/admin/login"
+                    className="text-xs font-semibold text-[#3F2965] hover:text-[#DD1764]"
+                  >
+                    Administrator sign in
+                  </Link>
+                </div>
+              )}
+
               {/* Divider */}
-              <div className="flex items-center gap-4 my-6">
+              {!isAdminLogin && <div className="flex items-center gap-4 my-6">
                 <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#3F2965]/20 to-transparent" />
                 <span className="text-xs text-[#6B4D8A]/40 font-medium">
                   OR
                 </span>
                 <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#3F2965]/20 to-transparent" />
-              </div>
+              </div>}
 
               {/* Toggle View */}
-              <motion.div
+              {!isAdminLogin && <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.4 }}
@@ -705,7 +721,7 @@ const AuthPage = () => {
                     {view === "forgot" && "Sign in"}
                   </button>
                 </p>
-              </motion.div>
+              </motion.div>}
 
               {/* Trust badges - Mobile */}
               <motion.div

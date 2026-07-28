@@ -3,6 +3,7 @@
 import express from "express";
 import { geminiReply } from "../utils/ai.js";
 import { chatLimiter } from "../middlewares/rateLimiter.js";
+import { createChatSession, isChatSessionOwner } from "../utils/chatSession.js";
 
 const router = express.Router();
 
@@ -25,21 +26,21 @@ const cleanupOldSessions = () => {
 // Run cleanup every 10 minutes
 setInterval(cleanupOldSessions, 10 * 60 * 1000);
 
-// Get or create session
-const getSession = (chatId) => {
-  if (!chatSessions.has(chatId)) {
-    if (chatSessions.size >= MAX_SESSIONS) {
-      chatSessions.delete(chatSessions.keys().next().value);
-    }
-    chatSessions.set(chatId, {
-      history: [],
-      mood: null,
-      visitCount: 1,
-      lastActive: Date.now(),
-      createdAt: Date.now(),
-    });
+const isValidChatId = (chatId) =>
+  typeof chatId === "string" && /^[a-zA-Z0-9_-]{1,100}$/.test(chatId);
+
+// A session ID is not sufficient authorization. The server issues an
+// unguessable owner token on creation and requires it for every later action.
+const getSession = (chatId, ownerToken) => {
+  const existingSession = chatSessions.get(chatId);
+  if (existingSession) {
+    if (!isChatSessionOwner(existingSession, ownerToken)) return null;
+    return { session: existingSession, sessionToken: null };
   }
-  return chatSessions.get(chatId);
+
+  const session = createChatSession();
+  chatSessions.set(chatId, session);
+  return { session, sessionToken: session.ownerToken };
 };
 
 // Main chat endpoint
@@ -50,7 +51,7 @@ router.post("/", chatLimiter, async (req, res) => {
     : "Friend";
 
   // Validate input
-  if (typeof chatId !== "string" || !/^[a-zA-Z0-9_-]{1,100}$/.test(chatId)) {
+  if (!isValidChatId(chatId)) {
     return res.status(400).json({
       intent: "ERROR",
       reply: "Something went wrong. Please refresh and try again.",
@@ -66,8 +67,16 @@ router.post("/", chatLimiter, async (req, res) => {
     });
   }
 
-  // Get session
-  const session = getSession(chatId);
+  if (!chatSessions.has(chatId) && chatSessions.size >= MAX_SESSIONS) {
+    chatSessions.delete(chatSessions.keys().next().value);
+  }
+
+  const sessionResult = getSession(chatId, req.get("X-Chat-Session-Token"));
+  if (!sessionResult) {
+    return res.status(403).json({ message: "Chat session access denied." });
+  }
+
+  const { session, sessionToken } = sessionResult;
   session.lastActive = Date.now();
 
   try {
@@ -126,6 +135,7 @@ router.post("/", chatLimiter, async (req, res) => {
     res.json({
       ...aiResponse,
       sessionId: chatId,
+      ...(sessionToken ? { sessionToken } : {}),
       timestamp: new Date().toISOString(),
     });
 
@@ -143,12 +153,16 @@ router.post("/", chatLimiter, async (req, res) => {
 // Get chat history
 router.get("/history/:chatId", async (req, res) => {
   const { chatId } = req.params;
+  if (!isValidChatId(chatId)) return res.status(400).json({ message: "Invalid chat session." });
   
   if (!chatSessions.has(chatId)) {
     return res.json({ history: [], mood: null });
   }
 
   const session = chatSessions.get(chatId);
+  if (!isChatSessionOwner(session, req.get("X-Chat-Session-Token"))) {
+    return res.status(403).json({ message: "Chat session access denied." });
+  }
   res.json({
     history: session.history,
     mood: session.mood,
@@ -159,8 +173,12 @@ router.get("/history/:chatId", async (req, res) => {
 // Clear chat session
 router.delete("/clear/:chatId", async (req, res) => {
   const { chatId } = req.params;
+  if (!isValidChatId(chatId)) return res.status(400).json({ message: "Invalid chat session." });
   
   if (chatSessions.has(chatId)) {
+    if (!isChatSessionOwner(chatSessions.get(chatId), req.get("X-Chat-Session-Token"))) {
+      return res.status(403).json({ message: "Chat session access denied." });
+    }
     chatSessions.delete(chatId);
   }
   

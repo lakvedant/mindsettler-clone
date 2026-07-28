@@ -31,11 +31,11 @@ export default function Footer() {
 
   const footerLinks = {
     services: [
-      { name: "Online Sessions" },
-      { name: "Offline Sessions" },
-      { name: "Psycho-Education" },
-      { name: "Mental Health Guidance" },
-      { name: "Personalized Support" },
+      { name: "Online Sessions", href: "/booking" },
+      { name: "Offline Sessions", href: "/booking" },
+      { name: "Psycho-Education", href: "/events" },
+      { name: "Mental Health Guidance", href: "/booking" },
+      { name: "Personalized Support", href: "/booking" },
     ],
     company: [
       { name: "Who We Are", href: "/aboutus" },
@@ -167,7 +167,9 @@ export default function Footer() {
             {/* Contact Info */}
             <div className="space-y-3">
               <motion.a
-                href="+91 9974631313"
+                href="https://wa.me/919974631313"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="flex items-center gap-3 text-gray-300/80 hover:text-white transition-colors group text-sm"
                 whileHover={isMobile ? {} : { x: 5 }}
               >
@@ -326,7 +328,7 @@ export default function Footer() {
                 Need Support?
               </p>
               <p className="text-gray-300/70 text-xs mb-3">
-                We're here to help you on your mental wellness journey.
+                We&apos;re here to help you on your mental wellness journey.
               </p>
               <motion.a
                 href="/contact"
@@ -379,17 +381,17 @@ export default function Footer() {
               viewport={{ once: true }}
             >
               {[
-                "Privacy Policy",
-                "Terms of Service",
-                "Non-Refund Policy",
-                "Confidentiality",
+                { name: "Privacy Policy", href: "/contact" },
+                { name: "Terms of Service", href: "/contact" },
+                { name: "Non-Refund Policy", href: "/contact" },
+                { name: "Confidentiality", href: "/contact" },
               ].map((link, index) => (
                 <a
                   key={index}
-                  href="#"
+                  href={link.href}
                   className="text-gray-400 hover:text-[#Dd1764] transition-colors relative group"
                 >
-                  {link}
+                  {link.name}
                   <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-[#7c3aed] to-[#Dd1764] group-hover:w-full transition-all duration-300" />
                 </a>
               ))}

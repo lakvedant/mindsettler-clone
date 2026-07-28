@@ -36,6 +36,11 @@ const generateChatId = () => {
   return newId;
 };
 
+const getChatSessionToken = () => sessionStorage.getItem("mindSettlerChatSessionToken");
+const saveChatSessionToken = (token) => {
+  if (token) sessionStorage.setItem("mindSettlerChatSessionToken", token);
+};
+
 const getTimeGreeting = () => {
   const hour = new Date().getHours();
   if (hour < 12) return { text: "Good morning", icon: Sun, emoji: "🌅" };
@@ -220,7 +225,7 @@ const MessageBubble = ({ message, isUser, isLatest, isRedirecting, onQuickReply 
         {/* Timestamp & Reactions */}
         <div className={`flex items-center gap-2 mt-1.5 ${isUser ? "justify-end" : "justify-start"}`}>
           <span className="text-[9px] text-slate-300">
-            {new Date(message.timestamp || Date.now()).toLocaleTimeString([], {
+            {new Date(message.timestamp).toLocaleTimeString([], {
               hour: "2-digit",
               minute: "2-digit",
             })}
@@ -368,9 +373,7 @@ const ChatWidget = ({ user }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
-  const [showNotification, setShowNotification] = useState(true);
   const [currentMood, setCurrentMood] = useState(null);
-  const [messageCount, setMessageCount] = useState(0);
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [redirectTarget, setRedirectTarget] = useState(null);
 
@@ -415,11 +418,6 @@ const ChatWidget = ({ user }) => {
     }
   }, [isOpen]);
 
-  useEffect(() => {
-    const timer = setTimeout(() => setShowNotification(false), 8000);
-    return () => clearTimeout(timer);
-  }, []);
-
   const handleNavigate = useCallback((path) => {
     setIsRedirecting(true);
     setRedirectTarget(path);
@@ -438,15 +436,17 @@ const ChatWidget = ({ user }) => {
     setRedirectTarget(null);
   }, []);
 
-  const handleQuickReply = useCallback((text) => {
+  const handleQuickReply = (text) => {
     if (!isRedirecting) {
       handleSend(text);
     }
-  }, [isRedirecting]);
+  };
 
   const handleClearChat = useCallback(async () => {
     try {
-      await API.delete(`/chat/clear/${chatId}`);
+      await API.delete(`/chat/clear/${chatId}`, {
+        headers: { "X-Chat-Session-Token": getChatSessionToken() },
+      });
     } catch (err) {
       console.log("Clear chat error:", err);
     }
@@ -458,7 +458,6 @@ const ChatWidget = ({ user }) => {
       action: { type: "quick_replies", buttons: defaultQuickReplies },
     }]);
     setCurrentMood(null);
-    setMessageCount(0);
     setIsRedirecting(false);
     setRedirectTarget(null);
   }, [chatId, userName]);
@@ -476,10 +475,12 @@ const ChatWidget = ({ user }) => {
     setHistory((prev) => [...prev, userMessage]);
     setMessage("");
     setLoading(true);
-    setMessageCount((prev) => prev + 1);
 
     try {
-      const res = await API.post("/chat", { message: text.trim(), chatId, user });
+      const res = await API.post("/chat", { message: text.trim(), chatId, user }, {
+        headers: { "X-Chat-Session-Token": getChatSessionToken() },
+      });
+      saveChatSessionToken(res.data.sessionToken);
       const { intent, reply, action, mood_detected } = res.data;
 
       const botMessage = {
@@ -529,7 +530,6 @@ const ChatWidget = ({ user }) => {
   const handleButtonClick = () => {
     if (!hasMoved) {
       setIsOpen(!isOpen);
-      setShowNotification(false);
     }
   };
 

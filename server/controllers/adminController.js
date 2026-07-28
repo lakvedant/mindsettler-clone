@@ -3,6 +3,7 @@ import Appointment from '../models/appointmentModel.js';
 import User from '../models/userModel.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { mergeAvailabilitySlots } from "../utils/availability.js";
 
 const generateToken = (id) => {
     return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -67,16 +68,41 @@ export const setAvailability = async (req, res) => {
     try {
         let { date, slots } = req.body;
         slots = Array.isArray(slots) ? slots : JSON.parse(slots);
-        const formattedSlots = slots.map(time => ({
-            time,
-            isBooked: false
-        }));
+        let availability;
 
-        const availability = await Availability.findOneAndUpdate(
-            { date },
-            { slots: formattedSlots, isActive: true },
-            { upsert: true, new: true }
-        );
+        // Optimistic concurrency prevents an admin save from overwriting a
+        // booking that was made after the schedule was read.
+        for (let attempt = 0; attempt < 3 && !availability; attempt++) {
+            const existingAvailability = await Availability.findOne({ date });
+            const mergedSlots = mergeAvailabilitySlots(
+                existingAvailability?.slots || [],
+                slots
+            );
+
+            if (!existingAvailability) {
+                try {
+                    availability = await Availability.create({
+                        date,
+                        slots: mergedSlots,
+                        isActive: true,
+                    });
+                } catch (error) {
+                    if (error?.code !== 11000) throw error;
+                }
+            } else {
+                availability = await Availability.findOneAndUpdate(
+                    { _id: existingAvailability._id, updatedAt: existingAvailability.updatedAt },
+                    { slots: mergedSlots, isActive: true },
+                    { new: true, runValidators: true }
+                );
+            }
+        }
+
+        if (!availability) {
+            return res.status(409).json({
+                message: "The schedule changed while it was being updated. Please try again.",
+            });
+        }
 
         res.status(200).json({ success: true, data: availability });
     } catch (error) {

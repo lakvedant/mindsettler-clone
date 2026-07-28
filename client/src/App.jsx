@@ -56,6 +56,7 @@ function App() {
         <Route path="/corporate" element={<CorporateServices />} />
         <Route path="/profile" element={<UserProfile />} />
         <Route path="/auth" element={<AuthPage />} />
+        <Route path="/admin/login" element={<AuthPage />} />
         <Route path="/logout" element={<Logout />} />
         <Route path="/aboutus" element={<AboutUsPage />} />
         <Route path="/resources" element={<ResourcesPage />} />
@@ -67,7 +68,7 @@ function App() {
         <Route
           path="/admin"
           element={
-            <PrivateRoute roleRequired="admin" loginPath="/auth">
+            <PrivateRoute roleRequired="admin" loginPath="/admin/login">
               <AdminDashboard />
             </PrivateRoute>
           }

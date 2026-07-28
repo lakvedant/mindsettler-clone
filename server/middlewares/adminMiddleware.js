@@ -33,7 +33,7 @@ export const validateAvailability = (req, res, next) => {
     try {
         slots = Array.isArray(slots) ? slots : JSON.parse(slots);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        return res.status(400).json({ message: "Slots must be a valid JSON array." });
     }
 
     // 2. Date Format Validation (YYYY-MM-DD)
